@@ -16,8 +16,8 @@ public class User {
     public Date createAt;
     public Date updateAt;
     public String identifier;
-    public  String passwordHash;
     public Boolean verified;
     public List<Role> roles = new ArrayList<>();
-    public String lastLogin;
+    public Date lastLogin;
+    public List<AuthenticationMethod> authenticationMethods = new ArrayList<>();
 }
