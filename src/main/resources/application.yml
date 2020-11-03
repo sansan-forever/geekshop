@@ -1,0 +1,46 @@
+# database init, supports mysql too
+database: h2
+
+spring:
+  datasource:
+    schema: classpath*:db/${database}/schema.sql
+    data: classpath*:db/${database}/data.sql
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+  output:
+    ansi:
+      enabled: always
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# Logging
+logging:
+  level:
+    org.springframework: info
+    org.springframework.jdbc.core: debug
+#    org.hibernate.SQL: debug
+#    org.hibernate.type.descriptor.sql: trace
+    io.geekshop: info
+
+geekshop:
+  company-name: ${COMPANY_NAME:GEEKSHOP}
+  auth-options:
+    disable-auth: ${DISABLE_AUTH:false}
+    token-method: ${TOKEN_MEHTOD:cookie}
+    session-secret: ${SESSION_SECRET:session-secret}
+    auth-token-header-key: ${AUTH_TOKEN_HEADER_KEY:geekshop-auth-token}
+    session-duration: ${SESSION_DURATION:7d}
+    require-verification: ${REQUIRE_VERIFICATION:true}
+    verification-token-duration: ${VERIFICATION_TOKEN_DURATION:7d}
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
