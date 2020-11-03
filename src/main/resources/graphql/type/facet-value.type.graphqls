@@ -1,0 +1,8 @@
+type FacetValue implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    facet: Facet!
+    name: String!
+    code: String!
+}

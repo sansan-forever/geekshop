@@ -1,0 +1,13 @@
+type Role implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    code: String!
+    description: String!
+    permissions: [Permission!]!
+}
+
+type RoleList implements PaginatedList {
+    items: [Role!]!
+    totalItems: Int!
+}

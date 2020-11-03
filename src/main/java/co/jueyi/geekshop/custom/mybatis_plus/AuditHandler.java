@@ -1,4 +1,4 @@
-package co.jueyi.geekshop.mybatis_plus;
+package co.jueyi.geekshop.custom.mybatis_plus;
 
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.types.user.User;

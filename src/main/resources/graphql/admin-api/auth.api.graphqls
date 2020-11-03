@@ -1,0 +1,11 @@
+extend type Query {
+    me: CurrentUser
+}
+
+extend type Mutation {
+    login(username: String!, password: String!, rememberMe: Boolean): LoginResult!
+    authenticate(input: AuthenticationInput!, rememberMe: Boolean): LoginResult!
+}
+
+# Populated at run-time
+input AuthenticationInput

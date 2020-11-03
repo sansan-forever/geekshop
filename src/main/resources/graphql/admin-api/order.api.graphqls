@@ -1,0 +1,66 @@
+type Query {
+    order(id: ID!): Order
+    orders(options: OrderListOptions): OrderList!
+}
+
+type Mutation {
+    settlePayment(id: ID!): Payment!
+    fulfillOrder(input: FulfillOrderInput!): Fulfillment!
+    cancelOrder(input: CancelOrderInput!): Order!
+    refundOrder(input: RefundOrderInput!): Refund!
+    addNoteToOrder(input: SettleRefundInput!): Order!
+    updateOrderNote(input: UpdateOrderNoteInput!): HistoryEntry!
+    deleteOrderNote(id: ID!): DeletionResponse!
+    transitionOrderToState(id: ID!, state: String!): Order
+}
+
+
+extend type Order {
+    nextStates: [String!]!
+}
+
+input OrderListOptions
+
+input FulfillOrderInput {
+    lines: [OrderLineInput!]!
+    method: String!
+    trackingCode: String
+}
+
+input CancelOrderInput {
+    "The id of the order to be cancelled"
+    orderId: ID!
+    "Optionally specify which OrderLines to cancel. If not provided, all OrderLines will be cancelled"
+    lines: [OrderLineInput!]
+    reason: String
+}
+
+input RefundOrderInput {
+    lines: [OrderLineInput!]!
+    shipping: Int!
+    adjustment: Int!
+    paymentId: ID!
+    reason: String
+}
+
+input OrderLineInput {
+    orderLineId: ID!
+    quantity: Int!
+}
+
+input SettleRefundInput {
+    id: ID!
+    transactionId: String!
+}
+
+input AddNoteToOrderInput {
+    id: ID!
+    note: String!
+    isPublic: Boolean!
+}
+
+input UpdateOrderNoteInput {
+    nodeId: ID!
+    note: String
+    isPublic: Boolean
+}

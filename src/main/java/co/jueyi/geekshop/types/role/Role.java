@@ -13,10 +13,10 @@ import java.util.List;
  */
 @Data
 public class Role implements Node {
-    private Long id;
-    private Date createdAt;
-    private Date updatedAt;
-    private String code;
-    private String description;
-    private List<Permission> permissions = new ArrayList<>();
+    public Long id;
+    public Date createdAt;
+    public Date updatedAt;
+    public String code;
+    public String description;
+    public List<Permission> permissions = new ArrayList<>();
 }

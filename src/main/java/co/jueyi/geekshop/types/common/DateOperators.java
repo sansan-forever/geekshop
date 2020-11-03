@@ -9,8 +9,8 @@ import java.util.Date;
  */
 @Data
 public class DateOperators {
-    private Date eq;
-    private Date before;
-    private Date after;
-    private DateRange between;
+    public Date eq;
+    public Date before;
+    public Date after;
+    public DateRange between;
 }

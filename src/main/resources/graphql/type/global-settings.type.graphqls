@@ -1,0 +1,17 @@
+type GlobalSettings {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    trackInventory: Boolean!
+    serverConfig: ServerConfig!
+}
+
+type OrderProcessState {
+    name: String!
+    to: [String!]!
+}
+
+type ServerConfig {
+    orderProcess: [OrderProcessState!]!
+    permittedAssetTypes: [String!]!
+}

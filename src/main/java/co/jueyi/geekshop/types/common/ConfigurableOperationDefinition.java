@@ -1,0 +1,16 @@
+package co.jueyi.geekshop.types.common;
+
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created on Nov, 2020 by @author bobo
+ */
+@Data
+public class ConfigurableOperationDefinition {
+    public String code;
+    public List<ConfigArgDefinition> args = new ArrayList<>();
+    public String description;
+}

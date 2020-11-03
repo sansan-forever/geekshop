@@ -1,0 +1,22 @@
+type Customer implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    title: String
+    firstName: String!
+    lastName: String!
+    phoneNumber: String
+    emailAddress: String!
+    address: [Address!]
+    orders(options: OrderListOptions): OrderList!
+    user: User
+    # 该字段对shop api不可见
+    groups: [CustomerGroup!]!
+    # 该字段对shop api不可见
+    history(options: HistoryEntryListOptions): HistoryEntryList
+}
+
+type CustomerList implements PaginatedList {
+    items: [Customer!]!
+    totalItems: Int!
+}

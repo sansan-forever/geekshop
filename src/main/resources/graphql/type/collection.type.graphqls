@@ -1,0 +1,34 @@
+type Collection implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    name: String!
+    slug: String!
+    breadcrumbs: [CollectionBreadcrumb!]!
+    position: Int!
+    description: String!
+    featuredAsset: Asset
+    assets: [Asset!]!
+    parent: Collection
+    children: [Collection!]
+    filters: [ConfigurableOperation!]!
+    productVariants(options: ProductVariantListOptions): ProductVariantList!
+}
+
+type CollectionBreadcrumb {
+    id: ID!
+    name: String!
+    slug: String!
+}
+
+type CollectionList implements PaginatedList {
+    items: [Collection!]!
+    totalItems: Int!
+}
+
+type ProductVariantList implements PaginatedList {
+    items: [ProductVariant!]!
+    totalItems: Int!
+}
+
+input ProductVariantListOptions

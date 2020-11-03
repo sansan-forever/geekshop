@@ -1,0 +1,9 @@
+type CustomerGroup implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    name: String!
+    customers(options: CustomerListOptions): CustomerList!
+}
+
+input CustomerListOptions

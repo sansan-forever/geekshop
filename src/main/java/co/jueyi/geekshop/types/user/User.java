@@ -12,13 +12,12 @@ import java.util.List;
  */
 @Data
 public class User {
-    private Long id;
-    private Date createAt;
-    private Date updateAt;
-    private String identifier;
-    private String passwordHash;
-    private Boolean verified;
-    private List<Role> roles = new ArrayList<>();
-    private String lastLogin;
-
+    public Long id;
+    public Date createAt;
+    public Date updateAt;
+    public String identifier;
+    public  String passwordHash;
+    public Boolean verified;
+    public List<Role> roles = new ArrayList<>();
+    public String lastLogin;
 }

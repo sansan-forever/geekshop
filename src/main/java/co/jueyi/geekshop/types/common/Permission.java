@@ -41,6 +41,11 @@ public enum Permission {
     UpdateOrder,
     DeleteOrder,
 
+    CreatePromotion,
+    ReadPromotion,
+    UpdatePromotion,
+    DeletePromotion,
+
     CreateSettings,
     ReadSettings,
     UpdateSettings,

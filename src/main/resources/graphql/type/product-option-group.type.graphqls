@@ -1,0 +1,18 @@
+type ProductOptionGroup implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    code: String!
+    name: String!
+    options: [ProductOption!]!
+}
+
+type ProductOption implements Node {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    code: String!
+    name: String!
+    groupId: ID!
+    group: ProductOptionGroup!
+}
