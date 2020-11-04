@@ -2,7 +2,10 @@ package co.jueyi.geekshop.types.customer;
 
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.common.Node;
+import co.jueyi.geekshop.types.history.HistoryEntryList;
+import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.order.OrderList;
+import co.jueyi.geekshop.types.order.OrderListOptions;
 import co.jueyi.geekshop.types.user.User;
 import lombok.Data;
 
@@ -25,5 +28,15 @@ public class Customer implements Node {
     public String emailAddress;
     public List<Address> addresses = new ArrayList<>();
     public OrderList orders;
+    public OrderList getOrders(OrderListOptions options) {
+        return null;
+        // TODO
+    }
     public User user;
+    public List<CustomerGroup> groups = new ArrayList<>(); // 该字段只有Admin可见
+    public HistoryEntryList history; // 该字段只有Admin可见
+
+    public HistoryEntryList getHistory(HistoryEntryListOptions options) {
+        return null; // TODO
+    }
 }

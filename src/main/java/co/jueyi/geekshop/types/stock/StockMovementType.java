@@ -7,5 +7,5 @@ public enum StockMovementType {
     ADJUSTMENT,
     SALE,
     CANCELLATION,
-    RETRUN
+    RETURN
 }

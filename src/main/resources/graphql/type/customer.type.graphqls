@@ -7,7 +7,7 @@ type Customer implements Node {
     lastName: String!
     phoneNumber: String
     emailAddress: String!
-    address: [Address!]
+    addresses: [Address!]
     orders(options: OrderListOptions): OrderList!
     user: User
     # 该字段对shop api不可见

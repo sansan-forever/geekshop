@@ -4,6 +4,7 @@ import co.jueyi.geekshop.types.common.Adjustment;
 import co.jueyi.geekshop.types.common.Node;
 import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.history.HistoryEntryList;
+import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.payment.Payment;
 import co.jueyi.geekshop.types.promotion.Promotion;
 import co.jueyi.geekshop.types.shipping.ShippingMethod;
@@ -54,4 +55,10 @@ public class Order implements Node {
     public ShippingMethod shippingMethod;
     public Integer total;
     public HistoryEntryList history;
+
+    public HistoryEntryList getHistory(HistoryEntryListOptions options) {
+        return null; // TODO
+    }
+
+    public List<String> nextStates = new ArrayList<>(); // 该字段仅Admin可见
 }

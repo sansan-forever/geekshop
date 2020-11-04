@@ -38,4 +38,7 @@ type HistoryEntryList implements PaginatedList {
     totalItems: Int!
 }
 
-input HistoryEntryListOptions
+input HistoryEntryListOptions {
+    currentPage: Int
+    pageSize: Int
+}

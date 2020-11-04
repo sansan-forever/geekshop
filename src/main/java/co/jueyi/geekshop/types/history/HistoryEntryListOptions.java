@@ -7,4 +7,6 @@ import lombok.Data;
  */
 @Data
 public class HistoryEntryListOptions {
+    public Integer currentPage;
+    public Integer pageSize;
 }

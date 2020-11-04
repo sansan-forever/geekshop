@@ -13,8 +13,8 @@ import java.util.List;
 @Data
 public class User {
     public Long id;
-    public Date createAt;
-    public Date updateAt;
+    public Date createdAt;
+    public Date updatedAt;
     public String identifier;
     public Boolean verified;
     public List<Role> roles = new ArrayList<>();
