@@ -10,14 +10,14 @@ import java.util.*;
  */
 @Data
 public class Payment implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String method;
-    public Integer amount;
-    public String state;
-    public String transactionId;
-    public String errorMessage;
-    public List<Refund> refunds = new ArrayList<>();
-    public Map<String, String> metadata = new HashMap<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String method;
+    private Integer amount;
+    private String state;
+    private String transactionId;
+    private String errorMessage;
+    private List<Refund> refunds = new ArrayList<>();
+    private Map<String, String> metadata = new HashMap<>();
 }

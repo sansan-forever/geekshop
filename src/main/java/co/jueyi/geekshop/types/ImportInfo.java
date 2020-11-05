@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class ImportInfo {
-    public List<String> errors = new ArrayList<>();
-    public Integer processed;
-    public Integer imported;
+    private List<String> errors = new ArrayList<>();
+    private Integer processed;
+    private Integer imported;
 }

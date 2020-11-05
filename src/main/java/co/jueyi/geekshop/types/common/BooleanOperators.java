@@ -7,5 +7,5 @@ import lombok.Data;
  */
 @Data
 public class BooleanOperators {
-    public Boolean eq;
+    private Boolean eq;
 }

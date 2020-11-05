@@ -12,10 +12,10 @@ import java.util.List;
  */
 @Data
 public class Fulfillment implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public List<OrderItem> orderItems = new ArrayList<>();
-    public String method;
-    public String trackingCode;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private List<OrderItem> orderItems = new ArrayList<>();
+    private String method;
+    private String trackingCode;
 }

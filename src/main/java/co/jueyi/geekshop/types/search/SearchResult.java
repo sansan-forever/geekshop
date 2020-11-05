@@ -10,28 +10,28 @@ import java.util.List;
  */
 @Data
 public class SearchResult {
-    public String sku;
-    public String slug;
-    public Long productId;
-    public String productName;
-    public SearchResultAsset productAsset;
-    public Long productVariantId;
-    public String productVariantName;
-    public SearchResultAsset productVariantAsset;
+    private String sku;
+    private String slug;
+    private Long productId;
+    private String productName;
+    private SearchResultAsset productAsset;
+    private Long productVariantId;
+    private String productVariantName;
+    private SearchResultAsset productVariantAsset;
     /**
      * price和priceRange二选一
      */
-    public SinglePrice price;
-    public PriceRange priceRange;
-    public String description;
-    public List<Long> facetIds = new ArrayList<>();
-    public List<Long> facetValueIds = new ArrayList<>();
+    private SinglePrice price;
+    private PriceRange priceRange;
+    private String description;
+    private List<Long> facetIds = new ArrayList<>();
+    private List<Long> facetValueIds = new ArrayList<>();
     /**
      * An array of ids of the Collections in which this result appears.
      */
-    public List<Long> collectionIds = new ArrayList<>();
+    private List<Long> collectionIds = new ArrayList<>();
     /**
      * A relevence score for the result. Differs between database implementations
      */
-    public Float score;
+    private Float score;
 }

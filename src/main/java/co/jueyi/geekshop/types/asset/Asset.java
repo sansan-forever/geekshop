@@ -10,16 +10,16 @@ import java.util.Date;
  */
 @Data
 public class Asset implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String name;
-    public AssetType type;
-    public Integer fileSize;
-    public String mimeType;
-    public Integer width;
-    public Integer height;
-    public String source;
-    public String preview;
-    public Coordinate focalPoint;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String name;
+    private AssetType type;
+    private Integer fileSize;
+    private String mimeType;
+    private Integer width;
+    private Integer height;
+    private String source;
+    private String preview;
+    private Coordinate focalPoint;
 }

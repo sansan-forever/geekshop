@@ -10,12 +10,12 @@ import java.util.List;
  */
 @Data
 public class SearchInput {
-    public String term;
-    public List<Long> facetValueIds = new ArrayList<>();
-    public LogicalOperator facetValueOperator;
-    public Long collectionId;
-    public String collectionSlug;
-    public Boolean groupByProduct;
-    public Integer currentPage;
-    public Integer pageSize;
+    private String term;
+    private List<Long> facetValueIds = new ArrayList<>();
+    private LogicalOperator facetValueOperator;
+    private Long collectionId;
+    private String collectionSlug;
+    private Boolean groupByProduct;
+    private Integer currentPage;
+    private Integer pageSize;
 }

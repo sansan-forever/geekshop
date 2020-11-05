@@ -1,6 +1,6 @@
 package co.jueyi.geekshop.custom.graphql;
 
-import co.jueyi.geekshop.exception.InvalidInputException;
+import co.jueyi.geekshop.exception.UserInputException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -50,11 +50,11 @@ public class GraphQLValidationAspect {
 
         if (violations.size() == 0) return joinPoint.proceed();
 
-        InvalidInputException invalidInputException = new InvalidInputException();
+        UserInputException userInputException = new UserInputException();
         violations.forEach(violation -> {
-            invalidInputException.getExtensions().put(violation.getPropertyPath().toString(), violation.getMessage());
+            userInputException.getExtensions().put(violation.getPropertyPath().toString(), violation.getMessage());
         });
-        throw invalidInputException;
+        throw userInputException;
     }
 
     @Pointcut("allGraphQLMutationResolverMethods() || allGraphQLQueryResolverMethods()")

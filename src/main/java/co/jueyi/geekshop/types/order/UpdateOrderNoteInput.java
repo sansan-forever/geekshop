@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class UpdateOrderNoteInput {
-    public Long id;
-    public String note;
-    public Boolean isPublic;
+    private Long id;
+    private String note;
+    private Boolean isPublic;
 }

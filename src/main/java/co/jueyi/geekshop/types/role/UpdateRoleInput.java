@@ -11,8 +11,8 @@ import java.util.List;
  */
 @Data
 public class UpdateRoleInput {
-    public Long id;
-    public String code;
-    public String description;
-    public List<Permission> permissions = new ArrayList<>();
+    private Long id;
+    private String code;
+    private String description;
+    private List<Permission> permissions = new ArrayList<>();
 }

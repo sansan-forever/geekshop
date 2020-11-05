@@ -1,5 +1,10 @@
 package co.jueyi.geekshop.config;
 
+import co.jueyi.geekshop.config.auth.AuthConfig;
+import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
+import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
+import co.jueyi.geekshop.config.session_cache.InMemorySessionCacheStrategy;
+import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.properties.ConfigOptions;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
@@ -10,6 +15,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -41,4 +48,20 @@ public class AppConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean
+    public AuthConfig authConfig() {
+        SessionCacheStrategy sessionCacheStrategy = new InMemorySessionCacheStrategy();
+        return new AuthConfig(
+                Arrays.asList(nativeAuthStrategy()),
+                Arrays.asList(nativeAuthStrategy()),
+                sessionCacheStrategy
+        );
+    }
+
+    @Bean
+    public AuthenticationStrategy nativeAuthStrategy() {
+        return new NativeAuthenticationStrategy();
+    }
+
 }

@@ -7,10 +7,10 @@ import lombok.Data;
  */
 @Data
 public class NumberOperators {
-    public Float eq;
-    public Float lt;
-    public Float lte;
-    public Float gt;
-    public Float gte;
-    public NumberRange between;
+    private Float eq;
+    private Float lt;
+    private Float lte;
+    private Float gt;
+    private Float gte;
+    private NumberRange between;
 }

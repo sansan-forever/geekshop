@@ -11,18 +11,18 @@ import java.util.*;
  */
 @Data
 public class Refund implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Integer items;
-    public Integer shipping;
-    public Integer adjustment;
-    public Integer total;
-    public String method;
-    public String state;
-    public String transactionId;
-    public String reason;
-    public List<OrderItem> orderItems = new ArrayList<>();
-    public Long paymentId;
-    public Map<String, String> metadata = new HashMap<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Integer items;
+    private Integer shipping;
+    private Integer adjustment;
+    private Integer total;
+    private String method;
+    private String state;
+    private String transactionId;
+    private String reason;
+    private List<OrderItem> orderItems = new ArrayList<>();
+    private Long paymentId;
+    private Map<String, String> metadata = new HashMap<>();
 }

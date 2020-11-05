@@ -14,5 +14,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class CustomerGroupEntity extends BaseEntity {
-    public String name;
+    private String name;
 }

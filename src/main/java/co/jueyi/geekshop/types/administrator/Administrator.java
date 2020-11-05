@@ -11,11 +11,11 @@ import java.util.Date;
  */
 @Data
 public class Administrator implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String firstName;
-    public String lastName;
-    public String emailAddress;
-    public User user;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String firstName;
+    private String lastName;
+    private String emailAddress;
+    private User user;
 }

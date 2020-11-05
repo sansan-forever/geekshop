@@ -12,11 +12,11 @@ import java.util.Date;
  */
 @Data
 public class Sale implements Node, StockMovement {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public ProductVariant productVariant;
-    public StockMovementType type;
-    public Integer quantity;
-    public OrderLine orderLine;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private ProductVariant productVariant;
+    private StockMovementType type;
+    private Integer quantity;
+    private OrderLine orderLine;
 }

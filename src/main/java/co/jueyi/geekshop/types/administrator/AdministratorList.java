@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class AdministratorList implements PaginatedList<Administrator> {
-    public List<Administrator> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Administrator> items = new ArrayList<>();
+    private Integer totalItems;
 }

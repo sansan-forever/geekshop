@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class StockMovementList implements PaginatedList<StockMovement> {
-    public List<StockMovement> items;
-    public Integer totalItems;
+    private List<StockMovement> items;
+    private Integer totalItems;
 }

@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class SearchResultSortParameter {
-    public SortOrder name;
-    public SortOrder price;
+    private SortOrder name;
+    private SortOrder price;
 }

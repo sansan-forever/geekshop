@@ -7,14 +7,14 @@ import lombok.Data;
  */
 @Data
 public class UpdateAddressInput {
-    public Long id;
-    public String fullName;
-    public String streetLine1;
-    public String streetLine2;
-    public String city;
-    public String province;
-    public String postalCode;
-    public String phoneNumber;
-    public Boolean defaultShippingAddress;
-    public Boolean defaultBillingAddress;
+    private Long id;
+    private String fullName;
+    private String streetLine1;
+    private String streetLine2;
+    private String city;
+    private String province;
+    private String postalCode;
+    private String phoneNumber;
+    private Boolean defaultShippingAddress;
+    private Boolean defaultBillingAddress;
 }

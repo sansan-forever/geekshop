@@ -7,10 +7,10 @@ import lombok.Data;
  */
 @Data
 public class UpdateCustomerInput {
-    public Long id;
-    public String title;
-    public String firstName;
-    public String lastName;
-    public String phoneNumber;
-    public String emailAddress;
+    private Long id;
+    private String title;
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String emailAddress;
 }

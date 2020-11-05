@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class ConfigurableOperation {
-    public String code;
-    public List<ConfigArg> args = new ArrayList<>();
+    private String code;
+    private List<ConfigArg> args = new ArrayList<>();
 }

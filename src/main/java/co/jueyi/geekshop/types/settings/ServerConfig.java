@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class ServerConfig {
-    public List<OrderProcessState> orderProcess = new ArrayList<>();
-    public List<String> permittedAssetTypes = new ArrayList<>();
+    private List<OrderProcessState> orderProcess = new ArrayList<>();
+    private List<String> permittedAssetTypes = new ArrayList<>();
 }

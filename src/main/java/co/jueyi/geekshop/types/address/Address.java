@@ -10,17 +10,17 @@ import java.util.Date;
  */
 @Data
 public class Address implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String fullName;
-    public String company;
-    public String streetLine1;
-    public String streetLine2;
-    public String city;
-    public String province;
-    public String postalCode;
-    public String phoneNumber;
-    public Boolean defaultShippingAddress;
-    public Boolean defaultBillingAddress;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String fullName;
+    private String company;
+    private String streetLine1;
+    private String streetLine2;
+    private String city;
+    private String province;
+    private String postalCode;
+    private String phoneNumber;
+    private Boolean defaultShippingAddress;
+    private Boolean defaultBillingAddress;
 }

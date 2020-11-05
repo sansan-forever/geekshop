@@ -17,8 +17,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class UserEntity extends BaseEntity {
-    public Date deletedAt;
-    public String identifier;
-    public boolean verified;
-    public Date lastLogin;
+    private Date deletedAt;
+    private String identifier;
+    private boolean verified;
+    private Date lastLogin;
 }

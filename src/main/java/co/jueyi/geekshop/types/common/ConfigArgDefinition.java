@@ -10,10 +10,10 @@ import java.util.Map;
  */
 @Data
 public class ConfigArgDefinition {
-    public String name;
-    public String type;
-    public Boolean list;
-    public String label;
-    public String description;
-    public Map<String, String> ui = new HashMap<>();
+    private String name;
+    private String type;
+    private Boolean list;
+    private String label;
+    private String description;
+    private Map<String, String> ui = new HashMap<>();
 }

@@ -16,31 +16,31 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AuthenticationMethodEntity extends BaseEntity {
-    public Long userId;
+    private Long userId;
 
-    public boolean external; // external or native
+    private boolean external; // external or native
 
     // begin for native auth
-    public String identifier;
-    public String passwordHash;
-    public String verificationToken;
-    public String passwordRestToken;
+    private String identifier;
+    private String passwordHash;
+    private String verificationToken;
+    private String passwordRestToken;
     /**
      * A token issued when a User requests to change their identifer (typically an email address)
      */
-    public String identifierChangeToken;
+    private String identifierChangeToken;
     /**
      * When a request has been made to change the User's identifier, the new identifier
      * will be stored here until it has been verified, after which it will replace
      * the current value of the `identifier` field.
      */
-    public String pendingIdentifier;
+    private String pendingIdentifier;
     // end for native auth
 
     // begin for external auth
-    public String strategy;
-    public String externalIdentifier;
+    private String strategy;
+    private String externalIdentifier;
     @TableField(typeHandler = JacksonTypeHandler.class)
-    public Map<String, String> metadata = new HashMap<>();
+    private Map<String, String> metadata = new HashMap<>();
     // end for external auth
 }

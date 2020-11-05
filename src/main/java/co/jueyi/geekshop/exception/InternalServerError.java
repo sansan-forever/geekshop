@@ -4,7 +4,7 @@ import graphql.ErrorClassification;
 import graphql.ErrorType;
 
 /**
- * 内部服务器处理异常
+ * This exception should be thrown when some unexpected and exceptional case is encountered.
  *
  * Created on Nov, 2020 by @author bobo
  */
@@ -13,12 +13,8 @@ public class InternalServerError extends AbstractGraphqlException {
         super(ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    public InternalServerError(ErrorCode errorCode) {
-        super(errorCode);
-    }
-
-    public InternalServerError(ErrorCode errorCode, String message) {
-        super(message, errorCode);
+    public InternalServerError(String message) {
+        super(message, ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     @Override

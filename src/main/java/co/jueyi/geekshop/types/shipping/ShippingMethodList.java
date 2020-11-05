@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class ShippingMethodList implements PaginatedList<ShippingMethod> {
-    public List<ShippingMethod> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<ShippingMethod> items = new ArrayList<>();
+    private Integer totalItems;
 }

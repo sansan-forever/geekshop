@@ -7,5 +7,5 @@ import lombok.Data;
  */
 @Data
 public class LoginResult {
-    public CurrentUser user;
+    private CurrentUser user;
 }

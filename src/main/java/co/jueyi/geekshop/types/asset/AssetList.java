@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class AssetList implements PaginatedList<Asset> {
-    public List<Asset> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Asset> items = new ArrayList<>();
+    private Integer totalItems;
 }

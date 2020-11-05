@@ -11,7 +11,7 @@ import java.util.List;
  */
 @Data
 public class CurrentUser {
-    public Long id;
-    public String identifier;
-    public List<Permission> permissions = new ArrayList<>();
+    private Long id;
+    private String identifier;
+    private List<Permission> permissions = new ArrayList<>();
 }

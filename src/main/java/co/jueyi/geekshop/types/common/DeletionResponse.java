@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class DeletionResponse {
-    public DeletionResult result;
-    public String message;
+    private DeletionResult result;
+    private String message;
 }

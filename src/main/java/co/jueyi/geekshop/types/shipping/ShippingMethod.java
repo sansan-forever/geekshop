@@ -11,11 +11,11 @@ import java.util.Date;
  */
 @Data
 public class ShippingMethod implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String code;
-    public String description;
-    public ConfigurableOperation checker;
-    public ConfigurableOperation calculator;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String code;
+    private String description;
+    private ConfigurableOperation checker;
+    private ConfigurableOperation calculator;
 }

@@ -17,10 +17,10 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class CustomerEntity extends BaseEntity {
-    public Date deletedAt;
-    public String firstName;
-    public String lastName;
-    public String phoneNumber;
-    public String emailAddress;
-    public Long userId;
+    private Date deletedAt;
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String emailAddress;
+    private Long userId;
 }

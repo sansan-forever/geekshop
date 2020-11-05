@@ -10,11 +10,11 @@ import java.util.Date;
  */
 @Data
 public class ProductOption implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String code;
-    public String name;
-    public Long groupId;
-    public ProductOptionGroup group;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String code;
+    private String name;
+    private Long groupId;
+    private ProductOptionGroup group;
 }

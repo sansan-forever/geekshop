@@ -18,13 +18,13 @@ import java.util.Date;
 @Setter
 public class BaseEntity {
     @TableId(value = "id", type = IdType.AUTO)
-    public Long id;
+    private Long id;
     @TableField(fill = FieldFill.INSERT)
-    public String createdBy;
+    private String createdBy;
     @TableField(fill = FieldFill.INSERT)
-    public Date createdAt;
+    private Date createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    public Date updatedBy;
+    private Date updatedBy;
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    public Date updatedAt;
+    private Date updatedAt;
 }

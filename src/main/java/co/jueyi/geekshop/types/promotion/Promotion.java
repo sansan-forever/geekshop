@@ -13,15 +13,15 @@ import java.util.List;
  */
 @Data
 public class Promotion implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Date startsAt;
-    public Date endsAt;
-    public String couponCode;
-    public Integer perCustomerUsageLimit;
-    public String name;
-    public Boolean enabled;
-    public List<ConfigurableOperation> conditions = new ArrayList<>();
-    public List<ConfigurableOperation> actions = new ArrayList<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Date startsAt;
+    private Date endsAt;
+    private String couponCode;
+    private Integer perCustomerUsageLimit;
+    private String name;
+    private Boolean enabled;
+    private List<ConfigurableOperation> conditions = new ArrayList<>();
+    private List<ConfigurableOperation> actions = new ArrayList<>();
 }

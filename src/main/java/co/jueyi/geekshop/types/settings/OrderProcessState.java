@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class OrderProcessState {
-    public String name;
-    public List<String> to = new ArrayList<>();
+    private String name;
+    private List<String> to = new ArrayList<>();
 }

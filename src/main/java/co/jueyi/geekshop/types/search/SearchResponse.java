@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class SearchResponse {
-    public List<SearchResult> items = new ArrayList<>();
-    public Integer totalItems;
-    public List<FacetValueResult> facetValues = new ArrayList<>();
+    private List<SearchResult> items = new ArrayList<>();
+    private Integer totalItems;
+    private List<FacetValueResult> facetValues = new ArrayList<>();
 }

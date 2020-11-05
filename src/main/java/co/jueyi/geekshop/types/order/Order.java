@@ -19,46 +19,46 @@ import java.util.List;
  */
 @Data
 public class Order implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
     /**
      * A unique code for the Order
      */
-    public String code;
-    public String state;
+    private String code;
+    private String state;
     /**
      * An order is active as long as the payment process has not been completed
      */
-    public Boolean active;
-    public Customer customer;
-    public OrderAddress shippingAddress;
-    public OrderAddress billingAddress;
-    public List<OrderLine> lines = new ArrayList<>();
+    private Boolean active;
+    private Customer customer;
+    private OrderAddress shippingAddress;
+    private OrderAddress billingAddress;
+    private List<OrderLine> lines = new ArrayList<>();
     /**
      * Order-level adjustments to the order total, such as discounts from promotions
      */
-    public List<Adjustment> adjustments = new ArrayList<>();
-    public List<String> couponCodes = new ArrayList<>();
+    private List<Adjustment> adjustments = new ArrayList<>();
+    private List<String> couponCodes = new ArrayList<>();
     /**
      * Promotions applied to the order. Only gets populated after the payment process has completed.
      */
-    public List<Promotion> promotions = new ArrayList<>();
-    public List<Payment> payments = new ArrayList<>();
-    public List<Fulfillment> fulfillments = new ArrayList<>();
-    public Integer totalQuantity;
+    private List<Promotion> promotions = new ArrayList<>();
+    private List<Payment> payments = new ArrayList<>();
+    private List<Fulfillment> fulfillments = new ArrayList<>();
+    private Integer totalQuantity;
     /**
      * The subTotal is the total of the OrderLines, before order-level promotions and shipping has been applied.
      */
-    public Integer subTotal;
-    public Integer shipping;
-    public ShippingMethod shippingMethod;
-    public Integer total;
-    public HistoryEntryList history;
+    private Integer subTotal;
+    private Integer shipping;
+    private ShippingMethod shippingMethod;
+    private Integer total;
+    private HistoryEntryList history;
 
     public HistoryEntryList getHistory(HistoryEntryListOptions options) {
         return null; // TODO
     }
 
-    public List<String> nextStates = new ArrayList<>(); // 该字段仅Admin可见
+    private List<String> nextStates = new ArrayList<>(); // 该字段仅Admin可见
 }

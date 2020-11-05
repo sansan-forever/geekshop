@@ -14,16 +14,16 @@ import java.util.List;
  */
 @Data
 public class ProductVariant implements Node {
-    public Long id;
-    public Product product;
-    public Long productId;
-    public Date createdAt;
-    public Date updatedAt;
-    public String sku;
-    public String name;
-    public Asset featuredAsset;
-    public List<Asset> assets = new ArrayList<>();
-    public Integer price;
-    public List<ProductOption> options = new ArrayList<>();
-    public List<FacetValue> facetValues = new ArrayList<>();
+    private Long id;
+    private Product product;
+    private Long productId;
+    private Date createdAt;
+    private Date updatedAt;
+    private String sku;
+    private String name;
+    private Asset featuredAsset;
+    private List<Asset> assets = new ArrayList<>();
+    private Integer price;
+    private List<ProductOption> options = new ArrayList<>();
+    private List<FacetValue> facetValues = new ArrayList<>();
 }

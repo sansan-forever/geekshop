@@ -10,10 +10,10 @@ import java.util.Date;
  */
 @Data
 public class FacetValue implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Facet facet;
-    public String name;
-    public String code;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Facet facet;
+    private String name;
+    private String code;
 }

@@ -18,23 +18,23 @@ import java.util.List;
  */
 @Data
 public class Customer implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String title;
-    public String firstName;
-    public String lastName;
-    public String phoneNumber;
-    public String emailAddress;
-    public List<Address> addresses = new ArrayList<>();
-    public OrderList orders;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String title;
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String emailAddress;
+    private List<Address> addresses = new ArrayList<>();
+    private OrderList orders;
     public OrderList getOrders(OrderListOptions options) {
         return null;
         // TODO
     }
-    public User user;
-    public List<CustomerGroup> groups = new ArrayList<>(); // 该字段只有Admin可见
-    public HistoryEntryList history; // 该字段只有Admin可见
+    private User user;
+    private List<CustomerGroup> groups = new ArrayList<>(); // 该字段只有Admin可见
+    private HistoryEntryList history; // 该字段只有Admin可见
 
     public HistoryEntryList getHistory(HistoryEntryListOptions options) {
         return null; // TODO

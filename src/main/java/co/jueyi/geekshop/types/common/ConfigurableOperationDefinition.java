@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class ConfigurableOperationDefinition {
-    public String code;
-    public List<ConfigArgDefinition> args = new ArrayList<>();
-    public String description;
+    private String code;
+    private List<ConfigArgDefinition> args = new ArrayList<>();
+    private String description;
 }

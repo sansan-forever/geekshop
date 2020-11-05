@@ -13,10 +13,10 @@ public class CancelOrderInput {
     /**
      * The id of the order to be cancelled
      */
-    public Long orderId;
+    private Long orderId;
     /**
      * Optionally specify which OrderLines to cancel. If not provided, all OrderLines will be cancelled.
      */
-    public List<OrderLineInput> lines = new ArrayList<>();
-    public String reason;
+    private List<OrderLineInput> lines = new ArrayList<>();
+    private String reason;
 }

@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class ConfigArg {
-    public String name;
-    public String value;
+    private String name;
+    private String value;
 }

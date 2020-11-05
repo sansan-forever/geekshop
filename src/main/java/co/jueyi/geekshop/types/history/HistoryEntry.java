@@ -13,11 +13,11 @@ import java.util.Map;
  */
 @Data
 public class HistoryEntry implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Boolean isPublic;
-    public HistoryEntryType type;
-    public Administrator administrator;
-    public Map<String, String> data = new HashMap<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Boolean isprivate;
+    private HistoryEntryType type;
+    private Administrator administrator;
+    private Map<String, String> data = new HashMap<>();
 }

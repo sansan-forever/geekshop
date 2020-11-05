@@ -13,12 +13,12 @@ import java.util.List;
  */
 @Data
 public class OrderItem implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Boolean cancelled;
-    public Integer unitPrice;
-    public List<Adjustment> adjustments = new ArrayList<>();
-    public Fulfillment fulfillment;
-    public Long refundId;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Boolean cancelled;
+    private Integer unitPrice;
+    private List<Adjustment> adjustments = new ArrayList<>();
+    private Fulfillment fulfillment;
+    private Long refundId;
 }

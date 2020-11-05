@@ -15,16 +15,16 @@ import java.util.List;
  */
 @Data
 public class Product implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String name;
-    public String slug;
-    public String description;
-    public Asset featuredAsset;
-    public List<Asset> assets = new ArrayList<>();
-    public List<ProductVariant> variants = new ArrayList<>();
-    public List<ProductOptionGroup> optionGroups = new ArrayList<>();
-    public List<FacetValue> facetValues = new ArrayList<>();
-    public List<Collection> collections = new ArrayList<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String name;
+    private String slug;
+    private String description;
+    private Asset featuredAsset;
+    private List<Asset> assets = new ArrayList<>();
+    private List<ProductVariant> variants = new ArrayList<>();
+    private List<ProductOptionGroup> optionGroups = new ArrayList<>();
+    private List<FacetValue> facetValues = new ArrayList<>();
+    private List<Collection> collections = new ArrayList<>();
 }

@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class UpdateCustomerNoteInput {
-    public Long noteId;
-    public String note;
+    private Long noteId;
+    private String note;
 }

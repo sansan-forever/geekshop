@@ -10,8 +10,8 @@ import java.util.Map;
  */
 @Data
 public class ShippingMethodQuote {
-    public Long id;
-    public Integer price;
-    public String description;
-    public Map<String, String> metadata = new HashMap<>();
+    private Long id;
+    private Integer price;
+    private String description;
+    private Map<String, String> metadata = new HashMap<>();
 }

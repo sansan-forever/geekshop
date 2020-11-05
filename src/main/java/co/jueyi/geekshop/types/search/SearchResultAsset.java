@@ -8,7 +8,7 @@ import lombok.Data;
  */
 @Data
 public class SearchResultAsset {
-    public Long id;
-    public String review;
-    public Coordinate focalPoint;
+    private Long id;
+    private String review;
+    private Coordinate focalPoint;
 }

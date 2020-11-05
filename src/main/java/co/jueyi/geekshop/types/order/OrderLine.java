@@ -15,15 +15,15 @@ import java.util.List;
  */
 @Data
 public class OrderLine implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public ProductVariant productVariant;
-    public Asset featuredAsset;
-    public Integer unitPrice;
-    public Integer quantity;
-    public List<OrderItem> items = new ArrayList<>();
-    public Integer totalPrice;
-    public List<Adjustment> adjustments = new ArrayList<>();
-    public Order order;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private ProductVariant productVariant;
+    private Asset featuredAsset;
+    private Integer unitPrice;
+    private Integer quantity;
+    private List<OrderItem> items = new ArrayList<>();
+    private Integer totalPrice;
+    private List<Adjustment> adjustments = new ArrayList<>();
+    private Order order;
 }

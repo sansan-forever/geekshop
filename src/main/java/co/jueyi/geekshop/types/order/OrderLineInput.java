@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class OrderLineInput {
-    public Long orderLineId;
-    public Integer quantity;
+    private Long orderLineId;
+    private Integer quantity;
 }

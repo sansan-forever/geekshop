@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class HistoryEntryList implements PaginatedList<HistoryEntry> {
-    public List<HistoryEntry> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<HistoryEntry> items = new ArrayList<>();
+    private Integer totalItems;
 }

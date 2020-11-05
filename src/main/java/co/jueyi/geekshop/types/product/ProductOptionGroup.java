@@ -11,10 +11,10 @@ import java.util.List;
  */
 @Data
 public class ProductOptionGroup implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String code;
-    public String name;
-    public List<ProductOption> options;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String code;
+    private String name;
+    private List<ProductOption> options;
 }

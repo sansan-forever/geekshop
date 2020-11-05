@@ -10,9 +10,9 @@ import java.util.List;
  */
 @Data
 public class RefundOrderInput {
-    public List<OrderLineInput> lines = new ArrayList<>();
-    public Integer shipping;
-    public Integer adjustment;
-    public Long paymentId;
-    public String reason;
+    private List<OrderLineInput> lines = new ArrayList<>();
+    private Integer shipping;
+    private Integer adjustment;
+    private Long paymentId;
+    private String reason;
 }

@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class ConfigurableOperationInput {
-    public String code;
-    public List<ConfigArgInput> arguments = new ArrayList<>();
+    private String code;
+    private List<ConfigArgInput> arguments = new ArrayList<>();
 }

@@ -17,20 +17,20 @@ import java.util.List;
  */
 @Data
 public class Collection implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String name;
-    public String slug;
-    public List<CollectionBreadcrumb> breadcrumbs = new ArrayList<>();
-    public Integer position;
-    public String description;
-    public Asset featuredAsset;
-    public List<Asset> assets = new ArrayList<>();
-    public Collection parent;
-    public List<Collection> children = new ArrayList<>();
-    public List<ConfigurableOperation> filters = new ArrayList<>();
-    public ProductVariantList productVariants;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String name;
+    private String slug;
+    private List<CollectionBreadcrumb> breadcrumbs = new ArrayList<>();
+    private Integer position;
+    private String description;
+    private Asset featuredAsset;
+    private List<Asset> assets = new ArrayList<>();
+    private Collection parent;
+    private List<Collection> children = new ArrayList<>();
+    private List<ConfigurableOperation> filters = new ArrayList<>();
+    private ProductVariantList productVariants;
 
     public ProductVariantList getProductVariants(ProductVariantListOptions options) {
         return null; // TODO

@@ -16,17 +16,18 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SessionEntity extends BaseEntity {
-    public String token;
-    public Date expires;
-    public boolean invalided;
-    public boolean anonymous;
+    private String token;
+    private Date expires;
+    private boolean invalided;
+    private boolean anonymous;
     /**
      * The {@link co.jueyi.geekshop.types.user.User} who has authenticated to create this session.
      */
-    public Long userId;
-    public Long activeOrderId;
+    private Long userId;
+    private Long activeOrderId;
     /**
-     * The name of the {@link AuthenticationStrategyEntity} used when authenticating to create this session.
+     * The name of the {@link co.jueyi.geekshop.config.auth.AuthenticationStrategy} used when
+     * authenticating to create this session.
      */
-    public String authenticationStrategy;
+    private String authenticationStrategy;
 }

@@ -9,9 +9,9 @@ import java.util.Date;
  */
 @Data
 public class GlobalSettings {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public Boolean trackInventory;
-    public ServerConfig serverConfig;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private Boolean trackInventory;
+    private ServerConfig serverConfig;
 }

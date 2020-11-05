@@ -20,8 +20,8 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class RoleEntity extends BaseEntity {
-    public String code = "";
-    public String description = "";
+    private String code = "";
+    private String description = "";
     @TableField(typeHandler = JacksonTypeHandler.class)
-    public List<Permission> permissions = new ArrayList<>();
+    private List<Permission> permissions = new ArrayList<>();
 }

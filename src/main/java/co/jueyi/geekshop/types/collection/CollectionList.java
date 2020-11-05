@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class CollectionList implements PaginatedList<Collection> {
-    public List<Collection> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Collection> items = new ArrayList<>();
+    private Integer totalItems;
 }

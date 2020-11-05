@@ -14,11 +14,11 @@ import java.util.List;
  */
 @Data
 public class PaymentMethod implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String code;
-    public Boolean enabled;
-    public List<ConfigArg> configArgs = new ArrayList<>();
-    public ConfigurableOperationDefinition definition;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String code;
+    private Boolean enabled;
+    private List<ConfigArg> configArgs = new ArrayList<>();
+    private ConfigurableOperationDefinition definition;
 }

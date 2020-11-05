@@ -39,6 +39,8 @@ create table tb_auth_method (
     primary key (id)
 );
 
+create index idx_auth_method_user_id on tb_auth_method(user_id);
+
 create table tb_role (
     id bigint not null auto_increment,
     code varchar(50) not null,
@@ -55,6 +57,10 @@ create table tb_user_role_join (
      id bigint not null auto_increment,
      user_id bigint not null ,
      role_id bigint not null ,
+     created_by varchar(30),
+     created_at datetime,
+     updated_by varchar(30),
+     updated_at datetime,
      primary key (id),
      unique key (user_id, role_id),
      foreign key (role_id) references tb_role(id),
@@ -115,6 +121,10 @@ create table tb_customer_group_join (
      id bigint not null auto_increment,
      customer_id bigint not null,
      group_id bigint not null,
+     created_by varchar(30),
+     created_at datetime,
+     updated_by varchar(30),
+     updated_at datetime,
      primary key (id),
      unique key (customer_id, group_id),
      foreign key (customer_id) references tb_customer(id),

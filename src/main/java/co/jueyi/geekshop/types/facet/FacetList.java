@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class FacetList implements PaginatedList<Facet> {
-    public List<Facet> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Facet> items = new ArrayList<>();
+    private Integer totalItems;
 }

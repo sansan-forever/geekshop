@@ -11,6 +11,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class CustomerGroupJoinEntity extends BaseEntity {
-    public Long customerId;
-    public Long groupId;
+    private Long customerId;
+    private Long groupId;
 }

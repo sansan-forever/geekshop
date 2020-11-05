@@ -9,5 +9,5 @@ import lombok.Data;
  */
 @Data
 public class SinglePrice {
-    public Integer value;
+    private Integer value;
 }

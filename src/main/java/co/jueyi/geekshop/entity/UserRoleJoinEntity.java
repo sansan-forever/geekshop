@@ -11,6 +11,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class UserRoleJoinEntity extends BaseEntity {
-    public Long userId;
-    public Long roleId;
+    private Long userId;
+    private Long roleId;
 }

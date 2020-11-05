@@ -10,8 +10,8 @@ import java.util.Date;
  */
 @Data
 public class AuthenticationMethod implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String strategy;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String strategy;
 }

@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class AddNoteToCustomerInput {
-    public Long id;
-    public String node;
-    public Boolean isPublic;
+    private Long id;
+    private String node;
+    private Boolean isPublic;
 }

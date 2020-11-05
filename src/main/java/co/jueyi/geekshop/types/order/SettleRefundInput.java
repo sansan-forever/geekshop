@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class SettleRefundInput {
-    public Long id;
-    public String transactionId;
+    private Long id;
+    private String transactionId;
 }

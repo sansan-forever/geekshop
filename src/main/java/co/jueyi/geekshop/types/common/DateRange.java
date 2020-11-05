@@ -9,6 +9,6 @@ import java.util.Date;
  */
 @Data
 public class DateRange {
-    public Date start;
-    public Date end;
+    private Date start;
+    private Date end;
 }

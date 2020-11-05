@@ -12,10 +12,10 @@ import java.util.List;
  */
 @Data
 public class Facet implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String name;
-    public String code;
-    public List<FacetValue> values = new ArrayList<>();
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String name;
+    private String code;
+    private List<FacetValue> values = new ArrayList<>();
 }

@@ -7,8 +7,8 @@ import lombok.Data;
  */
 @Data
 public class Adjustment {
-    public String adjustmentSource;
-    public AdjustmentType type;
-    public String description;
-    public Integer amount;
+    private String adjustmentSource;
+    private AdjustmentType type;
+    private String description;
+    private Integer amount;
 }

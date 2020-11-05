@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class CollectionBreadcrumb {
-    public Long id;
-    public String name;
-    public String slug;
+    private Long id;
+    private String name;
+    private String slug;
 }

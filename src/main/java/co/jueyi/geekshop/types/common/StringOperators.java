@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class StringOperators {
-    public String eq;
-    public String contains;
+    private String eq;
+    private String contains;
 }

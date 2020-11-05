@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class NumberRange {
-    public Float start;
-    public Float end;
+    private Float start;
+    private Float end;
 }

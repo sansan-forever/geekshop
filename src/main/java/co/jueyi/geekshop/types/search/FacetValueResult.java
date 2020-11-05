@@ -11,6 +11,6 @@ import lombok.Data;
  */
 @Data
 public class FacetValueResult {
-    public FacetValue facetValue;
-    public Integer count;
+    private FacetValue facetValue;
+    private Integer count;
 }

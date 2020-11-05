@@ -10,13 +10,13 @@ import java.util.Date;
  */
 @Data
 public class CustomerGroup implements Node {
-    public Long id;
-    public Date createdAt;
-    public Date updatedAt;
-    public String name;
-    public CustomerList customers;
+    private Long id;
+    private Date createdAt;
+    private Date updatedAt;
+    private String name;
+    private CustomerList customers;
 
-    public CustomerList getCustomers(CustomerListOptions options) {
+    private CustomerList getCustomers(CustomerListOptions options) {
         return null; // TODO
     }
 }

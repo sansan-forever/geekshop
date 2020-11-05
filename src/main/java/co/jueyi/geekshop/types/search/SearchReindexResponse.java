@@ -7,5 +7,5 @@ import lombok.Data;
  */
 @Data
 public class SearchReindexResponse {
-    public Boolean success;
+    private Boolean success;
 }

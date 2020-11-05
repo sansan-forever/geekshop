@@ -7,12 +7,12 @@ import lombok.Data;
  */
 @Data
 public class OrderAddress {
-    public String fullName;
-    public String company;
-    public String streetLine1;
-    public String streetLine2;
-    public String city;
-    public String province;
-    public String postalCode;
-    public String phoneNumber;
+    private String fullName;
+    private String company;
+    private String streetLine1;
+    private String streetLine2;
+    private String city;
+    private String province;
+    private String postalCode;
+    private String phoneNumber;
 }

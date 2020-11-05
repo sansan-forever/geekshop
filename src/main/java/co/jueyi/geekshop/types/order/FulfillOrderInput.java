@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class FulfillOrderInput {
-    public List<OrderLineInput> lines = new ArrayList<>();
-    public String method;
-    public String trackingCode;
+    private List<OrderLineInput> lines = new ArrayList<>();
+    private String method;
+    private String trackingCode;
 }

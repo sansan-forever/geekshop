@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class OrderList implements PaginatedList<Order> {
-    public List<Order> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Order> items = new ArrayList<>();
+    private Integer totalItems;
 }

@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class UpdateOrderInput {
-    public Long id;
+    private Long id;
     // TODO more fields
 }

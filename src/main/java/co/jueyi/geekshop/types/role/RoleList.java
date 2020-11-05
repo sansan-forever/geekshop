@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class RoleList implements PaginatedList<Role> {
-    public List<Role> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Role> items = new ArrayList<>();
+    private Integer totalItems;
 }

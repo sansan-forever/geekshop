@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class PromotionList implements PaginatedList<Promotion> {
-    public List<Promotion> items = new ArrayList<>();
-    public Integer totalItems;
+    private List<Promotion> items = new ArrayList<>();
+    private Integer totalItems;
 }
