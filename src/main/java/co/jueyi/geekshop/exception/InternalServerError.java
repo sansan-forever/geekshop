@@ -13,6 +13,10 @@ public class InternalServerError extends AbstractGraphqlException {
         super(ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
+    public InternalServerError(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
     public InternalServerError(String message) {
         super(message, ErrorCode.INTERNAL_SERVER_ERROR);
     }

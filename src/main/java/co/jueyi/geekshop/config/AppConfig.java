@@ -5,7 +5,7 @@ import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
 import co.jueyi.geekshop.config.session_cache.InMemorySessionCacheStrategy;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
-import co.jueyi.geekshop.properties.ConfigOptions;
+import co.jueyi.geekshop.options.ConfigOptions;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Executor;
 
 /**

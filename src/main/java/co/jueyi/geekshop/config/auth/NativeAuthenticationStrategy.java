@@ -3,19 +3,15 @@ package co.jueyi.geekshop.config.auth;
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.entity.AuthenticationMethodEntity;
-import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.UnauthorizedException;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.AuthenticationMethodEntityMapper;
-import co.jueyi.geekshop.mapper.UserEntityMapper;
+import co.jueyi.geekshop.service.UserService;
 import co.jueyi.geekshop.types.user.User;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,14 +24,14 @@ import java.util.Map;
 public class NativeAuthenticationStrategy implements AuthenticationStrategy<NativeAuthenticationData> {
 
     @Autowired
-    private UserEntityMapper userEntityMapper;
+    private UserService userService;
     @Autowired
     private AuthenticationMethodEntityMapper authenticationMethodEntityMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    static String KEY_USERNAME = "username";
-    static String KEY_PASSWORD = "password";
+    public static final String KEY_USERNAME = "username";
+    public static final String KEY_PASSWORD = "password";
 
     @Override
     public String getName() {
@@ -72,7 +68,7 @@ public class NativeAuthenticationStrategy implements AuthenticationStrategy<Nati
     }
 
     private User getUserFromIdentifier(String identifier) {
-        User user = this.userEntityMapper.findUserWithRoleByIdentifier(identifier);
+        User user = this.userService.findUserWithRoleByIdentifier(identifier);
         if (user == null) {
             throw new UnauthorizedException();
         }
@@ -82,20 +78,9 @@ public class NativeAuthenticationStrategy implements AuthenticationStrategy<Nati
     /**
      * Verify the provided password against the one we have for the given user.
      */
-    boolean verifyUserPassword(Long userId, String password) {
-        QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AuthenticationMethodEntity::getUserId, userId);
-        List<AuthenticationMethodEntity> authMethods =
-                this.authenticationMethodEntityMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(authMethods)) {
-            throw new InternalServerError("User's native authentication methods not loaded");
-        }
+    public boolean verifyUserPassword(Long userId, String password) {
         AuthenticationMethodEntity nativeAuthMethod =
-                authMethods.stream().filter(m -> !m.isExternal())
-                .findFirst().orElse(null);
-        if (nativeAuthMethod == null) {
-            throw new InternalServerError("User's native authentication method not found");
-        }
+                this.userService.getNativeAuthMethodEntityByUserId(userId);
 
         boolean passwordMatches = this.passwordEncoder.matches(password, nativeAuthMethod.getPasswordHash());
 

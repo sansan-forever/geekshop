@@ -12,8 +12,6 @@ extend type Mutation {
     deleteRole(id: ID!): DeletionResponse!
 }
 
-input RoleListOptions
-
 input CreateRoleInput {
     code: String!
     description: String!
@@ -25,4 +23,26 @@ input UpdateRoleInput {
     code: String
     description: String
     permissions: [Permission!]
+}
+
+input RoleListOptions {
+    currentPage: Int
+    pageSize: Int
+    sort: RoleSortParameter
+    filter: RoleFilterParameter
+}
+
+input RoleSortParameter {
+    id: SortOrder
+    createdAt: SortOrder
+    updatedAt: SortOrder
+    code: SortOrder
+    description: SortOrder
+}
+
+input RoleFilterParameter {
+    code: StringOperators
+    description: StringOperators
+    createdAt: DateOperators
+    updatedAt: DateOperators
 }

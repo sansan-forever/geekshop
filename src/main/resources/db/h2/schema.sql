@@ -14,6 +14,8 @@ create table tb_user (
     unique key (identifier)
 );
 
+create index idx_user_identifier on tb_user(identifier);
+
 create table tb_auth_method (
     id bigint not null auto_increment,
     user_id bigint not null,
@@ -40,6 +42,9 @@ create table tb_auth_method (
 );
 
 create index idx_auth_method_user_id on tb_auth_method(user_id);
+create index idx_auth_method_verification_token on tb_auth_method(verification_token);
+create index idx_auth_method_password_reset_token on tb_auth_method(password_reset_token);
+create index idx_auth_method_identifier_change_token on tb_auth_method(identifier_change_token);
 
 create table tb_role (
     id bigint not null auto_increment,
@@ -52,6 +57,8 @@ create table tb_role (
     updated_at datetime,
     primary key (id)
 );
+
+create index idx_role_code on tb_role(code);
 
 create table tb_user_role_join (
      id bigint not null auto_increment,
@@ -84,6 +91,23 @@ create table tb_customer (
     foreign key (user_id) references tb_user(id)
 );
 create index idx_customer_user_id on tb_customer(user_id);
+
+create table tb_administrator (
+    id bigint not null auto_increment,
+    first_name varchar(30),
+    last_name varchar(30),
+    email_address varchar(30),
+    user_id bigint,
+    deleted_at datetime,
+    created_by varchar(30),
+    created_at datetime,
+    updated_by varchar(30),
+    updated_at datetime,
+    primary key (id),
+    unique key (email_address),
+    foreign key (user_id) references tb_user(id)
+);
+create index idx_administrator_user_id on tb_administrator(user_id);
 
 create table address (
      id bigint not null auto_increment,
@@ -151,4 +175,5 @@ create table tb_session (
 );
 
 create index idx_session_user_id on tb_session(user_id);
+create index idx_session_token on tb_session(token);
 create index idx_session_active_order_id on tb_session(active_order_id);

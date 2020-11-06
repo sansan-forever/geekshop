@@ -1,17 +1,14 @@
 package co.jueyi.geekshop.service;
 
+import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.TimeSpanUtil;
 import co.jueyi.geekshop.common.utils.TokenUtil;
-import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.CachedSessionUser;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.entity.SessionEntity;
-import co.jueyi.geekshop.entity.UserEntity;
 import co.jueyi.geekshop.mapper.SessionEntityMapper;
-import co.jueyi.geekshop.mapper.UserEntityMapper;
-import co.jueyi.geekshop.properties.ConfigOptions;
 import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.role.Role;
 import co.jueyi.geekshop.types.user.User;
@@ -26,25 +23,28 @@ import java.util.*;
 @Service
 public class SessionService {
     private final SessionCacheStrategy sessionCacheStrategy;
-    private final AuthConfig authConfig;
-    private final ConfigOptions configOptions;
+    private final ConfigService configService;
     private final long sessionDurationInMs;
 
     private final SessionEntityMapper sessionEntityMapper;
-    private final UserEntityMapper userEntityMapper;
+    private final UserService userService;
 
     public SessionService(
-            AuthConfig authConfig,
-            ConfigOptions configOptions,
+            ConfigService configService,
             SessionEntityMapper sessionEntityMapper,
-            UserEntityMapper userEntityMapper) {
-        this.authConfig = authConfig;
-        this.configOptions = configOptions;
-        this.sessionCacheStrategy = authConfig.getSessionCacheStrategy();
+            UserService userService) {
+        this.configService = configService;
+        this.sessionCacheStrategy = this.configService.getAuthConfig().getSessionCacheStrategy();
+        this.sessionDurationInMs = TimeSpanUtil.toMs(this.configService.getAuthOptions().getSessionDuration());
         this.sessionEntityMapper = sessionEntityMapper;
-        this.userEntityMapper = userEntityMapper;
-        this.sessionDurationInMs = TimeSpanUtil.toMs(this.configOptions.getAuthOptions().getSessionDuration());
+        this.userService = userService;
     }
+
+    // TODO
+    // If Role changes, potentially all the cached permissions in the
+    // session cache will be wrong, so we just clear the entire cache. It should however
+    // be a very rate occurrence in normal operation, once initial setup is complete.
+    // this.sessionCacheStrategy.clear();
 
     /**
      * Authenticates a user's credentials and if okay, creates a new session.
@@ -63,10 +63,10 @@ public class SessionService {
 
         this.sessionEntityMapper.insert(sessionEntity);
 
-        CachedSession cachedSession = this.serializeSession(sessionEntity, user);
-        this.sessionCacheStrategy.set(cachedSession);
+        CachedSession authenticatedSession = this.serializeSession(sessionEntity, user);
+        this.sessionCacheStrategy.set(authenticatedSession);
 
-        return cachedSession;
+        return authenticatedSession;
     }
 
     /**
@@ -74,15 +74,16 @@ public class SessionService {
      */
     public CachedSession createAnonymousSession() {
         String token = this.generateSessionToken();
-        long anonymousSessionDurtionInMs = TimeSpanUtil.toMs("1y");
+        long anonymousSessionDurationInMs = TimeSpanUtil.toMs(Constant.DEFAULT_ANONYMOUS_SESSION_DURATION);
         SessionEntity newSession = new SessionEntity();
         newSession.setToken(token);
-        newSession.setExpires(this.getExpiryDate(anonymousSessionDurtionInMs));
+        newSession.setExpires(this.getExpiryDate(anonymousSessionDurationInMs));
         newSession.setInvalided(false);
         newSession.setAnonymous(true);
         // save the new session
         this.sessionEntityMapper.insert(newSession);
         CachedSession serializedSession = this.serializeSession(newSession, null);
+        this.sessionCacheStrategy.set(serializedSession);
         return serializedSession;
     }
 
@@ -99,7 +100,7 @@ public class SessionService {
 
         User user = null;
         if (session.getUserId() != null) {
-            user = this.getUserById(session.getUserId());
+            user = this.userService.findUserWithRolesById(session.getUserId());
         }
         serializedSession = this.serializeSession(session, user);
         return serializedSession;
@@ -114,16 +115,6 @@ public class SessionService {
         List<SessionEntity> sessionEntityList = this.sessionEntityMapper.selectList(queryWrapper);
         sessionEntityList.forEach(sessionEntity -> this.sessionCacheStrategy.delete(sessionEntity.getToken()));
         this.sessionEntityMapper.delete(queryWrapper);
-    }
-
-    private User getUserById(Long userId) {
-        UserEntity userEntity = this.userEntityMapper.selectById(userId);
-        if (userEntity == null) return null;
-        User user = new User();
-        user.setId(userEntity.getId());
-        user.setIdentifier(userEntity.getIdentifier());
-        user.setVerified(userEntity.isVerified());
-        return user;
     }
 
     /**
@@ -155,7 +146,7 @@ public class SessionService {
     }
 
     private CachedSession serializeSession(SessionEntity session, User user) {
-        long expiry = new Date().getTime() / 1000 + this.configOptions.getAuthOptions().getSessionCacheTTL();
+        long expiry = new Date().getTime() / 1000 + this.configService.getAuthOptions().getSessionCacheTTL();
         CachedSession serializedSession = new CachedSession();
         serializedSession.setCacheExpiry(expiry);
         serializedSession.setId(session.getId());

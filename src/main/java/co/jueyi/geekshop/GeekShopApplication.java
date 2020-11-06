@@ -1,6 +1,6 @@
 package co.jueyi.geekshop;
 
-import co.jueyi.geekshop.properties.ConfigOptions;
+import co.jueyi.geekshop.options.ConfigOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

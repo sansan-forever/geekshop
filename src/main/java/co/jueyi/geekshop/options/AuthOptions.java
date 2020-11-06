@@ -1,4 +1,4 @@
-package co.jueyi.geekshop.properties;
+package co.jueyi.geekshop.options;
 
 import co.jueyi.geekshop.common.Constant;
 import lombok.Data;

@@ -1,6 +1,7 @@
 package co.jueyi.geekshop.custom.mybatis_plus;
 
 import co.jueyi.geekshop.common.Constant;
+import co.jueyi.geekshop.config.session_cache.CachedSessionUser;
 import co.jueyi.geekshop.types.user.User;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
@@ -25,7 +26,7 @@ public class AuditHandler implements MetaObjectHandler {
             // No thread-bound request context, use system username
             return Constant.USERNAME_SYSTEM;
         }
-        User user = (User) RequestContextHolder.getRequestAttributes()
+        CachedSessionUser user = (CachedSessionUser) RequestContextHolder.getRequestAttributes()
                 .getAttribute(Constant.REQUEST_ATTRIBUTE_CURRENT_USER, RequestAttributes.SCOPE_REQUEST);
         if (user == null || user.getIdentifier() == null) {
             return Constant.USERNAME_ANONYMOUSE;

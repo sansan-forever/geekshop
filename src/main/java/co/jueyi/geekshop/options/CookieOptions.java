@@ -1,4 +1,4 @@
-package co.jueyi.geekshop.properties;
+package co.jueyi.geekshop.options;
 
 import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;

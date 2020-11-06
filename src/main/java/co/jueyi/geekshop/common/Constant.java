@@ -22,11 +22,14 @@ public abstract class Constant {
     public static final int PASSWORD_LENGTH_MIN = 8;
     public static final int PASSWORD_LENGTH_MAX = 20;
 
+    public static final int DEFAULT_CURRENT_PAGE = 1;
+    public static final int DEFAULT_PAGE_SIZE = 100;
+
     public static final int DEFAULT_IN_MEMORY_CACHE_SIZE = 1000;
 
     public static final String NATIVE_AUTH_STRATEGY_NAME = "native";
 
     public static final String DEFAULT_AUTH_TOKEN_HEADER_KEY = "geekshop-auth-token";
     public static final String SUPER_ADMIN_USER_IDENTIFIER = "superadmin";
-    public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin";
+    public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin123";
 }
