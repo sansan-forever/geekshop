@@ -1,7 +1,9 @@
 package co.jueyi.geekshop.types.administrator;
 
+import co.jueyi.geekshop.custom.validator.ValidPassword;
 import lombok.Data;
 
+import javax.validation.constraints.Email;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +14,9 @@ import java.util.List;
 public class CreateAdministratorInput {
     private String firstName;
     private String lastName;
+    @Email
     private String emailAddress;
+    @ValidPassword
     private String password;
     private List<Long> roleIds = new ArrayList<>();
 }

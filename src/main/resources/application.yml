@@ -41,6 +41,10 @@ geekshop:
     session-duration: ${SESSION_DURATION:7d}
     require-verification: ${REQUIRE_VERIFICATION:true}
     verification-token-duration: ${VERIFICATION_TOKEN_DURATION:7d}
+    superadmin-credentials:
+      identifier: ${SUPERADMIN_IDENTIFIER:superadmin}
+      password: ${SUPADMIN_PASSWORD:superadmin123}
+
 #mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

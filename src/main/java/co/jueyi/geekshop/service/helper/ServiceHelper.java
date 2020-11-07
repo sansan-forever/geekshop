@@ -1,8 +1,11 @@
 package co.jueyi.geekshop.service.helper;
 
+import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
+import co.jueyi.geekshop.types.common.ListOptions;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.reflect.Type;
 
@@ -41,5 +44,17 @@ public abstract class ServiceHelper {
             simpleClassName = simpleClassName.replace(ENTITY_MAPPER_SUFFIX, "");
         }
         throw new EntityNotFoundException(simpleClassName, id);
+    }
+
+    public static Pair getListOptions(ListOptions options) {
+        int currentPage = Constant.DEFAULT_CURRENT_PAGE;
+        if (options != null && options.getCurrentPage() != null) {
+            currentPage = options.getCurrentPage();
+        }
+        int pageSize = Constant.DEFAULT_PAGE_SIZE;
+        if (options != null && options.getPageSize() != null) {
+            pageSize = options.getPageSize();
+        }
+        return Pair.of(currentPage, pageSize);
     }
 }

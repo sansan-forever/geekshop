@@ -16,7 +16,7 @@ import java.util.List;
  *
  * Created on Nov, 2020 by @author bobo
  */
-@TableName(value = "tb_role")
+@TableName(value = "tb_role", autoResultMap = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class RoleEntity extends BaseEntity {

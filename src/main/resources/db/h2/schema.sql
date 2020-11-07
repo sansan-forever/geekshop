@@ -2,7 +2,7 @@ drop all objects delete files;
 
 create table tb_user (
     id bigint not null auto_increment,
-    deletedAt datetime,
+    deleted_at datetime,
     identifier varchar(30),
     verified boolean not null default false,
     last_login datetime,
@@ -22,11 +22,11 @@ create table tb_auth_method (
     external boolean not null default false,
     /* begin for native auth */
     identifier varchar(30),
-    password_hash varchar(50),
-    verification_token varchar(50),
-    password_reset_token varchar(50),
-    identifier_change_token varchar(50),
-    pending_identifier varchar(30),
+    password_hash varchar(255),
+    verification_token varchar(100),
+    password_reset_token varchar(100),
+    identifier_change_token varchar(100),
+    pending_identifier varchar(50),
     /* end for native auth */
 
     /* begin for external auth */
@@ -48,7 +48,7 @@ create index idx_auth_method_identifier_change_token on tb_auth_method(identifie
 
 create table tb_role (
     id bigint not null auto_increment,
-    code varchar(50) not null,
+    code varchar(30) not null,
     description varchar(255) not null,
     permissions text,
     created_by varchar(30),
@@ -157,7 +157,7 @@ create table tb_customer_group_join (
 
 create table tb_session (
     id bigint not null auto_increment,
-    token varchar(50) not null,
+    token varchar(100) not null,
     expires datetime not null,
     invalidated boolean not null,
     anonymous boolean not null default false,

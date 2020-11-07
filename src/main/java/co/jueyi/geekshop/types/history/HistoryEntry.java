@@ -16,7 +16,7 @@ public class HistoryEntry implements Node {
     private Long id;
     private Date createdAt;
     private Date updatedAt;
-    private Boolean isprivate;
+    private Boolean isPublic;
     private HistoryEntryType type;
     private Administrator administrator;
     private Map<String, String> data = new HashMap<>();

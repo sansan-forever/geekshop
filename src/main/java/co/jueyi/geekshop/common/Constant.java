@@ -32,4 +32,6 @@ public abstract class Constant {
     public static final String DEFAULT_AUTH_TOKEN_HEADER_KEY = "geekshop-auth-token";
     public static final String SUPER_ADMIN_USER_IDENTIFIER = "superadmin";
     public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin123";
+
+    public static final String DATA_LOADER_NAME_ADMINISTRATOR_USER = "administratorUserDataLoader";
 }

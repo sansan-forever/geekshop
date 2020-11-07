@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@RequiredArgsConstructor
 public class LoginEvent extends BaseEvent {
     private final RequestContext ctx;
     private final User uer;

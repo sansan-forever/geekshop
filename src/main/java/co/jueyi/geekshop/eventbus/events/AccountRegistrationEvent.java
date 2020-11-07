@@ -2,17 +2,19 @@ package co.jueyi.geekshop.eventbus.events;
 
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.eventbus.BaseEvent;
+import co.jueyi.geekshop.types.user.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 /**
- * This event is fired when a user logs out via the shop or admin API `logout` mutation.
+ * This event is fired when a new user registers an account, either as a stand-alone signup or after
+ * placing an order.
  *
  * Created on Nov, 2020 by @author bobo
  */
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class LogoutEvent extends BaseEvent {
+@Data
+public class AccountRegistrationEvent extends BaseEvent {
     private final RequestContext ctx;
+    private final User uer;
 }

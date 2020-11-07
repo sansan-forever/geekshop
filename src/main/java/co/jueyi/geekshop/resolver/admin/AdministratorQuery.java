@@ -1,21 +1,32 @@
 package co.jueyi.geekshop.resolver.admin;
 
+import co.jueyi.geekshop.custom.security.Allow;
+import co.jueyi.geekshop.service.AdministratorService;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.administrator.AdministratorList;
 import co.jueyi.geekshop.types.administrator.AdministratorListOptions;
+import co.jueyi.geekshop.types.common.Permission;
 import graphql.kickstart.tools.GraphQLQueryResolver;
+import graphql.schema.DataFetchingEnvironment;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 @Component
+@RequiredArgsConstructor
 public class AdministratorQuery implements GraphQLQueryResolver {
-    public AdministratorList administrators(AdministratorListOptions options) {
-        return null; // TODO
+
+    private final AdministratorService administratorService;
+
+    @Allow(Permission.ReadAdministrator)
+    public AdministratorList administrators(AdministratorListOptions options, DataFetchingEnvironment dfe) {
+        return administratorService.findAll(options);
     }
 
-    public Administrator administrator(Long id) {
-        return null; // TODO
+    @Allow(Permission.ReadAdministrator)
+    public Administrator administrator(Long id, DataFetchingEnvironment dfe) {
+        return administratorService.findOne(id);
     }
 }

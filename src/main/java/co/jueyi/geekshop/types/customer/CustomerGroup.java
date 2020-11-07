@@ -16,7 +16,7 @@ public class CustomerGroup implements Node {
     private String name;
     private CustomerList customers;
 
-    private CustomerList getCustomers(CustomerListOptions options) {
+    public CustomerList getCustomers(CustomerListOptions options) {
         return null; // TODO
     }
 }

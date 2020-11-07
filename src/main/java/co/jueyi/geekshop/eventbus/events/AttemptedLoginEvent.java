@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@RequiredArgsConstructor
 public class AttemptedLoginEvent extends BaseEvent {
     private final RequestContext ctx;
     private final String strategy;

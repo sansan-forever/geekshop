@@ -8,4 +8,7 @@ extend type Mutation {
 }
 
 # Populated at run-time
-input AuthenticationInput
+input AuthenticationInput {
+    method: String!
+    data: JSON!
+}

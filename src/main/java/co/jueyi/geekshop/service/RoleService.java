@@ -1,6 +1,5 @@
 package co.jueyi.geekshop.service;
 
-import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.RoleCode;
 import co.jueyi.geekshop.common.utils.BeanMapper;
@@ -11,15 +10,16 @@ import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.RoleEntityMapper;
 import co.jueyi.geekshop.service.helper.QueryHelper;
+import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
-import co.jueyi.geekshop.types.common.PaginatedList;
 import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.role.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -35,19 +35,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoleService {
     private final RoleEntityMapper roleEntityMapper;
-    private final UserService userService;
 
     @SuppressWarnings("Duplicates")
-    public PaginatedList<Role> findAll(RoleListOptions options) {
-        int currentPage = Constant.DEFAULT_CURRENT_PAGE;
-        if (options != null && options.getCurrentPage() != null) {
-            currentPage = options.getCurrentPage();
-        }
-        int pageSize = Constant.DEFAULT_PAGE_SIZE;
-        if (options != null && options.getPageSize() != null) {
-            pageSize = options.getPageSize();
-        }
-        IPage<RoleEntity> page = new Page<>(currentPage, pageSize);
+    public RoleList findAll(RoleListOptions options) {
+        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
+        IPage<RoleEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
         QueryWrapper<RoleEntity> queryWrapper = new QueryWrapper<>();
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());
@@ -109,18 +101,6 @@ public class RoleService {
      */
     public List<Permission> getAllPermissions() {
         return Arrays.asList(Permission.values());
-    }
-
-    /**
-     * Returns true if the User has the specified permission
-     */
-    public boolean userHasPermission(Long userId, Permission permission) {
-        if (userId == null) return false;
-        List<Role> roles = userService.findRolesByUserId(userId);
-        for (Role role : roles) {
-            if (role.getPermissions().contains(permission)) return true;
-        }
-        return false;
     }
 
     public Role create(RequestContext ctx, CreateRoleInput input) {
