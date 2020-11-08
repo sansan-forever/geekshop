@@ -19,5 +19,6 @@ public class HistoryEntry implements Node {
     private Boolean isPublic;
     private HistoryEntryType type;
     private Administrator administrator;
+    private Long administratorId; // 内部使用字段，GraphQL不可见
     private Map<String, String> data = new HashMap<>();
 }

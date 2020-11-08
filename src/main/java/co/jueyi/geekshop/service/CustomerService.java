@@ -1,5 +1,6 @@
 package co.jueyi.geekshop.service;
 
+import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.common.utils.NormalizeUtil;
@@ -7,14 +8,18 @@ import co.jueyi.geekshop.entity.*;
 import co.jueyi.geekshop.eventbus.events.AccountRegistrationEvent;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.*;
+import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.common.CreateCustomerInput;
 import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
+import co.jueyi.geekshop.types.history.HistoryEntryType;
 import co.jueyi.geekshop.types.user.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -35,6 +40,7 @@ public class CustomerService {
     private final CustomerGroupEntityMapper customerGroupEntityMapper;
     private final CustomerGroupJoinEntityMapper customerGroupJoinEntityMapper;
     private final UserService userService;
+    private final HistoryService historyService;
     private final EventBus eventBus;
 
     public Customer findOne(Long id) {
@@ -109,11 +115,20 @@ public class CustomerService {
         }
         this.customerEntityMapper.insert(newCustomerEntity);
 
+        CreateCustomerHistoryEntryArgs createCustomerHistoryEntryArgs = new CreateCustomerHistoryEntryArgs();
+        createCustomerHistoryEntryArgs.setCtx(ctx);
+        createCustomerHistoryEntryArgs.setCustomerId(newCustomerEntity.getId());
+        createCustomerHistoryEntryArgs.setType(HistoryEntryType.CUSTOMER_REGISTERED);
+        createCustomerHistoryEntryArgs.setData(ImmutableMap.of("strategy", Constant.NATIVE_AUTH_STRATEGY_NAME));
+        this.historyService.createHistoryEntryForCustomer(createCustomerHistoryEntryArgs, false);
 
-        // TODO history service handling
-
-        if (user.getVerified()) {
-            // TODO history service handling
+        if (BooleanUtils.isTrue(user.getVerified())) {
+            createCustomerHistoryEntryArgs = new CreateCustomerHistoryEntryArgs();
+            createCustomerHistoryEntryArgs.setCtx(ctx);
+            createCustomerHistoryEntryArgs.setCustomerId(newCustomerEntity.getId());
+            createCustomerHistoryEntryArgs.setType(HistoryEntryType.CUSTOMER_VERIFIED);
+            createCustomerHistoryEntryArgs.setData(ImmutableMap.of("strategy", Constant.NATIVE_AUTH_STRATEGY_NAME));
+            this.historyService.createHistoryEntryForCustomer(createCustomerHistoryEntryArgs, false);
         }
 
         return BeanMapper.map(newCustomerEntity, Customer.class);

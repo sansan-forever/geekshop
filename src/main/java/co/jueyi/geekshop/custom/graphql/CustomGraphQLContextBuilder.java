@@ -4,6 +4,8 @@ import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.mapper.AdministratorEntityMapper;
 import co.jueyi.geekshop.mapper.UserEntityMapper;
 import co.jueyi.geekshop.resolver.admin.dataloader.AdministratorUserDataLoader;
+import co.jueyi.geekshop.resolver.admin.dataloader.HistoryEntryAdministratorDataLoader;
+import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
 import graphql.kickstart.execution.context.GraphQLContext;
@@ -55,6 +57,13 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
                 new AdministratorUserDataLoader(this.userEntityMapper, this.administratorEntityMapper)
         );
         dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_ADMINISTRATOR_USER, administratorUserDataLoader);
+
+        DataLoader<Long, Administrator> historyEntryAdministratorDataLoader = DataLoader.newMappedDataLoader(
+                new HistoryEntryAdministratorDataLoader(this.administratorEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_HISTORY_ENTRY_ADMINISTRATOR,
+                historyEntryAdministratorDataLoader);
 
         return dataLoaderRegistry;
     }

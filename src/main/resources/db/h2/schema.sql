@@ -177,3 +177,25 @@ create table tb_session (
 create index idx_session_user_id on tb_session(user_id);
 create index idx_session_token on tb_session(token);
 create index idx_session_active_order_id on tb_session(active_order_id);
+
+create table tb_customer_history_entry (
+    id bigint not null auto_increment,
+    administrator_id bigint,
+    type varchar(50) not null,
+    is_public boolean,
+    data text,
+    customer_id bigint,
+    primary key (id)
+);
+
+create index idx_customer_history_entry_type on tb_customer_history_entry(type);
+
+create table tb_order_history_entry (
+    id bigint not null auto_increment,
+    administrator_id bigint,
+    type varchar(50) not null,
+    is_public boolean,
+    data text,
+    order_id bigint,
+    primary key (id)
+);

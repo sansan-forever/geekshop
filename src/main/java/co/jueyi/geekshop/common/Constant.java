@@ -34,4 +34,5 @@ public abstract class Constant {
     public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin123";
 
     public static final String DATA_LOADER_NAME_ADMINISTRATOR_USER = "administratorUserDataLoader";
+    public static final String DATA_LOADER_NAME_HISTORY_ENTRY_ADMINISTRATOR = "historyEntryAdministrator";
 }

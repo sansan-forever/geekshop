@@ -1,9 +1,6 @@
 package co.jueyi.geekshop.service.helper;
 
-import co.jueyi.geekshop.types.common.DateOperators;
-import co.jueyi.geekshop.types.common.DateRange;
-import co.jueyi.geekshop.types.common.SortOrder;
-import co.jueyi.geekshop.types.common.StringOperators;
+import co.jueyi.geekshop.types.common.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +32,14 @@ public abstract class QueryHelper {
             if (dateRange.getStart() != null && dateRange.getEnd() != null) {
                 queryWrapper.between(fieldName, dateRange.getStart(), dateRange.getEnd());
             }
+        }
+    }
+
+    public static void buildOneBooleanOperatorFilter(QueryWrapper queryWrapper, BooleanOperators booleanOperators,
+                                                     String fieldName) {
+        if (booleanOperators == null) return;
+        if (booleanOperators.getEq() != null) {
+            queryWrapper.eq(fieldName, booleanOperators.getEq());
         }
     }
 
