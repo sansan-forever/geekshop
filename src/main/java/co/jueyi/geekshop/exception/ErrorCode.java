@@ -31,6 +31,8 @@ public enum ErrorCode {
 
     NO_DATA_FETCHING_ENVIRONMENT("No DataFetchingEnvironment argument in GraphQL resolver"),
 
+    ILLEGAL_OPERATION("The attempted operation is not allowed"),
+
     USER_INPUT_ERROR("Invalid request input parameters");
 
     public final String defaultMessage;

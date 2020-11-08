@@ -109,7 +109,7 @@ public class AuthService {
                     ctx.getApiType(),
                     session.getAuthenticationStrategy()
             );
-            User user = this.userService.findUserById(session.getUserId());
+            User user = this.userService.findUserWithRolesById(session.getUserId());
             authenticationStrategy.onLogOut(user);
             this.eventBus.post(new LogoutEvent(ctx));
             this.sessionService.deleteSessionByUserId(user.getId());

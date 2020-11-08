@@ -3,10 +3,11 @@ package co.jueyi.geekshop.common.utils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.context.annotation.Bean;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created on Nov, 2020 by @author bobo

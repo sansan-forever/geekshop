@@ -43,6 +43,17 @@ public class UserService {
     private final VerificationTokenGenerator verificationTokenGenerator;
     private final AuthenticationMethodEntityMapper authenticationMethodEntityMapper;
 
+    public boolean checkHasNativeAuthMethod(Long userId) {
+        QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AuthenticationMethodEntity::getUserId, userId);
+        List<AuthenticationMethodEntity> authMethods =
+                this.authenticationMethodEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(authMethods)) {
+            return false;
+        }
+        return authMethods.stream().anyMatch(m -> !m.isExternal());
+    }
+
     public AuthenticationMethodEntity getNativeAuthMethodEntityByUserId(Long userId) {
         QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AuthenticationMethodEntity::getUserId, userId);
@@ -60,39 +71,36 @@ public class UserService {
         return nativeAuthMethod;
     }
 
-    public User findUserById(Long id) {
-        UserEntity userEntity = this.userEntityMapper.selectById(id);
-        if (userEntity == null) return null;
-        return BeanMapper.map(userEntity, User.class);
+    public UserEntity findUserEntityById(Long id) {
+        return this.userEntityMapper.selectById(id);
     }
 
     public User findUserWithRolesById(Long userId) {
-        User user = this.findUserById(userId);
-        if (user == null) return null;
+        UserEntity userEntity = this.findUserEntityById(userId);
+        if (userEntity == null) return null;
+        User user = BeanMapper.map(userEntity, User.class);
         List<Role> roles = this.findRolesByUserId(userId);
         user.setRoles(roles);
         return user;
     }
 
-    public User findUserByIdentifier(String identifier) {
+    public UserEntity findUserEntityByIdentifier(String identifier) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(UserEntity::getIdentifier, identifier);
         UserEntity userEntity = this.userEntityMapper.selectOne(queryWrapper);
-        if (userEntity == null) return null;
-        return BeanMapper.map(userEntity, User.class);
+        return userEntity;
     }
 
-    public User findUserByEmailAddress(String emailAddress) {
+    public UserEntity findUserEntityByEmailAddress(String emailAddress) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(UserEntity::getIdentifier, emailAddress).isNull(UserEntity::getDeletedAt);
-        UserEntity userEntity = this.userEntityMapper.selectOne(queryWrapper);
-        if (userEntity == null) return null;
-        return BeanMapper.map(userEntity, User.class);
+        return this.userEntityMapper.selectOne(queryWrapper);
     }
 
     public User findUserWithRoleByIdentifier(String identifier) {
-        User user = this.findUserByIdentifier(identifier);
-        if (user == null) return null;
+        UserEntity userEntity = this.findUserEntityByIdentifier(identifier);
+        if (userEntity == null) return null;
+        User user = BeanMapper.map(userEntity, User.class);
         List<Role> roles = this.findRolesByUserId(user.getId());
         user.setRoles(roles);
         return user;
@@ -115,7 +123,7 @@ public class UserService {
     }
 
     @Transactional
-    public User createCustomerUser(String identifier, String password) {
+    public UserEntity createCustomerUser(String identifier, String password) {
         UserEntity userEntity = new UserEntity();
         userEntity.setIdentifier(identifier);
         this.userEntityMapper.insert(userEntity); // 需要生成userId
@@ -130,7 +138,7 @@ public class UserService {
         userRoleJoinEntity.setRoleId(customerRoleEntity.getId());
         this.userRoleJoinEntityMapper.insert(userRoleJoinEntity);
 
-        return BeanMapper.map(userEntity, User.class);
+        return userEntity;
     }
 
     public UserEntity addNativeAuthenticationMethod(UserEntity userEntity, String identifier, String password) {
@@ -155,7 +163,7 @@ public class UserService {
     }
 
     @Transactional
-    public User createAdminUser(String identifier, String password) {
+    public UserEntity createAdminUser(String identifier, String password) {
         UserEntity userEntity = new UserEntity();
         userEntity.setIdentifier(identifier);
         userEntity.setVerified(true);
@@ -166,7 +174,7 @@ public class UserService {
         authenticationMethodEntity.setPasswordHash(this.passwordEncoder.encode(password));
         authenticationMethodEntity.setUserId(userEntity.getId());
         this.authenticationMethodEntityMapper.insert(authenticationMethodEntity);
-        return BeanMapper.map(userEntity, User.class);
+        return userEntity;
     }
 
     public void softDelete(Long userId) {
@@ -176,18 +184,17 @@ public class UserService {
     }
 
     @Transactional
-    public User setVerificationToken(Long userId) {
-        UserEntity userEntity = ServiceHelper.getEntityOrThrow(this.userEntityMapper, userId);
-        AuthenticationMethodEntity nativeAuthMethodEntity = getNativeAuthMethodEntityByUserId(userId);
+    public UserEntity setVerificationToken(UserEntity userEntity) {
+        AuthenticationMethodEntity nativeAuthMethodEntity = getNativeAuthMethodEntityByUserId(userEntity.getId());
         nativeAuthMethodEntity.setVerificationToken(this.verificationTokenGenerator.generateVerificationToken());
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethodEntity);
         userEntity.setVerified(false);
         this.userEntityMapper.updateById(userEntity);
-        return BeanMapper.map(userEntity, User.class);
+        return userEntity;
     }
 
     @Transactional
-    public User verifyUserByToken(String verificationToken, String password) {
+    public UserEntity verifyUserByToken(String verificationToken, String password) {
         QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AuthenticationMethodEntity::getVerificationToken, verificationToken);
         AuthenticationMethodEntity authMethodEntity =
@@ -217,21 +224,21 @@ public class UserService {
         userEntity.setVerified(true);
         this.userEntityMapper.updateById(userEntity);
 
-        return BeanMapper.map(userEntity, User.class);
+        return userEntity;
     }
 
-    public User setPasswordResetToken(String emailAddress) {
-        User user = this.findUserByEmailAddress(emailAddress);
-        if (user == null) return null;
+    public UserEntity setPasswordResetToken(String emailAddress) {
+        UserEntity userEntity = this.findUserEntityByEmailAddress(emailAddress);
+        if (userEntity == null) return null;
 
         AuthenticationMethodEntity nativeAuthMethod =
-                this.getNativeAuthMethodEntityByUserId(user.getId());
+                this.getNativeAuthMethodEntityByUserId(userEntity.getId());
         nativeAuthMethod.setPasswordRestToken(this.verificationTokenGenerator.generateVerificationToken());
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
-        return user;
+        return userEntity;
     }
 
-    public User resetPasswordByToken(String passwordResetToken, String password) {
+    public UserEntity resetPasswordByToken(String passwordResetToken, String password) {
         QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AuthenticationMethodEntity::getPasswordRestToken, passwordResetToken);
         AuthenticationMethodEntity authMethodEntity =
@@ -249,10 +256,10 @@ public class UserService {
 
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
 
-        return this.findUserById(authMethodEntity.getUserId());
+        return this.findUserEntityById(authMethodEntity.getUserId());
     }
 
-    public Pair<User, String> changeIdentifierByToken(String token) {
+    public Pair<UserEntity, String> changeIdentifierByToken(String token) {
         QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AuthenticationMethodEntity::getIdentifierChangeToken, token);
         AuthenticationMethodEntity authMethodEntity =
@@ -280,8 +287,7 @@ public class UserService {
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
         this.userEntityMapper.updateById(userEntity);
 
-        User user = BeanMapper.map(userEntity, User.class);
-        return Pair.of(user, oldIdentifier);
+        return Pair.of(userEntity, oldIdentifier);
     }
 
     public boolean updatePassword(Long userId, String currentPassword, String newPassword) {
@@ -298,9 +304,10 @@ public class UserService {
         return true;
     }
 
-    public void setIdentifierChangeToken(Long userId) {
+    public void changeIdentifierAndSetToken(Long userId, String newIdentifer) {
         AuthenticationMethodEntity nativeAuthMethod =
                 this.getNativeAuthMethodEntityByUserId(userId);
+        nativeAuthMethod.setIdentifier(newIdentifer);
         nativeAuthMethod.setIdentifierChangeToken(this.verificationTokenGenerator.generateVerificationToken());
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
     }

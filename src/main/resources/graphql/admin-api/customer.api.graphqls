@@ -37,7 +37,6 @@ input UpdateCustomerInput {
     emailAddress: String
 }
 
-
 input AddNoteToCustomerInput {
     id: ID!
     note: String!

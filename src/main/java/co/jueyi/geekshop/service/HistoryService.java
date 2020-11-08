@@ -32,6 +32,12 @@ public class HistoryService {
     private final AdministratorService administratorService;
     private final CustomerHistoryEntryEntityMapper customerHistoryEntryMapper;
 
+    public static final String KEY_STRATEGY = "strategy";
+    public static final String KEY_OLD_EMAIL_ADDRESS = "oldEmailAddress";
+    public static final String KEY_NEW_EMAIL_ADDRESS = "newEmailAddress";
+    public static final String KEY_ADDRESS = "address";
+    public static final String KEY_NOTE = "node";
+
     @SuppressWarnings("Duplicates")
     public HistoryEntryList getHistoryForCustomer(
             Long customerId, HistoryEntryListOptions options) {
@@ -74,6 +80,10 @@ public class HistoryService {
         QueryHelper.buildOneBooleanOperatorFilter(queryWrapper, filterParameter.getIsPublic(), "is_public");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getCreatedAt(), "created_at");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
+    }
+
+    public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args) {
+        return this.createHistoryEntryForCustomer(args, false);
     }
 
     public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isPublic) {

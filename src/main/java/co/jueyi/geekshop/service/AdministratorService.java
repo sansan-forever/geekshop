@@ -112,8 +112,8 @@ public class AdministratorService {
     @Transactional
     public Administrator create(CreateAdministratorInput input) {
         AdministratorEntity administratorEntity = BeanMapper.map(input, AdministratorEntity.class);
-        User user = this.userService.createAdminUser(input.getEmailAddress(), input.getPassword());
-        administratorEntity.setUserId(user.getId());
+        UserEntity userEntity = this.userService.createAdminUser(input.getEmailAddress(), input.getPassword());
+        administratorEntity.setUserId(userEntity.getId());
         this.administratorEntityMapper.insert(administratorEntity);
         input.getRoleIds().forEach(roleId -> this.assignRole(administratorEntity.getId(), roleId));
         return BeanMapper.map(administratorEntity, Administrator.class);

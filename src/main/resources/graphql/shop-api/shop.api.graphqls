@@ -1,0 +1,8 @@
+input RegisterCustomerInput {
+    emailAddress: String!
+    title: String
+    firstName: String
+    lastName: String
+    phoneNumber: String
+    password: String
+}
