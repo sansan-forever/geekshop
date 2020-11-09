@@ -1,4 +1,4 @@
-package co.jueyi.geekshop.resolver.admin;
+package co.jueyi.geekshop.resolver;
 
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.types.administrator.Administrator;

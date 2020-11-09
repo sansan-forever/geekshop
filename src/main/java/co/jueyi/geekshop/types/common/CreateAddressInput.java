@@ -1,5 +1,6 @@
 package co.jueyi.geekshop.types.common;
 
+import co.jueyi.geekshop.custom.validator.PhoneNumber;
 import lombok.Data;
 
 /**
@@ -14,6 +15,7 @@ public class CreateAddressInput {
     private String city;
     private String province;
     private String postalCode;
+    @PhoneNumber
     private String phoneNumber;
     private Boolean defaultShippingAddress;
     private Boolean defaultBillingAddress;

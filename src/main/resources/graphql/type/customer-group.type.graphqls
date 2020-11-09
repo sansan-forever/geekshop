@@ -5,5 +5,3 @@ type CustomerGroup implements Node {
     name: String!
     customers(options: CustomerListOptions): CustomerList!
 }
-
-input CustomerListOptions

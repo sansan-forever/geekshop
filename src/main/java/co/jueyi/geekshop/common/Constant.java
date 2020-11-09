@@ -7,7 +7,7 @@ public abstract class Constant {
     public static final String DB_NAME_H2 = "h2";
     public static final String DB_NAME_MYSQL = "mysql";
 
-    public static final String USERNAME_ANONYMOUSE = "anonymous";
+    public static final String USERNAME_ANONYMOUS = "anonymous";
     public static final String USERNAME_SYSTEM = "system";
 
     public static final String REQUEST_ATTRIBUTE_CURRENT_USER = "GEEKSHOP_REQUEST_CURRENT_USER";
@@ -35,4 +35,10 @@ public abstract class Constant {
 
     public static final String DATA_LOADER_NAME_ADMINISTRATOR_USER = "administratorUserDataLoader";
     public static final String DATA_LOADER_NAME_HISTORY_ENTRY_ADMINISTRATOR = "historyEntryAdministrator";
+    public static final String DATA_LOADER_NAME_CUSTOMER_USER = "customerUserDataLoader";
+    public static final String DATA_LOADER_NAME_CUSTOMER_ADDRESSES = "customerAddressesDataLoader";
+    public static final String DATA_LOADER_NAME_CUSTOMER_GROUPS = "customerGroupsDataLoader";
+    public static final String DATA_LOADER_NAME_CUSTOMER_HISTORY = "customerHistoryDataLoader";
+    public static final String DATA_LOADER_NAME_USER_ROLES = "userRolesDataLoader";
+    public static final String DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS = "userAuthenticationMethodsDataLoader";
 }

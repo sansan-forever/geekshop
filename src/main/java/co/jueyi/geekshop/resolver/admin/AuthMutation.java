@@ -1,9 +1,5 @@
 package co.jueyi.geekshop.resolver.admin;
 
-import co.jueyi.geekshop.common.Constant;
-import co.jueyi.geekshop.common.RequestContext;
-import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
-import co.jueyi.geekshop.custom.graphql.CustomGraphQLServletContext;
 import co.jueyi.geekshop.custom.security.Allow;
 import co.jueyi.geekshop.resolver.base.BaseAuthMutation;
 import co.jueyi.geekshop.service.AdministratorService;
@@ -13,13 +9,9 @@ import co.jueyi.geekshop.service.UserService;
 import co.jueyi.geekshop.types.auth.AuthenticationInput;
 import co.jueyi.geekshop.types.auth.LoginResult;
 import co.jueyi.geekshop.types.common.Permission;
-import com.google.common.collect.ImmutableMap;
 import graphql.kickstart.tools.GraphQLMutationResolver;
 import graphql.schema.DataFetchingEnvironment;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -38,41 +30,20 @@ public class AuthMutation extends BaseAuthMutation implements GraphQLMutationRes
      * `authenticate({ native: { ... }})`
      */
     @Allow(Permission.Public)
-    public LoginResult login(String username, String password, Boolean rememberMe, DataFetchingEnvironment dfe) {
-        AuthenticationInput input = new AuthenticationInput();
-        input.setMethod(Constant.NATIVE_AUTH_STRATEGY_NAME);
-        input.setData(ImmutableMap.of(
-                NativeAuthenticationStrategy.KEY_USERNAME, username,
-                NativeAuthenticationStrategy.KEY_PASSWORD, password));
-
-        CustomGraphQLServletContext customGraphQLServletContext = dfe.getContext();
-        RequestContext ctx = customGraphQLServletContext.getRequestContext();
-        HttpServletRequest request = customGraphQLServletContext.getHttpServletRequest();
-        HttpServletResponse response = customGraphQLServletContext.getHttpServletResponse();
-
-        return super.authenticateAndCreateSession(ctx, input, rememberMe, request, response);
+    public LoginResult loginAdmin(String username, String password, Boolean rememberMe, DataFetchingEnvironment dfe) {
+        return super.login(username, password, rememberMe, dfe);
     }
 
     /**
      * Authenticates the user using a named authentication strategy
      */
     @Allow(Permission.Public)
-    public LoginResult authenticate(AuthenticationInput input, Boolean rememberMe, DataFetchingEnvironment dfe) {
-        CustomGraphQLServletContext customGraphQLServletContext = dfe.getContext();
-        RequestContext ctx = customGraphQLServletContext.getRequestContext();
-        HttpServletRequest request = customGraphQLServletContext.getHttpServletRequest();
-        HttpServletResponse response = customGraphQLServletContext.getHttpServletResponse();
-
-        return super.authenticateAndCreateSession(ctx, input, rememberMe, request, response);
+    public LoginResult authenticateAdmin(AuthenticationInput input, Boolean rememberMe, DataFetchingEnvironment dfe) {
+        return super.authenticateAndCreateSession(input, rememberMe, dfe);
     }
 
     @Allow(Permission.Public)
-    public Boolean logout(DataFetchingEnvironment dfe) {
-        CustomGraphQLServletContext customGraphQLServletContext = dfe.getContext();
-        RequestContext ctx = customGraphQLServletContext.getRequestContext();
-        HttpServletRequest request = customGraphQLServletContext.getHttpServletRequest();
-        HttpServletResponse response = customGraphQLServletContext.getHttpServletResponse();
-        return super.logout(ctx, request, response);
+    public Boolean logoutAdmin(DataFetchingEnvironment dfe) {
+        return super.logout(dfe);
     }
-
 }

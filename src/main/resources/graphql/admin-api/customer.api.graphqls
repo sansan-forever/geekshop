@@ -8,19 +8,19 @@ extend type Mutation {
     createCustomer(input: CreateCustomerInput!, password: String): Customer!
 
     "Update an existing Customer"
-    updateCustomer(input: UpdateCustomerInput!): Customer!
+    updateCustomerAdmin(input: UpdateCustomerInput!): Customer!
 
     "Delete a Customer"
     deleteCustomer(id: ID!): DeletionResponse!
 
     "Create a new Address and associate it with the Customer specified by customerId"
-    createCustomerAddress(customerId: ID!, input: CreateAddressInput!): Address!
+    createCustomerAddressAdmin(customerId: ID!, input: CreateAddressInput!): Address!
 
     "Update an existing Address"
-    updateCustomerAddress(input: UpdateAddressInput!): Address!
+    updateCustomerAddressAdmin(input: UpdateAddressInput!): Address!
 
     "Update an existing Address"
-    deleteCustomerAddress(id: ID!): Boolean!
+    deleteCustomerAddressAdmin(id: ID!): Boolean!
 
     addNoteToCustomer(input: AddNoteToCustomerInput!): Customer
     updateCustomerNode(input: UpdateCustomerNoteInput!): HistoryEntry!
@@ -46,4 +46,30 @@ input AddNoteToCustomerInput {
 input UpdateCustomerNoteInput {
     nodeId: ID!
     note: String!
+}
+
+input CustomerListOptions {
+    currentPage: Int
+    pageSize: Int
+    sort: CustomerSortParameter
+    filter: CustomerFilterParameter
+}
+
+input CustomerSortParameter {
+    id: SortOrder
+    createdAt: SortOrder
+    updatedAt: SortOrder
+    firstName: SortOrder
+    lastName: SortOrder
+    phoneNumber: SortOrder
+    emailAddress: SortOrder
+}
+
+input CustomerFilterParameter {
+    firstName: StringOperators
+    lastName: StringOperators
+    phoneNumber: StringOperators
+    emailAddress: StringOperators
+    createdAt: DateOperators
+    updatedAt: DateOperators
 }

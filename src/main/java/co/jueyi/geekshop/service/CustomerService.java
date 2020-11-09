@@ -16,12 +16,15 @@ import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.customer.*;
 import co.jueyi.geekshop.types.history.HistoryEntry;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
@@ -40,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("Duplicates")
 public class CustomerService {
     private final CustomerEntityMapper customerEntityMapper;
     private final AddressEntityMapper addressEntityMapper;
@@ -51,6 +55,54 @@ public class CustomerService {
     private final EventBus eventBus;
     private final ConfigService configService;
     private final ObjectMapper objectMapper;
+
+    public CustomerList findAll(CustomerListOptions options) {
+        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
+        IPage<CustomerEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().isNull(CustomerEntity::getDeletedAt);
+        if (options != null) {
+            buildFilter(queryWrapper, options.getFilter());
+            buildSortOrder(queryWrapper, options.getSort());
+        }
+        IPage<CustomerEntity> customerEntityPage =
+                this.customerEntityMapper.selectPage(page, queryWrapper);
+
+        CustomerList customerList = new CustomerList();
+        customerList.setTotalItems((int) customerEntityPage.getTotal()); // 设置满足条件总记录数
+
+        if (CollectionUtils.isEmpty(customerEntityPage.getRecords()))
+            return customerList; // 返回空
+
+        // 将持久化实体类型转换成GraphQL传输类型
+        customerEntityPage.getRecords().forEach(customerEntity -> {
+            Customer customer = BeanMapper.map(customerEntity, Customer.class);
+            customerList.getItems().add(customer);
+        });
+
+        return customerList;
+    }
+
+    private void buildSortOrder(QueryWrapper queryWrapper, CustomerSortParameter sortParameter) {
+        if (sortParameter == null) return ;
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getId(), "id");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getFirstName(), "first_name");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getLastName(), "last_name");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getPhoneNumber(), "phone_number");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getEmailAddress(), "email_address");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getCreatedAt(), "created_at");
+        QueryHelper.buildOneSortOrder(queryWrapper, sortParameter.getUpdatedAt(), "updated_at");
+    }
+
+    private void buildFilter(QueryWrapper queryWrapper, CustomerFilterParameter filterParameter) {
+        if (filterParameter == null) return;
+        QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getFirstName(), "first_name");
+        QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getLastName(), "last_name");
+        QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getPhoneNumber(), "phone_number");
+        QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getEmailAddress(), "email_address");
+        QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getCreatedAt(), "created_at");
+        QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
+    }
 
     public CustomerEntity findOneEntity(Long id) {
         QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
@@ -205,7 +257,6 @@ public class CustomerService {
         }
     }
 
-    @SuppressWarnings("Duplicates")
     public CustomerEntity verifiyCustomerEmailAddress(RequestContext ctx, String verificationToken, String password) {
         UserEntity userEntity = this.userService.verifyUserByToken(verificationToken, password);
         if (userEntity == null) return null;
@@ -237,7 +288,6 @@ public class CustomerService {
         this.historyService.createHistoryEntryForCustomer(args);
     }
 
-    @SuppressWarnings("Duplicates")
     public CustomerEntity resetPassword(RequestContext ctx, String passwordResetToken, String password) {
         UserEntity userEntity = this.userService.resetPasswordByToken(passwordResetToken, password);
         if (userEntity == null) return null;

@@ -43,7 +43,7 @@ public class GraphQLAuthGuardAspect {
     private final ConfigService configService;
     private final SessionService sessionService;
 
-    @Before("allGraphQLResolverMethods() && isDefinedInApplication()")
+    @Before("allGraphQLMutationOrQueryResolverMethods() && isDefinedInApplication()")
     public void doAuthGuard(JoinPoint joinPoint) {
         DataFetchingEnvironment dfe = (DataFetchingEnvironment) Arrays.stream(joinPoint.getArgs())
                 .filter(o -> o instanceof DataFetchingEnvironment).findFirst().orElse(null);
@@ -117,14 +117,16 @@ public class GraphQLAuthGuardAspect {
         return Arrays.asList(allow.value());
     }
 
-    /**
-     * Matches all beans that implement {@link graphql.kickstart.tools.GraphQLResolver}
-     * note: {@code GraphQLMutationResolver}, {@code GraphQLQueryResolver} etc
-     * extend base GraphQLResolver interface
-     */
-    @Pointcut("target(graphql.kickstart.tools.GraphQLResolver)")
-    public void allGraphQLResolverMethods() {
+    @Pointcut("allGraphQLMutationResolverMethods() || allGraphQLQueryResolverMethods()")
+    private void allGraphQLMutationOrQueryResolverMethods() {
+    }
 
+    @Pointcut("target(graphql.kickstart.tools.GraphQLMutationResolver)")
+    private void allGraphQLMutationResolverMethods() {
+    }
+
+    @Pointcut("target(graphql.kickstart.tools.GraphQLQueryResolver)")
+    private void allGraphQLQueryResolverMethods() {
     }
 
     /**

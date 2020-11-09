@@ -29,7 +29,7 @@ public class AuditHandler implements MetaObjectHandler {
         CachedSessionUser user = (CachedSessionUser) RequestContextHolder.getRequestAttributes()
                 .getAttribute(Constant.REQUEST_ATTRIBUTE_CURRENT_USER, RequestAttributes.SCOPE_REQUEST);
         if (user == null || user.getIdentifier() == null) {
-            return Constant.USERNAME_ANONYMOUSE;
+            return Constant.USERNAME_ANONYMOUS;
         }
         return user.getIdentifier();
     }

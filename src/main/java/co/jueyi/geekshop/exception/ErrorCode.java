@@ -33,6 +33,8 @@ public enum ErrorCode {
 
     ILLEGAL_OPERATION("The attempted operation is not allowed"),
 
+    BAD_PASSWORD_REST_TOKEN("Password reset token not recognized"),
+
     USER_INPUT_ERROR("Invalid request input parameters");
 
     public final String defaultMessage;

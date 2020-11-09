@@ -1,74 +1,101 @@
 package co.jueyi.geekshop.resolver.admin;
 
+import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.common.utils.BeanMapper;
+import co.jueyi.geekshop.custom.security.Allow;
+import co.jueyi.geekshop.entity.AddressEntity;
+import co.jueyi.geekshop.entity.CustomerEntity;
+import co.jueyi.geekshop.service.CustomerService;
 import co.jueyi.geekshop.types.address.Address;
-import co.jueyi.geekshop.types.common.CreateCustomerInput;
-import co.jueyi.geekshop.types.common.DeletionResponse;
-import co.jueyi.geekshop.types.common.UpdateAddressInput;
+import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.customer.*;
 import co.jueyi.geekshop.types.history.HistoryEntry;
 import graphql.kickstart.tools.GraphQLMutationResolver;
+import graphql.schema.DataFetchingEnvironment;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 @Component
+@RequiredArgsConstructor
 public class CustomerMutation implements GraphQLMutationResolver {
-    /**
-     * Mutation
-     */
+    private final CustomerService customerService;
 
     /**
      * Create a new Customer. If a password is provided, a new User will also be created and linked to the Customer.
      */
-    public Customer createCustomer(CreateCustomerInput input, String password) {
-        return null; // TODO
+    @Allow(Permission.CreateCustomer)
+    public Customer createCustomer(CreateCustomerInput input, String password, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        CustomerEntity customerEntity = this.customerService.create(ctx, input, password);
+        return BeanMapper.map(customerEntity, Customer.class);
     }
 
     /**
      * Update an existing Customer
      */
-    public Customer updateCustomer(UpdateCustomerInput input) {
-        return null; // TODO
+    @Allow(Permission.UpdateCustomer)
+    public Customer updateCustomerAdmin(UpdateCustomerInput input, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        CustomerEntity customerEntity = this.customerService.update(ctx, input);
+        return BeanMapper.map(customerEntity, Customer.class);
     }
 
     /**
      * Delete a Customer
      */
-    public DeletionResponse deleteCustomer(Long id) {
-        return null; // TODO
+    @Allow(Permission.DeleteCustomer)
+    public DeletionResponse deleteCustomer(Long id, DataFetchingEnvironment dfe) {
+        return this.customerService.softDelete(id);
     }
 
     /**
      * Create a new Address and associate it with the Customer specified by customerId
      */
-    public Address createCustomerAddress(Long customerId, CreateCustomerInput input) {
-        return null; // TODO
+    @Allow(Permission.CreateCustomer)
+    public Address createCustomerAddressAdmin(Long customerId, CreateAddressInput input, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        AddressEntity addressEntity = this.customerService.createAddress(ctx, customerId, input);
+        return BeanMapper.map(addressEntity, Address.class);
     }
 
     /**
      * Update an existing Address
      */
-    public Address updateCustomerAddress(UpdateAddressInput input) {
-        return null; // TODO
+    @Allow(Permission.UpdateCustomer)
+    public Address updateCustomerAddressAdmin(UpdateAddressInput input, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        AddressEntity addressEntity = this.customerService.updateAddress(ctx, input);
+        return BeanMapper.map(addressEntity, Address.class);
     }
 
     /**
      * Delete an existing Address
      */
-    public Boolean deleteCustomerAddress(Long id) {
-        return null; // TODO
+    @Allow(Permission.DeleteCustomer)
+    public Boolean deleteCustomerAddressAdmin(Long id, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        return this.customerService.deleteAddress(ctx, id);
     }
 
-    public Customer addNoteToCustomer(AddNoteToCustomerInput input) {
-        return null; // TODO
+    @Allow(Permission.UpdateCustomer)
+    public Customer addNoteToCustomer(AddNoteToCustomerInput input, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        CustomerEntity customerEntity = this.customerService.addNoteToCustomer(ctx, input);
+        return BeanMapper.map(customerEntity, Customer.class);
     }
 
-    public HistoryEntry updateCustomerNode(UpdateCustomerNoteInput input) {
-        return null; // TODO
+    @Allow(Permission.UpdateCustomer)
+    public HistoryEntry updateCustomerNode(UpdateCustomerNoteInput input, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        return this.customerService.updateCustomerNode(ctx, input);
     }
 
-    public DeletionResponse deleteCustomerNote(Long id) {
-        return null; // TODO
+    @Allow(Permission.UpdateCustomer)
+    public DeletionResponse deleteCustomerNote(Long id, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        return this.customerService.deleteCustomerNote(ctx, id);
     }
 }

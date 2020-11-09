@@ -10,9 +10,8 @@ type Customer implements Node {
     addresses: [Address!]
     orders(options: OrderListOptions): OrderList!
     user: User
-    # 该字段对shop api不可见
     groups: [CustomerGroup!]!
-    # 该字段对shop api不可见
+    # 该字段对shop api只可见public公开的历史记录
     history(options: HistoryEntryListOptions): HistoryEntryList
 }
 

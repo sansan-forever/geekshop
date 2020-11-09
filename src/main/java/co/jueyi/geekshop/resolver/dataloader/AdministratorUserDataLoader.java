@@ -1,4 +1,4 @@
-package co.jueyi.geekshop.resolver.admin.dataloader;
+package co.jueyi.geekshop.resolver.dataloader;
 
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.AdministratorEntity;
