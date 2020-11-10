@@ -8,7 +8,7 @@ package co.jueyi.geekshop.exception;
  */
 public class EntityNotFoundException extends AbstractGraphqlException {
     public EntityNotFoundException(String entityName, Long id) {
-        super(String.format("No { %s } with the id '{ %d }' could be found", entityName, id),
+        super(String.format("No %s with the id { %d } could be found", entityName, id),
                 ErrorCode.ENTITY_NOT_FOUND);
     }
 }

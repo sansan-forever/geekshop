@@ -1,0 +1,5 @@
+mutation UpdateAdministrator($input: UpdateAdministratorInput!) {
+    updateAdministrator(input: $input) {
+        ...Administrator
+    }
+}

@@ -1,0 +1,5 @@
+query GetAdministrator($id: ID!) {
+    administrator(id: $id) {
+        ...Administrator
+    }
+}

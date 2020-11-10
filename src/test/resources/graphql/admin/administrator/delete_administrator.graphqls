@@ -1,0 +1,6 @@
+mutation DeleteAdministrator($id: ID!) {
+    deleteAdministrator(id: $id) {
+        message
+        result
+    }
+}

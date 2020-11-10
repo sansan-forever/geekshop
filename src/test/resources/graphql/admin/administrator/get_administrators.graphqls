@@ -1,0 +1,8 @@
+query GetAdministrators($options: AdministratorListOptions) {
+    administrators(options: $options) {
+        items {
+            ...Administrator
+        }
+        totalItems
+    }
+}

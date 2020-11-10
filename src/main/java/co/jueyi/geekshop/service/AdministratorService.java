@@ -54,6 +54,7 @@ public class AdministratorService {
         Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
         IPage<AdministratorEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
         QueryWrapper<AdministratorEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().isNull(AdministratorEntity::getDeletedAt);
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());
             buildSortOrder(queryWrapper, options.getSort());
@@ -96,7 +97,9 @@ public class AdministratorService {
 
 
     public Administrator findOne(Long administratorId) {
-        AdministratorEntity administratorEntity = this.administratorEntityMapper.selectById(administratorId);
+        QueryWrapper<AdministratorEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AdministratorEntity::getId, administratorId).isNull(AdministratorEntity::getDeletedAt);
+        AdministratorEntity administratorEntity = this.administratorEntityMapper.selectOne(queryWrapper);
         if (administratorEntity == null) return null;
         return BeanMapper.map(administratorEntity, Administrator.class);
     }
@@ -119,6 +122,7 @@ public class AdministratorService {
         return BeanMapper.map(administratorEntity, Administrator.class);
     }
 
+    @Transactional
     public Administrator update(UpdateAdministratorInput input) {
         AdministratorEntity administratorEntity =
                 ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, input.getId());
@@ -132,6 +136,11 @@ public class AdministratorService {
             this.authenticationMethodEntityMapper.updateById(nativeAuthMethodEntity);
         }
         if (!CollectionUtils.isEmpty(input.getRoleIds())) {
+            // 清除现有roles
+            QueryWrapper<UserRoleJoinEntity> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(UserRoleJoinEntity::getUserId, administratorEntity.getUserId());
+            this.userRoleJoinEntityMapper.delete(queryWrapper);
+
             input.getRoleIds().forEach(roleId -> this.assignRole(administratorEntity.getId(), roleId));
         }
         return BeanMapper.map(administratorEntity, Administrator.class);

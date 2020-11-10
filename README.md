@@ -3,4 +3,4 @@
 
 ## Copyright
 
-#### Copyright © 2020-present, jueyi.co. All rights reserved.
+#### Copyright © 2020-present 掘艺网络(jueyi.co). All rights reserved.

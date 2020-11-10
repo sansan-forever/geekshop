@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020. 掘艺科技(jueyi.co).
+ * All rights reserved
+ */
+
 package co.jueyi.geekshop.resolver.admin;
 
 import co.jueyi.geekshop.*;
