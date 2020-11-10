@@ -30,7 +30,7 @@ public class AuthMutation extends BaseAuthMutation implements GraphQLMutationRes
      * `authenticate({ native: { ... }})`
      */
     @Allow(Permission.Public)
-    public LoginResult loginAdmin(String username, String password, Boolean rememberMe, DataFetchingEnvironment dfe) {
+    public LoginResult adminLogin(String username, String password, Boolean rememberMe, DataFetchingEnvironment dfe) {
         return super.login(username, password, rememberMe, dfe);
     }
 
@@ -38,12 +38,12 @@ public class AuthMutation extends BaseAuthMutation implements GraphQLMutationRes
      * Authenticates the user using a named authentication strategy
      */
     @Allow(Permission.Public)
-    public LoginResult authenticateAdmin(AuthenticationInput input, Boolean rememberMe, DataFetchingEnvironment dfe) {
+    public LoginResult adminAuthenticate(AuthenticationInput input, Boolean rememberMe, DataFetchingEnvironment dfe) {
         return super.authenticateAndCreateSession(input, rememberMe, dfe);
     }
 
     @Allow(Permission.Public)
-    public Boolean logoutAdmin(DataFetchingEnvironment dfe) {
+    public Boolean adminLogout(DataFetchingEnvironment dfe) {
         return super.logout(dfe);
     }
 }

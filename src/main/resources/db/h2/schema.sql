@@ -20,20 +20,20 @@ create table tb_auth_method (
     id bigint not null auto_increment,
     user_id bigint not null,
     external boolean not null default false,
-    /* begin for native auth */
+    /* begin for native shared */
     identifier varchar(30),
     password_hash varchar(255),
     verification_token varchar(100),
     password_reset_token varchar(100),
     identifier_change_token varchar(100),
     pending_identifier varchar(50),
-    /* end for native auth */
+    /* end for native shared */
 
-    /* begin for external auth */
+    /* begin for external shared */
     strategy varchar(30),
     external_identifier varchar(30),
     metadata text,
-    /* end for external auth */
+    /* end for external shared */
     created_by varchar(30),
     created_at datetime,
     updated_by varchar(30),
@@ -76,7 +76,7 @@ create table tb_user_role_join (
 
 create table tb_customer (
     id bigint not null auto_increment,
-    deletedAt datetime,
+    deleted_at datetime,
     title varchar(30),
     first_name varchar(30),
     last_name varchar(30),
@@ -109,7 +109,7 @@ create table tb_administrator (
 );
 create index idx_administrator_user_id on tb_administrator(user_id);
 
-create table address (
+create table tb_address (
      id bigint not null auto_increment,
      customer_id bigint not null,
      full_name varchar(30) not null default '',
@@ -120,8 +120,8 @@ create table address (
      province varchar(30) not null default '',
      postal_code varchar(30) not null default '',
      phone_number varchar(30) not null default '',
-     default_shipping_address boolean not null default false,
-     default_billing_address boolean not null default false,
+     default_shipping_address boolean default false,
+     default_billing_address boolean default false,
      created_by varchar(30),
      created_at datetime,
      updated_by varchar(30),
@@ -129,7 +129,7 @@ create table address (
      primary key (id),
      foreign key (customer_id) references tb_customer(id)
 );
-create index idx_address_customer_id on address(customer_id);
+create index idx_address_customer_id on tb_address(customer_id);
 
 create table tb_customer_group (
      id bigint not null auto_increment,
@@ -185,6 +185,10 @@ create table tb_customer_history_entry (
     is_public boolean,
     data text,
     customer_id bigint,
+    created_by varchar(30),
+    created_at datetime,
+    updated_by varchar(30),
+    updated_at datetime,
     primary key (id)
 );
 
@@ -197,5 +201,9 @@ create table tb_order_history_entry (
     is_public boolean,
     data text,
     order_id bigint,
+    created_by varchar(30),
+    created_at datetime,
+    updated_by varchar(30),
+    updated_at datetime,
     primary key (id)
 );

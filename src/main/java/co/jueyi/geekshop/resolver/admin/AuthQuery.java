@@ -22,7 +22,7 @@ public class AuthQuery extends BaseAuthQuery implements GraphQLQueryResolver {
     }
 
     @Allow({Permission.Authenticated, Permission.Owner})
-    public CurrentUser meAdmin(DataFetchingEnvironment dfe) {
+    public CurrentUser adminMe(DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         return super.me(ctx);
     }

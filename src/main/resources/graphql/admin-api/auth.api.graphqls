@@ -1,13 +1,13 @@
 extend type Query {
-    meAdmin: CurrentUser
+    adminMe: CurrentUser
 }
 
 extend type Mutation {
     "Authenticates the user using the native authentication strategy. This mutatation is an alias for `authenticate({ native: { ... }})"
-    loginAdmin(username: String!, password: String!, rememberMe: Boolean): LoginResult!
+    adminLogin(username: String!, password: String!, rememberMe: Boolean): LoginResult!
     "Authenticates the admin user using a named authentication strategy"
-    authenticateAdmin(input: AuthenticationInput!, rememberMe: Boolean): LoginResult!
-    logoutAdmin: Boolean!
+    adminAuthenticate(input: AuthenticationInput!, rememberMe: Boolean): LoginResult!
+    adminLogout: Boolean!
 }
 
 # Populated at run-time

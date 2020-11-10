@@ -21,6 +21,7 @@ import co.jueyi.geekshop.types.auth.LoginResult;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -87,7 +88,8 @@ public abstract class BaseAuthMutation {
                 NativeAuthenticationStrategy.KEY_USERNAME, username,
                 NativeAuthenticationStrategy.KEY_PASSWORD, password));
 
-        return this.authenticateAndCreateSession(input, rememberMe, dfe);
+        LoginResult loginResult = this.authenticateAndCreateSession(input, rememberMe, dfe);
+        return loginResult;
     }
 
     /**
@@ -95,7 +97,7 @@ public abstract class BaseAuthMutation {
      */
     protected LoginResult authenticateAndCreateSession(
             AuthenticationInput input,
-            boolean rememberMe,
+            Boolean rememberMe,
             DataFetchingEnvironment dfe) {
 
         CustomGraphQLServletContext customGraphQLServletContext = dfe.getContext();
@@ -112,7 +114,7 @@ public abstract class BaseAuthMutation {
             }
         }
         SessionTokenHelper.setSessionToken(session.getToken(),
-                rememberMe,
+                BooleanUtils.toBoolean(rememberMe),
                 this.configService.getAuthOptions(),
                 request,
                 response);

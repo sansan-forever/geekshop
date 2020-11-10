@@ -1,0 +1,17 @@
+query GetCustomerList($options: CustomerListOptions) {
+    customers(options: $options) {
+        items {
+            id
+            title
+            firstName
+            lastName
+            emailAddress
+            phoneNumber
+            user {
+                id
+                verified
+            }
+        }
+        totalItems
+    }
+}

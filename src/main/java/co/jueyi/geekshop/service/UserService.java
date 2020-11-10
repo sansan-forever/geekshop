@@ -233,14 +233,14 @@ public class UserService {
 
         AuthenticationMethodEntity nativeAuthMethod =
                 this.getNativeAuthMethodEntityByUserId(userEntity.getId());
-        nativeAuthMethod.setPasswordRestToken(this.verificationTokenGenerator.generateVerificationToken());
+        nativeAuthMethod.setPasswordResetToken(this.verificationTokenGenerator.generateVerificationToken());
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
         return userEntity;
     }
 
     public UserEntity resetPasswordByToken(String passwordResetToken, String password) {
         QueryWrapper<AuthenticationMethodEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AuthenticationMethodEntity::getPasswordRestToken, passwordResetToken);
+        queryWrapper.lambda().eq(AuthenticationMethodEntity::getPasswordResetToken, passwordResetToken);
         AuthenticationMethodEntity authMethodEntity =
                 this.authenticationMethodEntityMapper.selectOne(queryWrapper);
         if (authMethodEntity == null) return null;
@@ -252,7 +252,7 @@ public class UserService {
         AuthenticationMethodEntity nativeAuthMethod =
                 this.getNativeAuthMethodEntityByUserId(authMethodEntity.getUserId());
         nativeAuthMethod.setPasswordHash(this.passwordEncoder.encode(password));
-        nativeAuthMethod.setPasswordRestToken(null);
+        nativeAuthMethod.setPasswordResetToken(null);
 
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
 

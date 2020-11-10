@@ -518,7 +518,8 @@ public class CustomerService {
      * billing. If so, attempt to transfer default status to one of the other addresses if there are any.
      */
     private void reassignDefaultsForDeletedAddress(AddressEntity addressToDelete) {
-        if (!addressToDelete.isDefaultBillingAddress() && !addressToDelete.isDefaultShippingAddress()) {
+        if (!BooleanUtils.isTrue(addressToDelete.getDefaultBillingAddress()) &&
+                !BooleanUtils.isTrue(addressToDelete.getDefaultShippingAddress())) {
             return;
         }
         QueryWrapper<AddressEntity> queryWrapper = new QueryWrapper<>();
@@ -527,10 +528,10 @@ public class CustomerService {
         List<AddressEntity> otherAddressEntityList = this.addressEntityMapper.selectList(queryWrapper);
         if (!CollectionUtils.isEmpty(otherAddressEntityList)) {
             otherAddressEntityList.sort((a, b) -> a.getId() < b.getId() ? -1 : 1);
-            if (addressToDelete.isDefaultShippingAddress()) {
+            if (BooleanUtils.isTrue(addressToDelete.getDefaultShippingAddress())) {
                 otherAddressEntityList.get(0).setDefaultShippingAddress(true);
             }
-            if (addressToDelete.isDefaultBillingAddress()) {
+            if (BooleanUtils.isTrue(addressToDelete.getDefaultBillingAddress())) {
                 otherAddressEntityList.get(0).setDefaultBillingAddress(true);
             }
             this.addressEntityMapper.updateById(otherAddressEntityList.get(0));

@@ -18,7 +18,7 @@ import java.util.Date;
 public class SessionEntity extends BaseEntity {
     private String token;
     private Date expires;
-    private boolean invalided;
+    private boolean invalidated;
     private boolean anonymous;
     /**
      * The {@link co.jueyi.geekshop.types.user.User} who has authenticated to create this session.

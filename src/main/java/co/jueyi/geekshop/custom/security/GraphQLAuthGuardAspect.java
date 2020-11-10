@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -69,7 +70,7 @@ public class GraphQLAuthGuardAspect {
         graphQLServletContext.setRequestContext(ctx);
 
         // 用于审计
-        if (RequestContextHolder.getRequestAttributes() != null && session.getUser() != null) {
+        if (RequestContextHolder.getRequestAttributes() != null && session != null && session.getUser() != null) {
             RequestContextHolder.getRequestAttributes()
                     .setAttribute(Constant.REQUEST_ATTRIBUTE_CURRENT_USER,
                             session.getUser(), RequestAttributes.SCOPE_REQUEST);
@@ -79,7 +80,8 @@ public class GraphQLAuthGuardAspect {
             return; // pass
         }
 
-        boolean isAuthorized = session.getUser() != null && isUserAuthorized(session.getUser(), allowedPermissions);
+        boolean isAuthorized = session != null && session.getUser() != null &&
+                isUserAuthorized(session.getUser(), allowedPermissions);
         ctx.setAuthorized(isAuthorized);
         if (RequestContextHolder.getRequestAttributes() != null) {
             if (!isAuthorized && hasOwnerPermission) {
@@ -95,7 +97,10 @@ public class GraphQLAuthGuardAspect {
     }
 
     private boolean isUserAuthorized(CachedSessionUser user, List<Permission> allowedPermissions) {
-        return user.getPermissions().containsAll(allowedPermissions);
+        List<String> allowedPermissionsInString =
+                allowedPermissions.stream().map(p -> p.name()).collect(Collectors.toList());
+        boolean result = user.getPermissions().containsAll(allowedPermissionsInString);
+        return result;
     }
 
     private ApiType reflectApiType(JoinPoint joinPoint) {

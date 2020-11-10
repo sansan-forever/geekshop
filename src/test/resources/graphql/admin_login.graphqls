@@ -1,0 +1,8 @@
+mutation($username: String!, $password: String!) {
+    adminLogin(username: $username, password: $password) {
+        user {
+            id
+            identifier
+        }
+    }
+}

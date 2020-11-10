@@ -12,5 +12,5 @@ public class ConfigOptions {
     /**
      * Configuration for authorization.
      */
-    private AuthOptions authOptions;
+    private AuthOptions authOptions = new AuthOptions();
 }

@@ -25,20 +25,22 @@ management:
 # Logging
 logging:
   level:
-    org.springframework: info
-    org.springframework.jdbc.core: debug
-#    org.hibernate.SQL: debug
-#    org.hibernate.type.descriptor.sql: trace
-    io.geekshop: info
+    org.springframework: warn
+    io.geekshop: warn
+    graphql: error
+    # https://github.com/graphql-java-kickstart/graphql-spring-boot/issues/432
+    notprivacysafe.graphql: warn
 
 geekshop:
   company-name: ${COMPANY_NAME:GEEKSHOP}
   auth-options:
     disable-auth: ${DISABLE_AUTH:false}
     token-method: ${TOKEN_MEHTOD:cookie}
-    session-secret: ${SESSION_SECRET:session-secret}
-    auth-token-header-key: ${AUTH_TOKEN_HEADER_KEY:geekshop-auth-token}
-    session-duration: ${SESSION_DURATION:7d}
+    cookie-options:
+      http-only: ${COOKIE_HTTP_ONLY:true}
+    auth-token-header-key: ${AUTH_TOKEN_HEADER_KEY:geekshop-shared-token}
+    session-duration: ${SESSION_DURATION:1y}
+    session-cache-ttl: ${SESSION_CACHE_TTL:300}
     require-verification: ${REQUIRE_VERIFICATION:true}
     verification-token-duration: ${VERIFICATION_TOKEN_DURATION:7d}
     superadmin-credentials:

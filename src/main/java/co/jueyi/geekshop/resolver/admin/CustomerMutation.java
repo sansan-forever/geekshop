@@ -37,7 +37,7 @@ public class CustomerMutation implements GraphQLMutationResolver {
      * Update an existing Customer
      */
     @Allow(Permission.UpdateCustomer)
-    public Customer updateCustomerAdmin(UpdateCustomerInput input, DataFetchingEnvironment dfe) {
+    public Customer adminUpdateCustomer(UpdateCustomerInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         CustomerEntity customerEntity = this.customerService.update(ctx, input);
         return BeanMapper.map(customerEntity, Customer.class);
@@ -55,7 +55,7 @@ public class CustomerMutation implements GraphQLMutationResolver {
      * Create a new Address and associate it with the Customer specified by customerId
      */
     @Allow(Permission.CreateCustomer)
-    public Address createCustomerAddressAdmin(Long customerId, CreateAddressInput input, DataFetchingEnvironment dfe) {
+    public Address adminCreateCustomerAddress(Long customerId, CreateAddressInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         AddressEntity addressEntity = this.customerService.createAddress(ctx, customerId, input);
         return BeanMapper.map(addressEntity, Address.class);
@@ -65,7 +65,7 @@ public class CustomerMutation implements GraphQLMutationResolver {
      * Update an existing Address
      */
     @Allow(Permission.UpdateCustomer)
-    public Address updateCustomerAddressAdmin(UpdateAddressInput input, DataFetchingEnvironment dfe) {
+    public Address adminUpdateCustomerAddress(UpdateAddressInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         AddressEntity addressEntity = this.customerService.updateAddress(ctx, input);
         return BeanMapper.map(addressEntity, Address.class);
@@ -75,7 +75,7 @@ public class CustomerMutation implements GraphQLMutationResolver {
      * Delete an existing Address
      */
     @Allow(Permission.DeleteCustomer)
-    public Boolean deleteCustomerAddressAdmin(Long id, DataFetchingEnvironment dfe) {
+    public Boolean adminDeleteCustomerAddress(Long id, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         return this.customerService.deleteAddress(ctx, id);
     }

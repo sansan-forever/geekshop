@@ -8,19 +8,19 @@ extend type Mutation {
     createCustomer(input: CreateCustomerInput!, password: String): Customer!
 
     "Update an existing Customer"
-    updateCustomerAdmin(input: UpdateCustomerInput!): Customer!
+    adminUpdateCustomer(input: UpdateCustomerInput!): Customer!
 
     "Delete a Customer"
     deleteCustomer(id: ID!): DeletionResponse!
 
     "Create a new Address and associate it with the Customer specified by customerId"
-    createCustomerAddressAdmin(customerId: ID!, input: CreateAddressInput!): Address!
+    adminCreateCustomerAddress(customerId: ID!, input: CreateAddressInput!): Address!
 
     "Update an existing Address"
-    updateCustomerAddressAdmin(input: UpdateAddressInput!): Address!
+    adminUpdateCustomerAddress(input: UpdateAddressInput!): Address!
 
     "Update an existing Address"
-    deleteCustomerAddressAdmin(id: ID!): Boolean!
+    adminDeleteCustomerAddress(id: ID!): Boolean!
 
     addNoteToCustomer(input: AddNoteToCustomerInput!): Customer
     updateCustomerNode(input: UpdateCustomerNoteInput!): HistoryEntry!

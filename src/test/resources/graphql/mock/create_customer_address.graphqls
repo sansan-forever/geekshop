@@ -1,0 +1,6 @@
+mutation CreateCustomerAddress($customerId: ID!, $input: CreateAddressInput!) {
+    adminCreateCustomerAddress(customerId: $customerId, input: $input) {
+        id
+        streetLine1
+    }
+}

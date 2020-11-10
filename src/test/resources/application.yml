@@ -5,8 +5,8 @@ spring:
   datasource:
     schema: classpath*:db/${database}/schema.sql
     data: classpath*:db/${database}/data.sql
-    driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
   output:
     ansi:
       enabled: always
@@ -14,20 +14,27 @@ spring:
 # Logging
 logging:
   level:
+    graphql: error
+    notprivacysafe.graphql: error
     org.springframework: info
-#    org.hibernate.SQL: debug
-    #    org.hibernate.type.descriptor.sql: trace
     io.geekshop: info
-    io.geekshop.mapper: debug
 
 geekshop:
   company-name: ${COMPANY_NAME:GEEKSHOP}
   auth-options:
     disable-auth: ${DISABLE_AUTH:false}
     token-method: ${TOKEN_MEHTOD:bearer}
-    session-secret: ${SESSION_SECRET:some-secret}
-    auth-token-header-key: ${AUTH_TOKEN_HEADER_KEY:geekshop-auth-token}
-    session-duration: ${SESSION_DURATION:7d}
+    cookie-options:
+      http-only: ${COOKIE_HTTP_ONLY:true}
+    auth-token-header-key: ${AUTH_TOKEN_HEADER_KEY:geekshop-shared-token}
+    session-duration: ${SESSION_DURATION:1y}
+    session-cache-ttl: ${SESSION_CACHE_TTL:300}
     require-verification: ${REQUIRE_VERIFICATION:true}
     verification-token-duration: ${VERIFICATION_TOKEN_DURATION:7d}
+    superadmin-credentials:
+      identifier: ${SUPERADMIN_IDENTIFIER:superadmin}
+      password: ${SUPADMIN_PASSWORD:superadmin123}
+
+
+
 

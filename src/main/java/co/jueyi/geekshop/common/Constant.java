@@ -29,7 +29,7 @@ public abstract class Constant {
 
     public static final String NATIVE_AUTH_STRATEGY_NAME = "native";
 
-    public static final String DEFAULT_AUTH_TOKEN_HEADER_KEY = "geekshop-auth-token";
+    public static final String DEFAULT_AUTH_TOKEN_HEADER_KEY = "geekshop-shared-token";
     public static final String SUPER_ADMIN_USER_IDENTIFIER = "superadmin";
     public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin123";
 

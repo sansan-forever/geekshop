@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 /**
- * The AuthConfig define how auth & auth is managed.
+ * The AuthConfig define how shared & shared is managed.
  *
  * Created on Nov, 2020 by @author bobo
  */

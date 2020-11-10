@@ -58,7 +58,7 @@ public class SessionService {
         sessionEntity.setUserId(user.getId());
         sessionEntity.setAuthenticationStrategy(authenticationStrategyName);
         sessionEntity.setExpires(this.getExpiryDate(this.sessionDurationInMs));
-        sessionEntity.setInvalided(false);
+        sessionEntity.setInvalidated(false);
         sessionEntity.setAnonymous(false);
 
         this.sessionEntityMapper.insert(sessionEntity);
@@ -78,7 +78,7 @@ public class SessionService {
         SessionEntity newSession = new SessionEntity();
         newSession.setToken(token);
         newSession.setExpires(this.getExpiryDate(anonymousSessionDurationInMs));
-        newSession.setInvalided(false);
+        newSession.setInvalidated(false);
         newSession.setAnonymous(true);
         // save the new session
         this.sessionEntityMapper.insert(newSession);
@@ -122,7 +122,7 @@ public class SessionService {
      */
     private SessionEntity findSessionByToken(String token) {
         QueryWrapper<SessionEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(SessionEntity::isInvalided, false).eq(SessionEntity::getToken, token);
+        queryWrapper.lambda().eq(SessionEntity::isInvalidated, false).eq(SessionEntity::getToken, token);
         SessionEntity session = this.sessionEntityMapper.selectOne(queryWrapper);
         if (session != null && session.getExpires().getTime() > new Date().getTime()) {
             this.updateSessionExpiry(session);
@@ -160,6 +160,7 @@ public class SessionService {
             cachedSessionUser.setIdentifier(user.getIdentifier());
             cachedSessionUser.setVerified(user.getVerified());
             cachedSessionUser.setPermissions(getUserPermissions(user));
+            serializedSession.setUser(cachedSessionUser);
         }
         return serializedSession;
     }

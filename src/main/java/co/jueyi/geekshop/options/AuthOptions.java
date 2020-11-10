@@ -29,7 +29,7 @@ public class AuthOptions {
      *
      * Node that if the bearer method is used, GeekShop will automatically expose the configured
      * `authTokenHeaderKey` in the server's CORS configuration (adding `Access-Control-Expose-Headers:
-     * geekshop-auth-token` by default).
+     * geekshop-shared-token` by default).
      *
      * @default 'cookie'
      */
@@ -38,12 +38,12 @@ public class AuthOptions {
     /**
      * Options related to the handling of cookies when using the 'cookie' tokenMethod.
      */
-    private CookieOptions cookieOptions;
+    private CookieOptions cookieOptions = new CookieOptions();
 
     /**
-     * Sets the header property which will be used to send the auth token when using the 'bearer' method.
+     * Sets the header property which will be used to send the shared token when using the 'bearer' method.
      *
-     * @default 'geekshop-auth-token'
+     * @default 'geekshop-shared-token'
      */
     private String authTokenHeaderKey = Constant.DEFAULT_AUTH_TOKEN_HEADER_KEY;
     /**

@@ -5,4 +5,5 @@ type LoginResult {
 type CurrentUser {
     id: ID!
     identifier: String!
+    permissions: [Permission!]!
 }

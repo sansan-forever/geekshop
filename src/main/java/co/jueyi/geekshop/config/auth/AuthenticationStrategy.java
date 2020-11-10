@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public interface AuthenticationStrategy<Data> {
     /**
-     * The name of the strategy, for example `google`, 'facebook`, `keycloak`.
+     * The name of the strategy, for example `google`, `facebook`, `keycloak`.
      */
     String getName();
 

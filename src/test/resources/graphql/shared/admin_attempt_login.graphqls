@@ -1,0 +1,7 @@
+mutation AdminAttemptLogin($username: String!, $password: String!, $rememberMe: Boolean) {
+    adminLogin(username: $username, password: $password, rememberMe: $rememberMe) {
+        user {
+            ...CurrentUser
+        }
+    }
+}

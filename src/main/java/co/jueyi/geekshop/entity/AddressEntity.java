@@ -22,6 +22,6 @@ public class AddressEntity extends BaseEntity {
     private String province = "";
     private String postalCode = "";
     private String phoneNumber = "";
-    private boolean defaultShippingAddress;
-    private boolean defaultBillingAddress;
+    private Boolean defaultShippingAddress;
+    private Boolean defaultBillingAddress;
 }

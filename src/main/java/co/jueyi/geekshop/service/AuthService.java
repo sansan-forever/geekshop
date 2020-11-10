@@ -47,17 +47,17 @@ public class AuthService {
             RequestContext ctx,
             ApiType apiType,
             String authMethod,
-            Map<String, String> authData) {
+            Map<String, String> inputMap) {
         AttemptedLoginEvent attemptedLoginEvent = new AttemptedLoginEvent(
                 ctx,
                 authMethod,
                 Constant.NATIVE_AUTH_STRATEGY_NAME.equals(authMethod)
-                        ? authData.get(NativeAuthenticationStrategy.KEY_USERNAME) : null
+                        ? inputMap.get(NativeAuthenticationStrategy.KEY_USERNAME) : null
         );
         this.eventBus.post(attemptedLoginEvent);
 
         AuthenticationStrategy authStrategy = this.getAuthenticationStrategy(apiType, authMethod);
-        User user = authStrategy.authenticate(ctx, authData);
+        User user = authStrategy.authenticate(ctx, authStrategy.convertInputToData(inputMap));
         if (user == null) throw new UnauthorizedException();
         return this.createAuthenticatedSessionForUser(ctx, user, authStrategy.getName());
     }

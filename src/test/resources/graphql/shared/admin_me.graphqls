@@ -1,0 +1,5 @@
+query AdminMe {
+    adminMe {
+        ...CurrentUser
+    }
+}

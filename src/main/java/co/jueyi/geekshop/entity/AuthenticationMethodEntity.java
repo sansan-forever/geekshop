@@ -20,11 +20,11 @@ public class AuthenticationMethodEntity extends BaseEntity {
 
     private boolean external; // external or native
 
-    // begin for native auth
+    // begin for native shared
     private String identifier;
     private String passwordHash;
     private String verificationToken;
-    private String passwordRestToken;
+    private String passwordResetToken;
     /**
      * A token issued when a User requests to change their identifer (typically an email address)
      */
@@ -35,12 +35,12 @@ public class AuthenticationMethodEntity extends BaseEntity {
      * the current value of the `identifier` field.
      */
     private String pendingIdentifier;
-    // end for native auth
+    // end for native shared
 
-    // begin for external auth
+    // begin for external shared
     private String strategy;
     private String externalIdentifier;
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, String> metadata = new HashMap<>();
-    // end for external auth
+    // end for external shared
 }
