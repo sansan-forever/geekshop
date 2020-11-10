@@ -159,18 +159,10 @@ public class SessionService {
             cachedSessionUser.setId(user.getId());
             cachedSessionUser.setIdentifier(user.getIdentifier());
             cachedSessionUser.setVerified(user.getVerified());
-            cachedSessionUser.setPermissions(getUserPermissions(user));
+            cachedSessionUser.setPermissions(user.getPermissions());
             serializedSession.setUser(cachedSessionUser);
         }
         return serializedSession;
-    }
-
-    private List<Permission> getUserPermissions(User user) {
-        Set<Permission> permissionSet = new HashSet<>();
-        for (Role role : user.getRoles()) {
-            permissionSet.addAll(role.getPermissions());
-        }
-        return new ArrayList<>(permissionSet);
     }
 
     /**

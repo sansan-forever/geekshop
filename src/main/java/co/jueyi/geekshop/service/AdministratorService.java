@@ -34,6 +34,7 @@ import java.util.Date;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("Duplicates")
 public class AdministratorService {
     private final ConfigService configService;
     private final PasswordEncoder passwordEncoder;
@@ -49,7 +50,6 @@ public class AdministratorService {
         this.ensureSuperAdminExists();
     }
 
-    @SuppressWarnings("Duplicates")
     public AdministratorList findAll(AdministratorListOptions options) {
         Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
         IPage<AdministratorEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());

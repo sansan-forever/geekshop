@@ -2,16 +2,26 @@ package co.jueyi.geekshop.resolver.admin;
 
 import co.jueyi.geekshop.*;
 import co.jueyi.geekshop.common.Constant;
+import co.jueyi.geekshop.types.administrator.CreateAdministratorInput;
+import co.jueyi.geekshop.types.auth.CurrentUser;
+import co.jueyi.geekshop.types.common.CreateCustomerInput;
+import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.customer.CustomerList;
+import co.jueyi.geekshop.types.role.CreateRoleInput;
+import co.jueyi.geekshop.types.role.Role;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphql.spring.boot.test.GraphQLResponse;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,6 +43,20 @@ public class AuthResolverTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "admin_attempt_login");
     public static final String GET_CUSTOMER_LIST =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_list");
+    public static final String CREATE_ROLE =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_role");
+    public static final String ROLE_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "role_fragment");
+    public static final String CREATE_ADMINISTRATOR =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_administrator");
+    public static final String ADMINISTRATOR_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "administrator_fragment");
+
+    public static final String ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/auth/%s.graphqls";
+    public static final String CREATE_CUSTOMER =
+            String.format(ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE, "create_customer");
+    public static final String GET_CUSTOMER_COUNT =
+            String.format(ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_count");
 
     @Autowired
     ApiClient apiClient;
@@ -76,6 +100,9 @@ public class AuthResolverTest {
         assertThat(graphQLResponse.isOk());
     }
 
+    /**
+     * Customer user test
+     */
     @Test
     @Order(3)
     public void customer_user_cannot_login() throws IOException {
@@ -87,9 +114,121 @@ public class AuthResolverTest {
         String customerEmailAddress = customerList.getItems().get(0).getEmailAddress();
 
         try {
-            this.apiClient.asUserWithCredentials(customerEmailAddress, MockDataService.TEST_PASSWORD, true);
+            this.apiClient.asAdminUserWithCredentials(customerEmailAddress, MockDataService.TEST_PASSWORD);
         } catch (ApiException apiEx) {
             assertThat(apiEx.getMessage()).isEqualTo("The credentials did not match. Please check and try again");
         }
+    }
+
+    /**
+     * ReadCatalog permission test suite
+     */
+
+    @Test
+    @Order(4)
+    public void me_returns_correct_permissions_after_adding_read_catalog_permission() throws IOException {
+        this.apiClient.asSuperAdmin();
+        Pair<String, String> pair =
+                this.createAdministratorWithPermissions("ReadCatalog", Arrays.asList(Permission.ReadCatalog));
+        this.apiClient.asAdminUserWithCredentials(pair.getLeft(), pair.getRight());
+
+        GraphQLResponse graphQLResponse =
+                this.apiClient.perform(ADMIN_ME, null, Arrays.asList(CURRENT_USER_FRAGMENT));
+        assertThat(graphQLResponse.isOk());
+
+        CurrentUser currentUser = graphQLResponse.get("$.data.adminMe", CurrentUser.class);
+        assertThat(currentUser.getPermissions()).containsExactlyInAnyOrder(
+                Permission.Authenticated, Permission.ReadCatalog
+        );
+    }
+
+    // TODO add read/update/create product test
+
+    /**
+     * CRUD on Customers permissions test suite
+     */
+    @Test
+    @Order(5)
+    public void me_returns_correct_permissions_after_adding_crud_on_customers_permission() throws IOException {
+        this.apiClient.asSuperAdmin();
+        Pair<String, String> pair = this.createAdministratorWithPermissions("CRUDCustomer",
+                        Arrays.asList(
+                                Permission.ReadCustomer,
+                                Permission.CreateCustomer,
+                                Permission.UpdateCustomer,
+                                Permission.DeleteCustomer));
+        this.apiClient.asAdminUserWithCredentials(pair.getLeft(), pair.getRight());
+
+        GraphQLResponse graphQLResponse =
+                this.apiClient.perform(ADMIN_ME, null, Arrays.asList(CURRENT_USER_FRAGMENT));
+        assertThat(graphQLResponse.isOk());
+
+        CurrentUser currentUser = graphQLResponse.get("$.data.adminMe", CurrentUser.class);
+        assertThat(currentUser.getPermissions()).containsExactlyInAnyOrder(
+                Permission.ReadCustomer,
+                Permission.CreateCustomer,
+                Permission.UpdateCustomer,
+                Permission.DeleteCustomer,
+                Permission.Authenticated
+        );
+    }
+
+    @Test
+    @Order(6)
+    public void can_create_customer() throws IOException {
+        CreateCustomerInput createCustomerInput = new CreateCustomerInput();
+        createCustomerInput.setEmailAddress("");
+        createCustomerInput.setFirstName("");
+        createCustomerInput.setLastName("");
+
+        JsonNode inputNode = objectMapper.valueToTree(createCustomerInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.apiClient.perform(CREATE_CUSTOMER, variables);
+        assertThat(graphQLResponse.isOk());
+    }
+
+    @Test
+    @Order(7)
+    public void can_read_customer() throws IOException {
+        GraphQLResponse graphQLResponse = this.apiClient.perform(GET_CUSTOMER_COUNT, null);
+        assertThat(graphQLResponse.isOk());
+        CustomerList customerList = graphQLResponse.get("$.data.customers", CustomerList.class);
+        assertThat(customerList.getTotalItems()).isEqualTo(2);
+    }
+
+    private Pair<String, String> createAdministratorWithPermissions(String code, List<Permission> permissions)
+            throws IOException {
+        CreateRoleInput input = new CreateRoleInput();
+        input.setCode(code);
+        input.setDescription("");
+        input.setPermissions(permissions);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.apiClient.perform(CREATE_ROLE, variables, Arrays.asList(ROLE_FRAGMENT));
+        assertThat(graphQLResponse.isOk());
+        Role role = graphQLResponse.get("$.data.createRole", Role.class);
+
+        String identifier = code + "@" + RandomStringUtils.randomAlphabetic(7);
+        String password = MockDataService.TEST_PASSWORD;
+
+        CreateAdministratorInput createAdministratorInput = new CreateAdministratorInput();
+        createAdministratorInput.setEmailAddress(identifier);
+        createAdministratorInput.setFirstName(code);
+        createAdministratorInput.setLastName("Admin");
+        createAdministratorInput.setPassword(password);
+        createAdministratorInput.getRoleIds().add(role.getId());
+
+        inputNode = objectMapper.valueToTree(createAdministratorInput);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+        graphQLResponse = this.apiClient.perform(CREATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+        assertThat(graphQLResponse.isOk());
+
+        return Pair.of(identifier, password);
     }
 }

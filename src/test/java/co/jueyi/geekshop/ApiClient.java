@@ -186,14 +186,18 @@ public class ApiClient {
         return this.authToken;
     }
 
-    public void asUserWithCredentials(String username, String password) throws IOException {
+    public void asCustomerUserWithCredentials(String username, String password) throws IOException {
         asUserWithCredentials(username, password, false);
+    }
+
+    public void asAdminUserWithCredentials(String username, String password) throws IOException {
+        asUserWithCredentials(username, password, true);
     }
 
     /**
      * Attempts to log in with the specified credentials.
      */
-    public void asUserWithCredentials(String username, String password, boolean admin) throws IOException {
+    private void asUserWithCredentials(String username, String password, boolean admin) throws IOException {
         // first log out as the current user
         if (!StringUtils.isEmpty(this.authToken)) {
             perform(admin? ADMIN_LOGOUT : LOGOUT, null);

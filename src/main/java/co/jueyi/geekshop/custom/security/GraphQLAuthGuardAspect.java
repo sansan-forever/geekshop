@@ -7,8 +7,8 @@ import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.CachedSessionUser;
 import co.jueyi.geekshop.custom.graphql.CustomGraphQLServletContext;
 import co.jueyi.geekshop.exception.ErrorCode;
+import co.jueyi.geekshop.exception.ForbiddenException;
 import co.jueyi.geekshop.exception.InternalServerError;
-import co.jueyi.geekshop.exception.UnauthorizedException;
 import co.jueyi.geekshop.service.ConfigService;
 import co.jueyi.geekshop.service.SessionService;
 import co.jueyi.geekshop.types.common.Permission;
@@ -92,7 +92,7 @@ public class GraphQLAuthGuardAspect {
         }
 
         if (!isAuthorized && !hasOwnerPermission) {
-            throw new UnauthorizedException();
+            throw new ForbiddenException();
         }
     }
 

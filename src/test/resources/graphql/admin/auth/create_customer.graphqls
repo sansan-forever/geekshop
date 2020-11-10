@@ -1,0 +1,5 @@
+mutation CanCreateCustomer($input: CreateCustomerInput!) {
+    createCustomer(input: $input) {
+        id
+    }
+}

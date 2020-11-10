@@ -1,0 +1,17 @@
+fragment Administrator on Administrator {
+    id
+    firstName
+    lastName
+    emailAddress
+    user {
+        id
+        identifier
+        lastLogin
+        roles {
+            id
+            code
+            description
+            permissions
+        }
+    }
+}

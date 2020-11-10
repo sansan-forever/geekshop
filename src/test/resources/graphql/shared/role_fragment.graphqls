@@ -1,0 +1,6 @@
+fragment Role on Role {
+    id
+    code
+    description
+    permissions
+}

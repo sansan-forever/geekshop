@@ -7,10 +7,12 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
+@Configuration
 public class MybatisPlusConfig {
     @Value("${database:h2}")
     private String dbName;
