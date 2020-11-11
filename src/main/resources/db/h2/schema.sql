@@ -45,6 +45,7 @@ create index idx_auth_method_user_id on tb_auth_method(user_id);
 create index idx_auth_method_verification_token on tb_auth_method(verification_token);
 create index idx_auth_method_password_reset_token on tb_auth_method(password_reset_token);
 create index idx_auth_method_identifier_change_token on tb_auth_method(identifier_change_token);
+create index idx_auth_method_external_identifier on tb_auth_method(external_identifier);
 
 create table tb_role (
     id bigint not null auto_increment,

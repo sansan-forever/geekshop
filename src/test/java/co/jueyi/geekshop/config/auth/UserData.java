@@ -11,7 +11,8 @@ import lombok.Data;
  * Created on Nov, 2020 by @author bobo
  */
 @Data
-public class NativeAuthenticationData {
-    private String username;
-    private String password;
+public class UserData {
+    private String email;
+    private String firstName;
+    private String lastName;
 }

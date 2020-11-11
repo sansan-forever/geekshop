@@ -1,8 +1,6 @@
 package co.jueyi.geekshop;
 
 import co.jueyi.geekshop.common.Constant;
-import co.jueyi.geekshop.common.RoleCode;
-import co.jueyi.geekshop.options.ConfigOptions;
 import co.jueyi.geekshop.options.SuperadminCredentials;
 import co.jueyi.geekshop.service.ConfigService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -61,7 +59,13 @@ public class ApiClient {
 
     private String authToken;
 
+    private boolean adminClient;
+
     private HttpHeaders headers = new HttpHeaders();
+
+    public ApiClient(boolean adminClient) {
+        this.adminClient = adminClient;
+    }
 
     private String createJsonQuery(String graphql, ObjectNode variables)
             throws JsonProcessingException {
@@ -186,26 +190,18 @@ public class ApiClient {
         return this.authToken;
     }
 
-    public void asCustomerUserWithCredentials(String username, String password) throws IOException {
-        asUserWithCredentials(username, password, false);
-    }
-
-    public void asAdminUserWithCredentials(String username, String password) throws IOException {
-        asUserWithCredentials(username, password, true);
-    }
-
     /**
      * Attempts to log in with the specified credentials.
      */
-    private void asUserWithCredentials(String username, String password, boolean admin) throws IOException {
+    public void asUserWithCredentials(String username, String password) throws IOException {
         // first log out as the current user
         if (!StringUtils.isEmpty(this.authToken)) {
-            perform(admin? ADMIN_LOGOUT : LOGOUT, null);
+            perform(this.adminClient ? ADMIN_LOGOUT : LOGOUT, null);
         }
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("username", username);
         variables.put("password", password);
-        GraphQLResponse response = perform(admin? ADMIN_LOGIN : LOGIN, variables);
+        GraphQLResponse response = perform(this.adminClient? ADMIN_LOGIN : LOGIN, variables);
         assertThat(response.isOk());
     }
 
@@ -213,8 +209,7 @@ public class ApiClient {
      * Logs out so that the client is then treated as an anonymous user.
      */
     public void asAnonymousUser() throws IOException {
-        perform(ADMIN_LOGOUT, null);
-        perform(LOGOUT, null);
+        perform(this.adminClient ? ADMIN_LOGOUT : LOGOUT, null);
     }
 
     /**
@@ -224,17 +219,11 @@ public class ApiClient {
         SuperadminCredentials superadminCredentials = this.configService.getAuthOptions().getSuperadminCredentials();
         this.asUserWithCredentials(
                 superadminCredentials.getIdentifier(),
-                superadminCredentials.getPassword(),
-                true);
+                superadminCredentials.getPassword());
     }
 
     /**
      * 支持抛出异常的perform
-     *
-     * @param graphqlResource
-     * @param variables
-     * @return
-     * @throws IOException
      */
     public GraphQLResponse perform(String graphqlResource, ObjectNode variables) throws IOException {
         String graphql = loadQuery(graphqlResource);
@@ -245,12 +234,6 @@ public class ApiClient {
 
     /**
      * 支持抛出异常和GraphQL Fragment的perform
-     *
-     * @param graphqlResource
-     * @param variables
-     * @param fragmentResources
-     * @return
-     * @throws IOException
      */
     public GraphQLResponse perform(String graphqlResource, ObjectNode variables, List<String> fragmentResources)
             throws IOException {

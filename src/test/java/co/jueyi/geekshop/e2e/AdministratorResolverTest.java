@@ -3,9 +3,10 @@
  * All rights reserved.
  */
 
-package co.jueyi.geekshop.resolver.admin;
+package co.jueyi.geekshop.e2e;
 
 import co.jueyi.geekshop.*;
+import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.administrator.AdministratorList;
 import co.jueyi.geekshop.types.administrator.CreateAdministratorInput;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
@@ -51,7 +53,8 @@ public class AdministratorResolverTest {
             String.format(ADMINISTRATOR_GRAPHQL_RESOURCE_TEMPLATE, "delete_administrator");
 
     @Autowired
-    ApiClient apiClient;
+    @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
+    ApiClient adminClient;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -64,14 +67,14 @@ public class AdministratorResolverTest {
     @BeforeAll
     void beforeAll() throws IOException {
         mockDataService.populate(PopulateOptions.builder().customerCount(1).build());
-        apiClient.asSuperAdmin();
+        adminClient.asSuperAdmin();
     }
 
     @Test
     @Order(1)
     public void administrators() throws IOException {
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         AdministratorList administratorList =
                 graphQLResponse.get("$.data.administrators", AdministratorList.class);
         assertThat(administratorList.getItems()).hasSize(1);
@@ -93,7 +96,7 @@ public class AdministratorResolverTest {
         variables.set("input", inputNode);
 
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(CREATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(CREATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         assertThat(graphQLResponse.isOk());
         createdAdmin = graphQLResponse.get("$.data.createAdministrator", Administrator.class);
 
@@ -110,7 +113,7 @@ public class AdministratorResolverTest {
         variables.put("id", createdAdmin.getId());
 
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(GET_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(GET_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         assertThat(graphQLResponse.isOk());
         Administrator administrator = graphQLResponse.get("$.data.administrator", Administrator.class);
         assertThat(administrator).isEqualTo(createdAdmin);
@@ -132,7 +135,7 @@ public class AdministratorResolverTest {
         variables.set("input", inputNode);
 
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         assertThat(graphQLResponse.isOk());
         Administrator administrator = graphQLResponse.get("$.data.updateAdministrator", Administrator.class);
 
@@ -155,7 +158,7 @@ public class AdministratorResolverTest {
         variables.set("input", inputNode);
 
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         assertThat(graphQLResponse.isOk());
         Administrator administrator = graphQLResponse.get("$.data.updateAdministrator", Administrator.class);
 
@@ -181,7 +184,7 @@ public class AdministratorResolverTest {
         variables.set("input", inputNode);
 
         try {
-            this.apiClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+            this.adminClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         } catch (ApiException apiEx) {
             assertThat(apiEx.getMessage()).isEqualTo("No Role with the id { 999 } could be found");
         }
@@ -191,7 +194,7 @@ public class AdministratorResolverTest {
     @Order(7)
     public void deleteAdministrator() throws IOException {
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         AdministratorList administratorsBefore =
                 graphQLResponse.get("$.data.administrators", AdministratorList.class);
         assertThat(administratorsBefore.getTotalItems()).isEqualTo(2);
@@ -200,14 +203,14 @@ public class AdministratorResolverTest {
         variables.put("id", createdAdmin.getId());
 
         graphQLResponse =
-                this.apiClient.perform(DELETE_ADMINISTRATOR, variables);
+                this.adminClient.perform(DELETE_ADMINISTRATOR, variables);
         assertThat(graphQLResponse.isOk());
         DeletionResponse deletionResponse =
                 graphQLResponse.get("$.data.deleteAdministrator", DeletionResponse.class);
         assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
 
         graphQLResponse =
-                this.apiClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(GET_ADMINISTRATORS, null, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         AdministratorList administratorsAfter =
                 graphQLResponse.get("$.data.administrators", AdministratorList.class);
         assertThat(administratorsAfter.getTotalItems()).isEqualTo(1);
@@ -220,7 +223,7 @@ public class AdministratorResolverTest {
         variables.put("id", createdAdmin.getId());
 
         GraphQLResponse graphQLResponse =
-                this.apiClient.perform(GET_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+                this.adminClient.perform(GET_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
         assertThat(graphQLResponse.isOk());
         Administrator administrator = graphQLResponse.get("$.data.administrator", Administrator.class);
         assertThat(administrator).isNull();

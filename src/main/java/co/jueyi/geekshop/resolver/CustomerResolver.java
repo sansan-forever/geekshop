@@ -68,10 +68,10 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
                 .getDataLoader(Constant.DATA_LOADER_NAME_CUSTOMER_HISTORY);
 
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        if (options == null) {
+            options = new HistoryEntryListOptions();
+        }
         if (ApiType.SHOP.equals(ctx.getApiType())) { // show public only
-            if (options == null) {
-                options = new HistoryEntryListOptions();
-            }
             if (options.getFilter() == null) {
                 options.setFilter(new HistoryEntryFilterParameter());
             }
@@ -82,7 +82,7 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
         }
 
         if (options.getSort() == null) {
-            HistoryEntrySortParameter sort = options.getSort();
+            HistoryEntrySortParameter sort = new HistoryEntrySortParameter();
             sort.setCreatedAt(SortOrder.ASC);
             options.setSort(sort);
         }

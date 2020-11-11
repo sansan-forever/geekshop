@@ -14,7 +14,6 @@ import co.jueyi.geekshop.types.administrator.*;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.role.Role;
-import co.jueyi.geekshop.types.user.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -96,34 +95,32 @@ public class AdministratorService {
     }
 
 
-    public Administrator findOne(Long administratorId) {
+    public AdministratorEntity findOneEntity(Long administratorId) {
         QueryWrapper<AdministratorEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AdministratorEntity::getId, administratorId).isNull(AdministratorEntity::getDeletedAt);
         AdministratorEntity administratorEntity = this.administratorEntityMapper.selectOne(queryWrapper);
-        if (administratorEntity == null) return null;
-        return BeanMapper.map(administratorEntity, Administrator.class);
+        return administratorEntity;
     }
 
-    public Administrator findOneByUserId(Long userId) {
+    public AdministratorEntity findOneEntityByUserId(Long userId) {
         QueryWrapper<AdministratorEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AdministratorEntity::getUserId, userId).isNull(AdministratorEntity::getDeletedAt);
         AdministratorEntity administratorEntity = this.administratorEntityMapper.selectOne(queryWrapper);
-        if (administratorEntity == null) return null;
-        return BeanMapper.map(administratorEntity, Administrator.class);
+        return administratorEntity;
     }
 
     @Transactional
-    public Administrator create(CreateAdministratorInput input) {
+    public AdministratorEntity create(CreateAdministratorInput input) {
         AdministratorEntity administratorEntity = BeanMapper.map(input, AdministratorEntity.class);
         UserEntity userEntity = this.userService.createAdminUser(input.getEmailAddress(), input.getPassword());
         administratorEntity.setUserId(userEntity.getId());
         this.administratorEntityMapper.insert(administratorEntity);
         input.getRoleIds().forEach(roleId -> this.assignRole(administratorEntity.getId(), roleId));
-        return BeanMapper.map(administratorEntity, Administrator.class);
+        return administratorEntity;
     }
 
     @Transactional
-    public Administrator update(UpdateAdministratorInput input) {
+    public AdministratorEntity update(UpdateAdministratorInput input) {
         AdministratorEntity administratorEntity =
                 ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, input.getId());
         BeanMapper.patch(input, administratorEntity);
@@ -143,13 +140,13 @@ public class AdministratorService {
 
             input.getRoleIds().forEach(roleId -> this.assignRole(administratorEntity.getId(), roleId));
         }
-        return BeanMapper.map(administratorEntity, Administrator.class);
+        return administratorEntity;
     }
 
     /**
      * Assigns a Role to the Administrator's User entity.
      */
-    public Administrator assignRole(Long administratorId, Long roleId) {
+    public AdministratorEntity assignRole(Long administratorId, Long roleId) {
         AdministratorEntity administratorEntity = this.administratorEntityMapper.selectById(administratorId);
         if (administratorEntity == null) throw new EntityNotFoundException("Administrator", administratorId);
         Role role = this.roleService.findOne(roleId);
@@ -163,7 +160,7 @@ public class AdministratorService {
             userRoleJoinEntity.setUserId(administratorEntity.getUserId());
             this.userRoleJoinEntityMapper.insert(userRoleJoinEntity);
         }
-        return BeanMapper.map(administratorEntity, Administrator.class);
+        return administratorEntity;
     }
 
     public DeletionResponse softDelete(Long id) {

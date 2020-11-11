@@ -8,6 +8,7 @@ import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.custom.graphql.CustomGraphQLServletContext;
 import co.jueyi.geekshop.custom.security.SessionTokenHelper;
+import co.jueyi.geekshop.entity.AdministratorEntity;
 import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.UnauthorizedException;
 import co.jueyi.geekshop.service.AdministratorService;
@@ -108,8 +109,9 @@ public abstract class BaseAuthMutation {
         ApiType apiType = ctx.getApiType();
         CachedSession session = this.authService.authenticate(ctx, apiType, input.getMethod(), input.getData());
         if (apiType != null && ApiType.ADMIN.equals(apiType)) {
-            Administrator administrator = this.administratorService.findOneByUserId(session.getUser().getId());
-            if (administrator == null) {
+            AdministratorEntity administratorEntity =
+                    this.administratorService.findOneEntityByUserId(session.getUser().getId());
+            if (administratorEntity == null) {
                 throw new UnauthorizedException();
             }
         }

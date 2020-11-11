@@ -1,6 +1,8 @@
 package co.jueyi.geekshop.resolver.admin;
 
+import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.custom.security.Allow;
+import co.jueyi.geekshop.entity.AdministratorEntity;
 import co.jueyi.geekshop.service.AdministratorService;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.administrator.AdministratorList;
@@ -27,6 +29,8 @@ public class AdministratorQuery implements GraphQLQueryResolver {
 
     @Allow(Permission.ReadAdministrator)
     public Administrator administrator(Long id, DataFetchingEnvironment dfe) {
-        return administratorService.findOne(id);
+        AdministratorEntity administratorEntity = administratorService.findOneEntity(id);
+        if (administratorEntity == null) return null;
+        return BeanMapper.map(administratorEntity, Administrator.class);
     }
 }

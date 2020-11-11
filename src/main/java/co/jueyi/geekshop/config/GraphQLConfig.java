@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.config;
 
 import co.jueyi.geekshop.custom.scalar.DateTimeScalar;
@@ -42,7 +47,6 @@ public class GraphQLConfig {
     public SchemaParserDictionary schemaParserDictionary() {
         SchemaParserDictionary schemaParserDictionary = new SchemaParserDictionary();
         schemaParserDictionary.add(PaymentMethod.class);
-//        schemaParserDictionary.add(StockMovement.class);
         schemaParserDictionary.add(StockAdjustment.class);
         schemaParserDictionary.add(Sale.class);
         schemaParserDictionary.add(Cancellation.class);

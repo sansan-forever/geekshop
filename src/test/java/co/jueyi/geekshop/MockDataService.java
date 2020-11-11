@@ -1,5 +1,6 @@
 package co.jueyi.geekshop;
 
+import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.service.ConfigService;
 import co.jueyi.geekshop.types.common.CreateAddressInput;
 import co.jueyi.geekshop.types.common.CreateCustomerInput;
@@ -11,6 +12,7 @@ import com.github.javafaker.Faker;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.IOException;
 
@@ -34,7 +36,8 @@ public class MockDataService {
     ObjectMapper mapper;
 
     @Autowired
-    ApiClient apiClient;
+    @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
+    ApiClient adminClient;
 
     @Autowired
     ConfigService configService;
@@ -44,7 +47,7 @@ public class MockDataService {
     public void populate(PopulateOptions options) throws IOException {
         boolean originalRequiredVerification = this.configService.getAuthOptions().isRequireVerification();
         this.configService.getAuthOptions().setRequireVerification(false);
-        apiClient.asSuperAdmin();
+        adminClient.asSuperAdmin();
 
         Integer customerCount = options.getCustomerCount() == null ? 5 : options.getCustomerCount();
         populateCustomers(customerCount);
@@ -72,7 +75,7 @@ public class MockDataService {
             variables.set("input", inputNode);
             variables.put("password", TEST_PASSWORD);
 
-            GraphQLResponse graphQLResponse = this.apiClient.perform(CREATE_CUSTOMER, variables);
+            GraphQLResponse graphQLResponse = this.adminClient.perform(CREATE_CUSTOMER, variables);
             Customer customer = graphQLResponse.get("$.data.createCustomer", Customer.class);
 
             if (customer == null) continue;
@@ -89,7 +92,7 @@ public class MockDataService {
             variables.set("input", inputNode);
             variables.put("customerId", customer.getId());
 
-            this.apiClient.perform(CREATE_CUSTOMER_ADDRESS, variables);
+            this.adminClient.perform(CREATE_CUSTOMER_ADDRESS, variables);
         }
         log.info("Created " + count + " Customers");
     }

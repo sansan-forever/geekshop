@@ -2,6 +2,7 @@ package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
+import co.jueyi.geekshop.entity.AdministratorEntity;
 import co.jueyi.geekshop.entity.CustomerHistoryEntryEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
 import co.jueyi.geekshop.mapper.CustomerHistoryEntryEntityMapper;
@@ -9,7 +10,6 @@ import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
-import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.history.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -30,7 +30,7 @@ import org.springframework.util.CollectionUtils;
 @RequiredArgsConstructor
 public class HistoryService {
     private final AdministratorService administratorService;
-    private final CustomerHistoryEntryEntityMapper customerHistoryEntryMapper;
+    private final CustomerHistoryEntryEntityMapper customerHistoryEntryEntityMapper;
 
     public static final String KEY_STRATEGY = "strategy";
     public static final String KEY_OLD_EMAIL_ADDRESS = "oldEmailAddress";
@@ -50,7 +50,7 @@ public class HistoryService {
             buildSortOrder(queryWrapper, options.getSort());
         }
         IPage<CustomerHistoryEntryEntity> customerHistoryEntryEntityPage =
-                this.customerHistoryEntryMapper.selectPage(page, queryWrapper);
+                this.customerHistoryEntryEntityMapper.selectPage(page, queryWrapper);
 
         HistoryEntryList historyEntryList = new HistoryEntryList();
         historyEntryList.setTotalItems((int) customerHistoryEntryEntityPage.getTotal());
@@ -87,12 +87,13 @@ public class HistoryService {
     }
 
     public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isPublic) {
-        Administrator administrator = this.getAdministratorFromContext(args.getCtx());
+        AdministratorEntity administratorEntity =
+                this.getAdministratorFromContext(args.getCtx());
         CustomerHistoryEntryEntity customerHistoryEntryEntity =
                 BeanMapper.map(args, CustomerHistoryEntryEntity.class);
-        customerHistoryEntryEntity.setAdministratorId(administrator == null ? null : administrator.getId());
+        customerHistoryEntryEntity.setAdministratorId(administratorEntity == null ? null : administratorEntity.getId());
         customerHistoryEntryEntity.setPublic(BooleanUtils.toBoolean(isPublic));
-        this.customerHistoryEntryMapper.insert(customerHistoryEntryEntity);
+        this.customerHistoryEntryEntityMapper.insert(customerHistoryEntryEntity);
         return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
     }
 
@@ -101,7 +102,7 @@ public class HistoryService {
         queryWrapper.lambda().eq(CustomerHistoryEntryEntity::getId, args.getEntryId())
                 .eq(CustomerHistoryEntryEntity::getType, args.getType());
         CustomerHistoryEntryEntity customerHistoryEntryEntity =
-                this.customerHistoryEntryMapper.selectOne(queryWrapper);
+                this.customerHistoryEntryEntityMapper.selectOne(queryWrapper);
         if (customerHistoryEntryEntity == null) {
             throw new EntityNotFoundException("CustomerHistoryEntry", args.getEntryId());
         }
@@ -109,23 +110,23 @@ public class HistoryService {
         if (args.getData() != null && !args.getData().isEmpty()) {
             customerHistoryEntryEntity.setData(args.getData());
         }
-        Administrator administrator = this.getAdministratorFromContext(args.getCtx());
-        if (administrator != null) {
-            customerHistoryEntryEntity.setCustomerId(administrator.getId());
+        AdministratorEntity administratorEntity = this.getAdministratorFromContext(args.getCtx());
+        if (administratorEntity != null) {
+            customerHistoryEntryEntity.setCustomerId(administratorEntity.getId());
         }
-        this.customerHistoryEntryMapper.updateById(customerHistoryEntryEntity);
+        this.customerHistoryEntryEntityMapper.updateById(customerHistoryEntryEntity);
         return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
     }
 
     public void deleteCustomerHistoryEntry(Long id) {
         // 确保存在
-        ServiceHelper.getEntityOrThrow(this.customerHistoryEntryMapper, id);
-        this.customerHistoryEntryMapper.deleteById(id);
+        ServiceHelper.getEntityOrThrow(this.customerHistoryEntryEntityMapper, id);
+        this.customerHistoryEntryEntityMapper.deleteById(id);
     }
 
-    private Administrator getAdministratorFromContext(RequestContext ctx) {
+    private AdministratorEntity getAdministratorFromContext(RequestContext ctx) {
         if (ctx.getActiveUserId() == null) return null;
 
-        return this.administratorService.findOneByUserId(ctx.getActiveUserId());
+        return this.administratorService.findOneEntityByUserId(ctx.getActiveUserId());
     }
 }

@@ -1,6 +1,8 @@
 package co.jueyi.geekshop.resolver.admin;
 
+import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.custom.security.Allow;
+import co.jueyi.geekshop.entity.AdministratorEntity;
 import co.jueyi.geekshop.service.AdministratorService;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.administrator.CreateAdministratorInput;
@@ -23,12 +25,16 @@ public class AdministratorMutation implements GraphQLMutationResolver {
 
     @Allow(Permission.CreateAdministrator)
     public Administrator createAdministrator(CreateAdministratorInput input, DataFetchingEnvironment dfe) {
-        return this.administratorService.create(input);
+        AdministratorEntity administratorEntity = this.administratorService.create(input);
+        if (administratorEntity == null) return null;
+        return BeanMapper.map(administratorEntity, Administrator.class);
     }
 
     @Allow(Permission.UpdateAdministrator)
     public Administrator updateAdministrator(UpdateAdministratorInput input, DataFetchingEnvironment dfe) {
-        return this.administratorService.update(input);
+        AdministratorEntity administratorEntity = this.administratorService.update(input);
+        if (administratorEntity == null) return null;
+        return BeanMapper.map(administratorEntity, Administrator.class);
     }
 
     @Allow(Permission.DeleteAdministrator)
@@ -38,6 +44,8 @@ public class AdministratorMutation implements GraphQLMutationResolver {
 
     @Allow(Permission.UpdateAdministrator)
     public Administrator assignRoleToAdministrator(Long administratorId, Long roleId, DataFetchingEnvironment dfe) {
-        return this.administratorService.assignRole(administratorId, roleId);
+        AdministratorEntity administratorEntity = this.administratorService.assignRole(administratorId, roleId);
+        if (administratorEntity == null) return null;
+        return BeanMapper.map(administratorEntity, Administrator.class);
     }
 }

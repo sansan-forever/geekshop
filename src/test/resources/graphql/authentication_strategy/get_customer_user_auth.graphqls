@@ -1,0 +1,13 @@
+query GetCustomerUserAuth($id: ID!) {
+    customer(id: $id) {
+        id
+        user {
+            id
+            verified
+            authenticationMethods {
+                id
+                strategy
+            }
+        }
+    }
+}
