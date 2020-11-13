@@ -1,0 +1,8 @@
+query GetRoles($options: RoleListOptions) {
+    roles(options: $options) {
+        items {
+            ...Role
+        }
+        totalItems
+    }
+}

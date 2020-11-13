@@ -123,7 +123,7 @@ public class RoleService {
         if (roleEntity == null) throw new EntityNotFoundException("Role", input.getId());
         if (RoleCode.SUPER_ADMIN_ROLE_CODE.equals(roleEntity.getCode()) ||
                 RoleCode.CUSTOMER_ROLE_CODE.equals(roleEntity.getCode())) {
-            throw new InternalServerError("The role '{ " +roleEntity.getCode() + " }' cannot be modified");
+            throw new InternalServerError("The role '" +roleEntity.getCode() + "' cannot be modified");
         }
         if (!StringUtils.isEmpty(input.getCode())) {
             roleEntity.setCode(input.getCode());
@@ -146,7 +146,7 @@ public class RoleService {
         if (roleEntity == null) throw new EntityNotFoundException("Role", id);
         if (RoleCode.SUPER_ADMIN_ROLE_CODE.equals(roleEntity.getCode()) ||
                 RoleCode.CUSTOMER_ROLE_CODE.equals(roleEntity.getCode())) {
-            throw new InternalServerError("The role '{ " +roleEntity.getCode() + " }' cannot be deleted");
+            throw new InternalServerError("The role '" +roleEntity.getCode() + "' cannot be deleted");
         }
         this.roleEntityMapper.deleteById(id);
         DeletionResponse response = new DeletionResponse();

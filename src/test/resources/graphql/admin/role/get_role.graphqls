@@ -1,0 +1,5 @@
+query GetRole($id: ID!) {
+    role(id: $id) {
+        ...Role
+    }
+}
