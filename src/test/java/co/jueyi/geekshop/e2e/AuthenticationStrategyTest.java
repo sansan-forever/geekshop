@@ -109,6 +109,7 @@ public class AuthenticationStrategyTest {
 
         try {
             shopClient.perform(AUTHENTICATE, variables);
+            fail("should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getMessage()).isEqualTo("The credentials did not match. Please check and try again");
         }

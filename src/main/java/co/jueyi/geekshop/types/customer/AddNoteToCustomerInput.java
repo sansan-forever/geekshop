@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 public class AddNoteToCustomerInput {
     private Long id;
-    private String node;
-    private Boolean isPublic;
+    private String note;
+    private Boolean visibleToPublic;
 }

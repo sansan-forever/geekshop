@@ -368,7 +368,8 @@ public class CustomerService {
     }
 
     public CustomerEntity update(RequestContext ctx, UpdateCustomerInput input) {
-        CustomerEntity customerEntity = ServiceHelper.getEntityOrThrow(this.customerEntityMapper, input.getId());
+        CustomerEntity customerEntity =
+                ServiceHelper.getEntityOrThrow(this.customerEntityMapper, CustomerEntity.class, input.getId());
         BeanMapper.patch(input, customerEntity);
         this.customerEntityMapper.updateById(customerEntity);
 
@@ -413,7 +414,7 @@ public class CustomerService {
         CustomerEntity customerEntity = this.customerEntityMapper.selectOne(queryWrapper);
 
         if (customerEntity == null) {
-            throw new EntityNotFoundException("Customer", customerId);
+            throw new EntityNotFoundException("CustomerEntity", customerId);
         }
         AddressEntity createdAddressEntity = BeanMapper.patch(input, AddressEntity.class);
         createdAddressEntity.setCustomerId(customerId);
@@ -430,7 +431,8 @@ public class CustomerService {
     }
 
     public AddressEntity updateAddress(RequestContext ctx, UpdateAddressInput input) {
-        AddressEntity addressEntity = ServiceHelper.getEntityOrThrow(this.addressEntityMapper, input.getId());
+        AddressEntity addressEntity =
+                ServiceHelper.getEntityOrThrow(this.addressEntityMapper, AddressEntity.class, input.getId());
         BeanMapper.patch(input, addressEntity);
         this.addressEntityMapper.updateById(addressEntity);
         this.enforceSingleDefaultAddress(
@@ -445,7 +447,8 @@ public class CustomerService {
     }
 
     public boolean deleteAddress(RequestContext ctx, Long id) {
-        AddressEntity addressEntity = ServiceHelper.getEntityOrThrow(this.addressEntityMapper, id);
+        AddressEntity addressEntity =
+                ServiceHelper.getEntityOrThrow(this.addressEntityMapper, AddressEntity.class, id);
         this.reassignDefaultsForDeletedAddress(addressEntity);
         CreateCustomerHistoryEntryArgs args = ServiceHelper.buildCreateCustomerHistoryEntryArgs(
                 ctx, addressEntity.getCustomerId(), HistoryEntryType.CUSTOMER_ADDRESS_DELETED,
@@ -456,7 +459,8 @@ public class CustomerService {
     }
 
     public DeletionResponse softDelete(Long customerId) {
-        CustomerEntity customerEntity = ServiceHelper.getEntityOrThrow(this.customerEntityMapper, customerId);
+        CustomerEntity customerEntity =
+                ServiceHelper.getEntityOrThrow(this.customerEntityMapper, CustomerEntity.class, customerId);
         customerEntity.setDeletedAt(new Date());
         this.customerEntityMapper.updateById(customerEntity);
         this.userService.softDelete(customerEntity.getUserId());
@@ -466,11 +470,12 @@ public class CustomerService {
     }
 
     public CustomerEntity addNoteToCustomer(RequestContext ctx, AddNoteToCustomerInput input) {
-        CustomerEntity customerEntity = ServiceHelper.getEntityOrThrow(this.customerEntityMapper, input.getId());
+        CustomerEntity customerEntity =
+                ServiceHelper.getEntityOrThrow(this.customerEntityMapper, CustomerEntity.class, input.getId());
         CreateCustomerHistoryEntryArgs args = ServiceHelper.buildCreateCustomerHistoryEntryArgs(
                 ctx, customerEntity.getId(), HistoryEntryType.CUSTOMER_NOTE,
-                ImmutableMap.of(HistoryService.KEY_NOTE, input.getNode()));
-        this.historyService.createHistoryEntryForCustomer(args);
+                ImmutableMap.of(HistoryService.KEY_NOTE, input.getNote()));
+        this.historyService.createHistoryEntryForCustomer(args, input.getVisibleToPublic());
         return customerEntity;
     }
 

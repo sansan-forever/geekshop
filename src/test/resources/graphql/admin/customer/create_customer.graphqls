@@ -1,0 +1,5 @@
+mutation CreateCustomer($input: CreateCustomerInput!, $password: String) {
+    createCustomer(input: $input, password: $password) {
+        ...Customer
+    }
+}

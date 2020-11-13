@@ -9,7 +9,6 @@ import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.entity.AddressEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
-import co.jueyi.geekshop.service.HistoryService;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.types.common.ListOptions;
@@ -19,44 +18,37 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Type;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 public abstract class ServiceHelper {
-    private static String ENTITY_MAPPER_SUFFIX = "EntityMapper";
     private static String COLUMN_DELETED_AT = "deleted_at";
+    private static String FIELD_DELETED_AT = "deletedAt";
     private static String COLUMN_ID = "id";
 
-    public static <T> T getEntityOrThrow(BaseMapper<T> mapper, Long id) {
-        T entity = mapper.selectById(id);
-        if (entity == null) {
-            handleNullEntity(mapper, id);
-        }
-        return entity;
-    }
-
-    public static <T> T getEntityWithSoftDeleteOrThrow(BaseMapper<T> mapper, Long id) {
+    public static <T> T getEntityOrThrow(BaseMapper<T> mapper, Class<T> clazz, Long id) {
         QueryWrapper<T> queryWrapper = new QueryWrapper();
-        queryWrapper.eq("id", id);
-        queryWrapper.isNull(COLUMN_DELETED_AT);
+        queryWrapper.eq(COLUMN_ID, id);
+        boolean supportSoftDelete =
+                getAllFields(clazz).contains(FIELD_DELETED_AT);
+        if (supportSoftDelete) {
+            queryWrapper.isNull(COLUMN_DELETED_AT);
+        }
         T entity = mapper.selectOne(queryWrapper);
         if (entity == null) {
-            handleNullEntity(mapper, id);
+            throw new EntityNotFoundException(clazz.getSimpleName(), id);
         }
         return entity;
     }
 
-    private static<T> T handleNullEntity(BaseMapper<T> mapper, Long id) {
-        Type type = mapper.getClass().getGenericInterfaces()[0];
-        String fullClassName = type.getTypeName();
-        String simpleClassName = fullClassName.substring(fullClassName.lastIndexOf('.') + 1);
-        if (simpleClassName.endsWith(ENTITY_MAPPER_SUFFIX)) {
-            simpleClassName = simpleClassName.replace(ENTITY_MAPPER_SUFFIX, "");
-        }
-        throw new EntityNotFoundException(simpleClassName, id);
+    private static Set<String> getAllFields(final Class<?> type) {
+        return Arrays.stream(type.getDeclaredFields()).map(field -> field.getName()).collect(Collectors.toSet());
     }
 
     public static Pair getListOptions(ListOptions options) {

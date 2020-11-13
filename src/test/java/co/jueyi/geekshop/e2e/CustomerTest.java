@@ -5,31 +5,39 @@
 
 package co.jueyi.geekshop.e2e;
 
-import co.jueyi.geekshop.ApiClient;
-import co.jueyi.geekshop.GeekShopGraphQLTest;
-import co.jueyi.geekshop.MockDataService;
-import co.jueyi.geekshop.PopulateOptions;
+import co.jueyi.geekshop.*;
 import co.jueyi.geekshop.config.TestConfig;
+import co.jueyi.geekshop.email.EmailDetails;
+import co.jueyi.geekshop.email.EmailSender;
+import co.jueyi.geekshop.eventbus.events.AccountRegistrationEvent;
 import co.jueyi.geekshop.types.address.Address;
-import co.jueyi.geekshop.types.common.CreateAddressInput;
-import co.jueyi.geekshop.types.common.UpdateAddressInput;
-import co.jueyi.geekshop.types.customer.Customer;
-import co.jueyi.geekshop.types.customer.CustomerList;
+import co.jueyi.geekshop.types.common.*;
+import co.jueyi.geekshop.types.customer.*;
+import co.jueyi.geekshop.types.history.HistoryEntry;
+import co.jueyi.geekshop.types.history.HistoryEntryFilterParameter;
+import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
+import co.jueyi.geekshop.types.history.HistoryEntryType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static co.jueyi.geekshop.config.TestConfig.ASYNC_TIMEOUT;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -49,6 +57,8 @@ public class CustomerTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "customer_fragment");
     static final String ADDRESS_FRAGMENT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "address_fragment");
+    public static final String GET_CUSTOMER_HISTORY =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_history");
 
     static final String ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/customer/%s.graphqls";
     static final String GET_CUSTOMER_WITH_USER =
@@ -59,6 +69,18 @@ public class CustomerTest {
             String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "update_address");
     static final String DELETE_CUSTOMER_ADDRESS =
             String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer_address");
+    static final String CREATE_CUSTOMER =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "create_customer");
+    static final String DELETE_CUSTOMER =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer");
+    static final String UPDATE_CUSTOMER =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "update_customer");
+    static final String ADD_NOTE_TO_CUSTOMER =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "add_note_to_customer");
+    static final String UPDATE_CUSTOMER_NOTE =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "update_customer_note");
+    static final String DELETE_CUSTOMER_NOTE =
+            String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer_note");
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
@@ -69,6 +91,9 @@ public class CustomerTest {
 
     @Autowired
     MockDataService mockDataService;
+
+    @MockBean
+    EmailSender emailSender;
 
     @BeforeAll
     void beforeAll() throws IOException {
@@ -367,5 +392,272 @@ public class CustomerTest {
 
     // TODO orders
 
+    /**
+     * creation test suite
+     */
 
+    @Test
+    @Order(8)
+    public void triggers_verification_event_if_no_password_supplied() throws Exception {
+        CreateCustomerInput input = new CreateCustomerInput();
+        input.setEmailAddress("test1@test.com");
+        input.setFirstName("New");
+        input.setLastName("Customer");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(
+                CREATE_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+        Customer customer = graphQLResponse.get("$.data.createCustomer", Customer.class);
+        assertThat(customer.getUser().getVerified()).isFalse();
+
+        ArgumentCaptor<EmailDetails> captor = ArgumentCaptor.forClass(EmailDetails.class);
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(1)).send(captor.capture());
+        EmailDetails emailDetails = captor.getValue();
+        assertThat(emailDetails.getEvent()).isInstanceOf(AccountRegistrationEvent.class);
+        assertThat(emailDetails.getRecipient()).isEqualTo(input.getEmailAddress());
+    }
+
+    @Test
+    @Order(9)
+    public void creates_a_verified_Customer() throws Exception {
+        CreateCustomerInput input = new CreateCustomerInput();
+        input.setEmailAddress("test2@test.com");
+        input.setFirstName("New");
+        input.setLastName("Customer");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+        variables.put("password", MockDataService.TEST_PASSWORD);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(
+                CREATE_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+        Customer customer = graphQLResponse.get("$.data.createCustomer", Customer.class);
+        assertThat(customer.getUser().getVerified()).isTrue();
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(0)).send(any());
+    }
+
+    @Test
+    @Order(10)
+    public void throws_when_using_an_existing_non_deleted_emailAddress() throws IOException {
+        CreateCustomerInput input = new CreateCustomerInput();
+        input.setEmailAddress("test2@test.com");
+        input.setFirstName("New");
+        input.setLastName("Customer");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+        variables.put("password", MockDataService.TEST_PASSWORD);
+
+        try {
+            this.adminClient.perform(
+                    CREATE_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getMessage()).isEqualTo("The email address must be unique");
+        }
+    }
+
+    /**
+     * deletion test suite
+     */
+
+    @Test
+    @Order(11)
+    public void deletes_a_customer() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", thirdCustomer.getId());
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(
+                DELETE_CUSTOMER, variables);
+        DeletionResponse deletionResponse = graphQLResponse.get("$.data.deleteCustomer", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+    }
+
+    @Test
+    @Order(12)
+    public void cannot_get_a_deleted_customer() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", thirdCustomer.getId());
+
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(GET_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer).isNull();
+    }
+
+    @Test
+    @Order(13)
+    public void deleted_customer_omitted_from_list() throws IOException {
+        GraphQLResponse graphQLResponse = this.adminClient.perform(GET_CUSTOMER_LIST, null);
+        assertThat(graphQLResponse.isOk());
+        CustomerList customerList = graphQLResponse.get("$.data.customers", CustomerList.class);
+        customerList.getItems().stream().noneMatch(c -> c.getId().equals(thirdCustomer.getId()));
+    }
+
+    @Test
+    @Order(14)
+    public void updateCustomer_throws_for_deleted_customer() throws IOException {
+        UpdateCustomerInput input = new UpdateCustomerInput();
+        input.setId(thirdCustomer.getId());
+        input.setFirstName("updated");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(UPDATE_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getMessage()).isEqualTo("No CustomerEntity with the id '3' could be found");
+        }
+    }
+
+    @Test
+    @Order(15)
+    public void createCustomerAddress_throws_for_deleted_customer() throws IOException {
+        CreateAddressInput createAddressInput = new CreateAddressInput();
+        createAddressInput.setStreetLine1("test_street_line");
+        createAddressInput.setCity("test_city");
+
+        JsonNode inputNode = objectMapper.valueToTree(createAddressInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", thirdCustomer.getId());
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(CREATE_ADDRESS, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getMessage()).isEqualTo("No CustomerEntity with the id '3' could be found");
+        }
+    }
+
+    @Test
+    @Order(16)
+    public void new_Customer_cannot_be_created_with_same_emailAddress_as_a_deleted_Customer() throws IOException {
+        CreateCustomerInput input = new CreateCustomerInput();
+        input.setEmailAddress(thirdCustomer.getEmailAddress());
+        input.setFirstName("Reusing Email");
+        input.setLastName("Customer");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(
+                    CREATE_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            // Unique index or primary key violation on tb_user table
+            assertThat(apiEx.getMessage())
+                    .isEqualTo("Unexpected internal server error, please report to our engineering team!");
+        }
+    }
+
+    /**
+     * customer notes
+     */
+
+    Long noteId;
+
+    @Test
+    @Order(17)
+    public void addNoteToCustomer() throws IOException {
+        AddNoteToCustomerInput input = new AddNoteToCustomerInput();
+        input.setId(firstCustomer.getId());
+        input.setVisibleToPublic(true);
+        input.setNote("Test note");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(
+                ADD_NOTE_TO_CUSTOMER, variables, Arrays.asList(CUSTOMER_FRAGMENT, ADDRESS_FRAGMENT));
+        assertThat(graphQLResponse.isOk());
+
+        HistoryEntryListOptions options = new HistoryEntryListOptions();
+        StringOperators stringOperators = new StringOperators();
+        stringOperators.setEq(HistoryEntryType.CUSTOMER_NOTE.name());
+        HistoryEntryFilterParameter filter = new HistoryEntryFilterParameter();
+        filter.setType(stringOperators);
+        options.setFilter(filter);
+        JsonNode optionsNote = objectMapper.valueToTree(options);
+        variables = objectMapper.createObjectNode();
+        variables.put("id", firstCustomer.getId());
+        variables.set("options", optionsNote);
+
+        graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer.getHistory().getItems()).hasSize(1);
+        assertThat(customer.getHistory().getTotalItems()).isEqualTo(1);
+
+        assertThat(customer.getHistory().getItems().get(0).getType()).isEqualTo(HistoryEntryType.CUSTOMER_NOTE);
+        assertThat(customer.getHistory().getItems().get(0).getData().get("note")).isEqualTo(input.getNote());
+
+        noteId = customer.getHistory().getItems().get(0).getId();
+    }
+
+    @Test
+    @Order(18)
+    public void update_note() throws IOException {
+        UpdateCustomerNoteInput input = new UpdateCustomerNoteInput();
+        input.setNoteId(noteId);
+        input.setNote("An updated note");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(
+                UPDATE_CUSTOMER_NOTE, variables);
+        assertThat(graphQLResponse.isOk());
+
+        HistoryEntry historyEntry = graphQLResponse.get("$.data.updateCustomerNode", HistoryEntry.class);
+        assertThat(historyEntry.getData()).contains(entry("note", input.getNote()));
+        assertThat(historyEntry.getVisibleToPublic()).isTrue();
+    }
+
+    @Test
+    @Order(19)
+    public void delete_note() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables = objectMapper.createObjectNode();
+        variables.put("id", firstCustomer.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer beforeCustomer = graphQLResponse.get("$.data.customer", Customer.class);
+        Integer historyCount = beforeCustomer.getHistory().getTotalItems();
+
+        variables = objectMapper.createObjectNode();
+        variables = objectMapper.createObjectNode();
+        variables.put("id", noteId);
+
+        graphQLResponse = adminClient.perform(DELETE_CUSTOMER_NOTE, variables);
+        assertThat(graphQLResponse.isOk());
+        DeletionResponse deletionResponse =
+                graphQLResponse.get("$.data.deleteCustomerNote", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+
+        variables = objectMapper.createObjectNode();
+        variables = objectMapper.createObjectNode();
+        variables.put("id", firstCustomer.getId());
+
+        graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer afterCustomer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(afterCustomer.getHistory().getTotalItems()).isEqualTo(historyCount - 1);
+    }
 }

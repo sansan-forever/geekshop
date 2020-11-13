@@ -16,7 +16,7 @@ public class HistoryEntry implements Node {
     private Long id;
     private Date createdAt;
     private Date updatedAt;
-    private Boolean isPublic;
+    private Boolean visibleToPublic;
     private HistoryEntryType type;
     private Administrator administrator;
     private Long administratorId; // 内部使用字段，GraphQL不可见

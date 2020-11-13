@@ -187,7 +187,7 @@ create table tb_customer_history_entry (
     id bigint not null auto_increment,
     administrator_id bigint,
     type varchar(50) not null,
-    is_public boolean,
+    visible_to_public boolean,
     data text,
     customer_id bigint,
     created_by varchar(50),

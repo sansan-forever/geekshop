@@ -48,7 +48,7 @@ public class AccountRegistrationEventSubscriber {
     }
 
     @Subscribe
-    public void onEvent(AccountRegistrationEvent event) throws Exception {
+    public void onEvent(AccountRegistrationEvent event) {
         log.info("onEvent called event = " + event);
 
         AuthenticationMethodEntity nativeAuthMethod = null;

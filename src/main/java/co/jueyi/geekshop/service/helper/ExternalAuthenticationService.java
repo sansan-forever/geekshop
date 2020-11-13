@@ -153,7 +153,7 @@ public class ExternalAuthenticationService {
                 BeanMapper.map(args, CustomerHistoryEntryEntity.class);
         customerHistoryEntryEntity.setAdministratorId(
                 administratorEntity == null ? null : administratorEntity.getId());
-        customerHistoryEntryEntity.setPublic(false);
+        customerHistoryEntryEntity.setVisibleToPublic(false);
         this.customerHistoryEntryEntityMapper.insert(customerHistoryEntryEntity);
     }
 

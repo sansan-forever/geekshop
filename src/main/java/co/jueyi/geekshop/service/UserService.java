@@ -183,7 +183,7 @@ public class UserService {
     }
 
     public void softDelete(Long userId) {
-        UserEntity userEntity = ServiceHelper.getEntityOrThrow(this.userEntityMapper, userId);
+        UserEntity userEntity = ServiceHelper.getEntityOrThrow(this.userEntityMapper, UserEntity.class, userId);
         userEntity.setDeletedAt(new Date());
         this.userEntityMapper.updateById(userEntity);
     }
@@ -297,7 +297,7 @@ public class UserService {
 
     public boolean updatePassword(Long userId, String currentPassword, String newPassword) {
         // 确保用户存在
-        ServiceHelper.getEntityOrThrow(this.userEntityMapper, userId);
+        ServiceHelper.getEntityOrThrow(this.userEntityMapper, UserEntity.class, userId);
         AuthenticationMethodEntity nativeAuthMethod =
                 this.getNativeAuthMethodEntityByUserId(userId);
         boolean matches = this.passwordEncoder.matches(currentPassword, nativeAuthMethod.getPasswordHash());

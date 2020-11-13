@@ -36,8 +36,4 @@ public class Customer implements Node {
     private Long userId; // 该字段仅内部使用，GraphQL对外不可见
     private List<CustomerGroup> groups = new ArrayList<>(); // 该字段只有Admin可见
     private HistoryEntryList history; // 该字段只有Admin可见
-
-    public HistoryEntryList getHistory(HistoryEntryListOptions options) {
-        return null; // TODO
-    }
 }

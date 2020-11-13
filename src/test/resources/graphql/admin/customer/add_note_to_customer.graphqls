@@ -1,0 +1,5 @@
+mutation AddNoteToCustomer($input: AddNoteToCustomerInput!) {
+    addNoteToCustomer(input: $input) {
+        ...Customer
+    }
+}

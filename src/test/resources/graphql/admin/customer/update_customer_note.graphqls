@@ -1,0 +1,7 @@
+mutation UpdateCustomerNote($input: UpdateCustomerNoteInput!) {
+    updateCustomerNode(input: $input) {
+        id
+        data
+        visibleToPublic
+    }
+}

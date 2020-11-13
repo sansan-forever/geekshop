@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -91,6 +92,7 @@ public class AuthTest {
 
         try {
             this.adminClient.perform(ADMIN_ME, null, Arrays.asList(CURRENT_USER_FRAGMENT));
+            fail("should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getMessage()).isEqualTo("You are not currently authorized to perform this action");
         }
@@ -123,6 +125,7 @@ public class AuthTest {
 
         try {
             this.adminClient.asUserWithCredentials(customerEmailAddress, MockDataService.TEST_PASSWORD);
+            fail("should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getMessage()).isEqualTo("The credentials did not match. Please check and try again");
         }

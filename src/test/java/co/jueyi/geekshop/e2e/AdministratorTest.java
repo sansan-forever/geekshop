@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -185,8 +186,9 @@ public class AdministratorTest {
 
         try {
             this.adminClient.perform(UPDATE_ADMINISTRATOR, variables, Arrays.asList(ADMINISTRATOR_FRAGMENT));
+            fail("should have thrown");
         } catch (ApiException apiEx) {
-            assertThat(apiEx.getMessage()).isEqualTo("No Role with the id { 999 } could be found");
+            assertThat(apiEx.getMessage()).isEqualTo("No Role with the id '999' could be found");
         }
     }
 

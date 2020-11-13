@@ -8,6 +8,7 @@ package co.jueyi.geekshop.service;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.AdministratorEntity;
+import co.jueyi.geekshop.entity.CustomerEntity;
 import co.jueyi.geekshop.entity.CustomerHistoryEntryEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
 import co.jueyi.geekshop.mapper.CustomerHistoryEntryEntityMapper;
@@ -41,7 +42,7 @@ public class HistoryService {
     public static final String KEY_OLD_EMAIL_ADDRESS = "oldEmailAddress";
     public static final String KEY_NEW_EMAIL_ADDRESS = "newEmailAddress";
     public static final String KEY_ADDRESS = "address";
-    public static final String KEY_NOTE = "node";
+    public static final String KEY_NOTE = "note";
 
     @SuppressWarnings("Duplicates")
     public HistoryEntryList getHistoryForCustomer(
@@ -91,13 +92,13 @@ public class HistoryService {
         return this.createHistoryEntryForCustomer(args, false);
     }
 
-    public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isPublic) {
+    public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isVisibleToPublic) {
         AdministratorEntity administratorEntity =
                 this.getAdministratorFromContext(args.getCtx());
         CustomerHistoryEntryEntity customerHistoryEntryEntity =
                 BeanMapper.map(args, CustomerHistoryEntryEntity.class);
         customerHistoryEntryEntity.setAdministratorId(administratorEntity == null ? null : administratorEntity.getId());
-        customerHistoryEntryEntity.setPublic(BooleanUtils.toBoolean(isPublic));
+        customerHistoryEntryEntity.setVisibleToPublic(BooleanUtils.toBoolean(isVisibleToPublic));
         this.customerHistoryEntryEntityMapper.insert(customerHistoryEntryEntity);
         return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
     }
@@ -120,12 +121,13 @@ public class HistoryService {
             customerHistoryEntryEntity.setCustomerId(administratorEntity.getId());
         }
         this.customerHistoryEntryEntityMapper.updateById(customerHistoryEntryEntity);
-        return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
+        HistoryEntry historyEntry = BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
+        return historyEntry;
     }
 
     public void deleteCustomerHistoryEntry(Long id) {
         // 确保存在
-        ServiceHelper.getEntityOrThrow(this.customerHistoryEntryEntityMapper, id);
+        ServiceHelper.getEntityOrThrow(this.customerHistoryEntryEntityMapper, CustomerHistoryEntryEntity.class, id);
         this.customerHistoryEntryEntityMapper.deleteById(id);
     }
 

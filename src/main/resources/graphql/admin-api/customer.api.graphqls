@@ -40,11 +40,11 @@ input UpdateCustomerInput {
 input AddNoteToCustomerInput {
     id: ID!
     note: String!
-    isPublic: Boolean!
+    visibleToPublic: Boolean!
 }
 
 input UpdateCustomerNoteInput {
-    nodeId: ID!
+    noteId: ID!
     note: String!
 }
 

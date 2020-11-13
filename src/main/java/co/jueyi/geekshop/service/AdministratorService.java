@@ -127,7 +127,7 @@ public class AdministratorService {
     @Transactional
     public AdministratorEntity update(UpdateAdministratorInput input) {
         AdministratorEntity administratorEntity =
-                ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, input.getId());
+                ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, AdministratorEntity.class, input.getId());
         BeanMapper.patch(input, administratorEntity);
         this.administratorEntityMapper.updateById(administratorEntity);
 
@@ -170,7 +170,7 @@ public class AdministratorService {
 
     public DeletionResponse softDelete(Long id) {
         AdministratorEntity administratorEntity =
-                ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, id);
+                ServiceHelper.getEntityOrThrow(this.administratorEntityMapper, AdministratorEntity.class, id);
         administratorEntity.setDeletedAt(new Date());
         this.administratorEntityMapper.updateById(administratorEntity);
         this.userService.softDelete(administratorEntity.getUserId());
