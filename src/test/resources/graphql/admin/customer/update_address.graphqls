@@ -1,0 +1,8 @@
+mutation UpdateAddress($input: UpdateAddressInput!) {
+    adminUpdateCustomerAddress(input: $input) {
+        id
+        city
+        defaultShippingAddress
+        defaultBillingAddress
+    }
+}

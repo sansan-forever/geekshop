@@ -34,6 +34,13 @@ geekshop:
     superadmin-credentials:
       identifier: ${SUPERADMIN_IDENTIFIER:superadmin}
       password: ${SUPADMIN_PASSWORD:superadmin123}
+  email-options:
+    transport: ${EMAIL_TRANSPORT:none}
+    output-path: ${EMAIL_FILE_OUTPUT_PATH:test-emails}
+    default-from-email: ${DEFAULT_FROM_EMAIL:geekshop@jueyi.co}
+    verify-email-address-url: ${VERIFY_EMAIL_ADDRESS_URL:http://localhost:4201/verify}
+    password-reset-url: ${PASSWORD_RESET_URL:http://localhost:4201/reset-password}
+    change-email-address-url: ${CHANGE_EMAIL_ADDRESS_URL:http://localhost:4201/change-email-address}
 
 
 

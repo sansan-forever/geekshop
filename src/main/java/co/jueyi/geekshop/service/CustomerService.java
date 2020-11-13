@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.Constant;
@@ -173,6 +178,7 @@ public class CustomerService {
         } else {
             this.eventBus.post(new AccountRegistrationEvent(ctx, userEntity));
         }
+        newCustomerEntity.setUserId(userEntity.getId());
         this.customerEntityMapper.insert(newCustomerEntity);
 
         CreateCustomerHistoryEntryArgs args = ServiceHelper.buildCreateCustomerHistoryEntryArgs(
@@ -409,7 +415,7 @@ public class CustomerService {
         if (customerEntity == null) {
             throw new EntityNotFoundException("Customer", customerId);
         }
-        AddressEntity createdAddressEntity = BeanMapper.map(input, AddressEntity.class);
+        AddressEntity createdAddressEntity = BeanMapper.patch(input, AddressEntity.class);
         createdAddressEntity.setCustomerId(customerId);
         this.addressEntityMapper.insert(createdAddressEntity);
         this.enforceSingleDefaultAddress(

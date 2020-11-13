@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.entity;
 
 import co.jueyi.geekshop.types.history.HistoryEntryType;

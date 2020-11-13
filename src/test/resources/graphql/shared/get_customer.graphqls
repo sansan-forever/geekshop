@@ -1,0 +1,16 @@
+query GetCustomer($id: ID! #, $orderListOptions: OrderListOptions) {
+) {
+    customer(id: $id) {
+        ...Customer
+#        orders(options: $orderListOptions) {
+#            items {
+#                id
+#                code
+#                state
+#                total
+#                updatedAt
+#            }
+#            totalItems
+#        }
+    }
+}

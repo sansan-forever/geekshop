@@ -1,9 +1,12 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.eventbus.events;
 
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.entity.UserEntity;
-import co.jueyi.geekshop.eventbus.BaseEvent;
-import co.jueyi.geekshop.types.user.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,5 +20,5 @@ import lombok.EqualsAndHashCode;
 @Data
 public class AccountRegistrationEvent extends BaseEvent {
     private final RequestContext ctx;
-    private final UserEntity uerEntity;
+    private final UserEntity userEntity;
 }

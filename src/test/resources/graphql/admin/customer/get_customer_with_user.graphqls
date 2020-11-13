@@ -1,0 +1,10 @@
+query GetCustomerWithUser($id: ID!) {
+    customer(id: $id) {
+        id
+        user {
+            id
+            identifier
+            verified
+        }
+    }
+}

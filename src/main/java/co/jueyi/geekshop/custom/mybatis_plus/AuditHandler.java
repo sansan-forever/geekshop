@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.custom.mybatis_plus;
 
 import co.jueyi.geekshop.common.Constant;

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.options;
 
 import lombok.Data;
@@ -13,4 +18,9 @@ public class ConfigOptions {
      * Configuration for authorization.
      */
     private AuthOptions authOptions = new AuthOptions();
+
+    /**
+     * Configuration for email;
+     */
+    private EmailOptions emailOptions = new EmailOptions();
 }

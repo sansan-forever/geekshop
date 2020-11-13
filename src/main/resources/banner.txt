@@ -5,6 +5,8 @@
  \__, /  \___/ \___/ /_/|_|  /____/  /_/ /_/ \____/  / .___/
 /____/                                              /_/
 
+:: Copyright (c) 2020 掘艺网络(jueyi.co).
+:: All rights reserved.
 :: Built with Spring Boot :: ${spring-boot.version}
 :: Banner built with :: https://devops.datenkollektiv.de/banner.txt/index.html
 :: Banner Font :: slant

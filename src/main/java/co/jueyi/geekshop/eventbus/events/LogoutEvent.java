@@ -1,10 +1,13 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.eventbus.events;
 
 import co.jueyi.geekshop.common.RequestContext;
-import co.jueyi.geekshop.eventbus.BaseEvent;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 /**
  * This event is fired when a user logs out via the shop or admin API `logout` mutation.

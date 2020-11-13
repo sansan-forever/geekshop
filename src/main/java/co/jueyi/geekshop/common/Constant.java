@@ -15,6 +15,9 @@ public abstract class Constant {
     public static final String USERNAME_ANONYMOUS = "anonymous";
     public static final String USERNAME_SYSTEM = "system";
 
+    public static final String PEBBLE_TEMPLATE_PREFIX = "templates/email/";
+    public static final String PEBBLE_TEMPLATE_SUFFIX = ".pebble";
+
     public static final String REQUEST_ATTRIBUTE_CURRENT_USER = "GEEKSHOP_REQUEST_CURRENT_USER";
 
     public static final String COOKIE_NAME_TOKEN = "token";
