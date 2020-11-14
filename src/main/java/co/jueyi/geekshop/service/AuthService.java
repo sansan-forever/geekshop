@@ -107,7 +107,7 @@ public class AuthService {
      */
     public void destroyAuthenticatedSession(RequestContext ctx, String sessionToken) {
         QueryWrapper<SessionEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(SessionEntity::getToken, sessionToken);
+        queryWrapper.lambda().eq(SessionEntity::getToken, sessionToken).eq(SessionEntity::isAnonymous, false);
         SessionEntity session = this.sessionEntityMapper.selectOne(queryWrapper);
         if (session != null) {
             AuthenticationStrategy authenticationStrategy = this.getAuthenticationStrategy(

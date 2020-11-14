@@ -9,7 +9,7 @@ import co.jueyi.geekshop.email.EmailDetails;
 import co.jueyi.geekshop.email.EmailSender;
 import co.jueyi.geekshop.email.PebbleTemplateService;
 import co.jueyi.geekshop.entity.AuthenticationMethodEntity;
-import co.jueyi.geekshop.eventbus.events.AccountRegistrationEvent;
+import co.jueyi.geekshop.eventbus.events.PasswordResetEvent;
 import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.email.SendEmailException;
 import co.jueyi.geekshop.exception.email.TemplateException;
@@ -21,7 +21,6 @@ import com.google.common.eventbus.Subscribe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
@@ -33,9 +32,9 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 @SuppressWarnings("Duplicates")
-public class AccountRegistrationEventSubscriber {
-    final static String VERIFICATION_EMAIL_TEMPLATE = "email-verification";
-    final static String VERIFICATION_EMAIL_SUBJECT = "Please verify your email address";
+public class PasswordResetEventSubscriber {
+    final static String PASSWORD_RESET_EMAIL_TEMPLATE = "password-reset";
+    final static String PASSWORD_RESET_EMAIL_SUBJECT = "Forgotten password reset";
 
     private final ConfigOptions configOptions;
     private final PebbleTemplateService pebbleTemplateService;
@@ -49,7 +48,7 @@ public class AccountRegistrationEventSubscriber {
     }
 
     @Subscribe
-    public void onEvent(AccountRegistrationEvent event) {
+    public void onEvent(PasswordResetEvent event) {
         log.info("onEvent called event = " + event);
 
         AuthenticationMethodEntity nativeAuthMethod = null;
@@ -60,24 +59,18 @@ public class AccountRegistrationEventSubscriber {
             return;
         }
 
-        if (StringUtils.isEmpty(nativeAuthMethod.getIdentifier())) {
-            log.warn("Missing identifier in native auth method, userId = { " + event.getUserEntity().getId() + " }");
-            return;
-        }
-
         EmailDetails emailDetails = new EmailDetails(
                 event,
                 event.getUserEntity().getIdentifier(),
                 this.configOptions.getEmailOptions().getDefaultFromEmail());
 
-        emailDetails.setSubject(VERIFICATION_EMAIL_SUBJECT);
+        emailDetails.setSubject(PASSWORD_RESET_EMAIL_SUBJECT);
 
         Map<String, Object> model = ImmutableMap.of(
-                "verificationToken", nativeAuthMethod.getVerificationToken(),
-                "verifyEmailAddressUrl", configOptions.getEmailOptions().getVerifyEmailAddressUrl());
-
+                "passwordResetToken", nativeAuthMethod.getPasswordResetToken(),
+                "passwordResetUrl", configOptions.getEmailOptions().getPasswordResetUrl());
         try {
-            String body = this.pebbleTemplateService.mergeTemplateIntoString(VERIFICATION_EMAIL_TEMPLATE, model);
+            String body = this.pebbleTemplateService.mergeTemplateIntoString(PASSWORD_RESET_EMAIL_TEMPLATE, model);
             emailDetails.setBody(body);
         } catch (TemplateException te) {
             log.error("The template file cannot be processed", te);

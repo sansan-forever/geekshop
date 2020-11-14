@@ -68,9 +68,6 @@ public class RoleTest {
     @Autowired
     MockDataService mockDataService;
 
-    @MockBean
-    EmailSender emailSender;
-
     Role createdRole;
     List<Role>  defaultRoles;
 

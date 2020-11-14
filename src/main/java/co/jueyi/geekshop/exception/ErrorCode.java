@@ -13,7 +13,7 @@ public enum ErrorCode {
 
     INVALID_INPUT_PARAMETER("Invalid request input parameters"),
 
-    INVALID_VERIFICATION_TOKEN("Verification token is invalid"),
+    INVALID_VERIFICATION_TOKEN("Verification token not recognized"),
 
     EXPIRED_VERIFICATION_TOKEN(
             "Verification token has expired. Use refreshCustomerVerification to send a new token."),

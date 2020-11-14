@@ -19,5 +19,5 @@ import lombok.EqualsAndHashCode;
 @Data
 public class PasswordResetEvent extends BaseEvent {
     private final RequestContext ctx;
-    private final UserEntity uerEntity;
+    private final UserEntity userEntity;
 }

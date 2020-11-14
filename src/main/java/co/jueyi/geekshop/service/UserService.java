@@ -309,10 +309,10 @@ public class UserService {
         return true;
     }
 
-    public void changeIdentifierAndSetToken(Long userId, String newIdentifer) {
+    public void changeIdentifierAndSetToken(Long userId, String newIdentifier) {
         AuthenticationMethodEntity nativeAuthMethod =
                 this.getNativeAuthMethodEntityByUserId(userId);
-        nativeAuthMethod.setIdentifier(newIdentifer);
+        nativeAuthMethod.setPendingIdentifier(newIdentifier);
         nativeAuthMethod.setIdentifierChangeToken(this.verificationTokenGenerator.generateVerificationToken());
         this.authenticationMethodEntityMapper.updateById(nativeAuthMethod);
     }

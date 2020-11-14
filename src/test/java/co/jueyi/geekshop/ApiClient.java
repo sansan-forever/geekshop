@@ -198,7 +198,7 @@ public class ApiClient {
     /**
      * Attempts to log in with the specified credentials.
      */
-    public void asUserWithCredentials(String username, String password) throws IOException {
+    public GraphQLResponse asUserWithCredentials(String username, String password) throws IOException {
         // first log out as the current user
         if (!StringUtils.isEmpty(this.authToken)) {
             perform(this.adminClient ? ADMIN_LOGOUT : LOGOUT, null);
@@ -208,6 +208,7 @@ public class ApiClient {
         variables.put("password", password);
         GraphQLResponse response = perform(this.adminClient? ADMIN_LOGIN : LOGIN, variables);
         assertThat(response.isOk());
+        return response;
     }
 
     /**
