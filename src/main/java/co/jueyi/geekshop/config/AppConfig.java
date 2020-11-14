@@ -99,17 +99,22 @@ public class AppConfig {
 
     @Bean
     public AuthConfig authConfig() {
-        SessionCacheStrategy sessionCacheStrategy = new InMemorySessionCacheStrategy();
+        // sessionCacheStrategy autowired
         return new AuthConfig(
                 Arrays.asList(nativeAuthStrategy()),
-                Arrays.asList(nativeAuthStrategy()),
-                sessionCacheStrategy
+                Arrays.asList(nativeAuthStrategy())
         );
+    }
+
+    @Bean
+    public SessionCacheStrategy sessionCacheStrategy() {
+        return new InMemorySessionCacheStrategy();
     }
 
     @Bean
     public AuthenticationStrategy nativeAuthStrategy() {
         return new NativeAuthenticationStrategy();
     }
+
 
 }

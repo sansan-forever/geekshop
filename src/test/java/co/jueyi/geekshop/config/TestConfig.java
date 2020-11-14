@@ -6,9 +6,9 @@ import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.TestAuthenticationStrategy;
-import co.jueyi.geekshop.config.session_cache.InMemorySessionCacheStrategy;
+import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import co.jueyi.geekshop.config.session_cache.TestingSessionCacheStrategy;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +17,8 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -63,11 +65,9 @@ public class TestConfig {
     @Bean
     @Primary
     public AuthConfig testAuthConfig() {
-        SessionCacheStrategy sessionCacheStrategy = new InMemorySessionCacheStrategy();
         return new AuthConfig(
                 Arrays.asList(testNativeAuthStrategy(), testAuthStrategy()),
-                Arrays.asList(testNativeAuthStrategy()),
-                sessionCacheStrategy
+                Arrays.asList(testNativeAuthStrategy())
         );
     }
 
@@ -79,5 +79,16 @@ public class TestConfig {
     @Bean
     public AuthenticationStrategy testAuthStrategy() {
         return new TestAuthenticationStrategy();
+    }
+
+    @Bean
+    @Primary
+    public SessionCacheStrategy testSessionCacheStrategy() {
+        return new TestingSessionCacheStrategy(testSessionCache());
+    }
+
+    @Bean
+    public Map<String, CachedSession> testSessionCache() {
+        return new HashMap<>();
     }
 }

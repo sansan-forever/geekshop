@@ -7,7 +7,9 @@ package co.jueyi.geekshop.config.auth;
 
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
@@ -17,8 +19,8 @@ import java.util.List;
  * Created on Nov, 2020 by @author bobo
  */
 @Data
-@RequiredArgsConstructor
 public class AuthConfig {
+
     /**
      * Configures one or more AuthenticationStrategies which defines how authentication
      * is handled in the Shop API.
@@ -36,5 +38,6 @@ public class AuthConfig {
      * in-memory caching strategy which is suitable for development and low-traffic, single-instance
      * deployments.
      */
-    private final SessionCacheStrategy sessionCacheStrategy;
+    @Autowired
+    private SessionCacheStrategy sessionCacheStrategy;
 }

@@ -18,6 +18,8 @@ import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.role.Role;
 import co.jueyi.geekshop.types.user.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,23 +28,19 @@ import java.util.*;
  * Created on Nov, 2020 by @author bobo
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class SessionService {
-    private final SessionCacheStrategy sessionCacheStrategy;
     private final ConfigService configService;
-    private final long sessionDurationInMs;
-
     private final SessionEntityMapper sessionEntityMapper;
     private final UserService userService;
 
-    public SessionService(
-            ConfigService configService,
-            SessionEntityMapper sessionEntityMapper,
-            UserService userService) {
-        this.configService = configService;
-        this.sessionCacheStrategy = this.configService.getAuthConfig().getSessionCacheStrategy();
-        this.sessionDurationInMs = TimeSpanUtil.toMs(this.configService.getAuthOptions().getSessionDuration());
-        this.sessionEntityMapper = sessionEntityMapper;
-        this.userService = userService;
+    private long getSessionDurationInMs() {
+        return TimeSpanUtil.toMs(this.configService.getAuthOptions().getSessionDuration());
+    }
+
+    private SessionCacheStrategy getSessionCacheStrategy() {
+        return this.configService.getAuthConfig().getSessionCacheStrategy();
     }
 
     // TODO
@@ -62,14 +60,14 @@ public class SessionService {
         sessionEntity.setToken(token);
         sessionEntity.setUserId(user.getId());
         sessionEntity.setAuthenticationStrategy(authenticationStrategyName);
-        sessionEntity.setExpires(this.getExpiryDate(this.sessionDurationInMs));
+        sessionEntity.setExpires(this.getExpiryDate(this.getSessionDurationInMs()));
         sessionEntity.setInvalidated(false);
         sessionEntity.setAnonymous(false);
 
         this.sessionEntityMapper.insert(sessionEntity);
 
         CachedSession authenticatedSession = this.serializeSession(sessionEntity, user);
-        this.sessionCacheStrategy.set(authenticatedSession);
+        this.getSessionCacheStrategy().set(authenticatedSession);
 
         return authenticatedSession;
     }
@@ -88,14 +86,14 @@ public class SessionService {
         // save the new session
         this.sessionEntityMapper.insert(newSession);
         CachedSession serializedSession = this.serializeSession(newSession, null);
-        this.sessionCacheStrategy.set(serializedSession);
+        this.getSessionCacheStrategy().set(serializedSession);
         return serializedSession;
     }
 
     public CachedSession getSessionFromToken(String sessionToken) {
-        CachedSession serializedSession = this.sessionCacheStrategy.get(sessionToken);
+        CachedSession serializedSession = this.getSessionCacheStrategy().get(sessionToken);
         boolean stale = serializedSession != null &&
-                serializedSession.getCacheExpiry() < new Date().getTime() / 1000;
+                serializedSession.getCacheExpiry() < new Date().getTime();
         boolean expired = serializedSession != null && serializedSession.getExpires().getTime() < new Date().getTime();
 
         if (serializedSession != null && !stale && !expired) return serializedSession;
@@ -108,6 +106,7 @@ public class SessionService {
             user = this.userService.findUserWithRolesById(session.getUserId());
         }
         serializedSession = this.serializeSession(session, user);
+        this.getSessionCacheStrategy().set(serializedSession);
         return serializedSession;
     }
 
@@ -118,7 +117,7 @@ public class SessionService {
         QueryWrapper<SessionEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(SessionEntity::getUserId, userId);
         List<SessionEntity> sessionEntityList = this.sessionEntityMapper.selectList(queryWrapper);
-        sessionEntityList.forEach(sessionEntity -> this.sessionCacheStrategy.delete(sessionEntity.getToken()));
+        sessionEntityList.forEach(sessionEntity -> this.getSessionCacheStrategy().delete(sessionEntity.getToken()));
         this.sessionEntityMapper.delete(queryWrapper);
     }
 
@@ -131,8 +130,9 @@ public class SessionService {
         SessionEntity session = this.sessionEntityMapper.selectOne(queryWrapper);
         if (session != null && session.getExpires().getTime() > new Date().getTime()) {
             this.updateSessionExpiry(session);
+            return session;
         }
-        return session;
+        return null; // expired
     }
 
     /**
@@ -143,15 +143,16 @@ public class SessionService {
      */
     private void updateSessionExpiry(SessionEntity session) {
         long now = new Date().getTime();
-        if (session.getExpires().getTime() - now < this.sessionDurationInMs / 2) {
-            Date newExpiryDate = this.getExpiryDate(this.sessionDurationInMs);
+        long durationBeforeExpiry = session.getExpires().getTime() - now;
+        if (durationBeforeExpiry > 0 && durationBeforeExpiry < this.getSessionDurationInMs() / 2) {
+            Date newExpiryDate = this.getExpiryDate(this.getSessionDurationInMs());
             session.setExpires(newExpiryDate);
             this.sessionEntityMapper.updateById(session);
         }
     }
 
     private CachedSession serializeSession(SessionEntity session, User user) {
-        long expiry = new Date().getTime() / 1000 + this.configService.getAuthOptions().getSessionCacheTTL();
+        long expiry = new Date().getTime() + this.configService.getAuthOptions().getSessionCacheTTL() * 1000;
         CachedSession serializedSession = new CachedSession();
         serializedSession.setCacheExpiry(expiry);
         serializedSession.setId(session.getId());
