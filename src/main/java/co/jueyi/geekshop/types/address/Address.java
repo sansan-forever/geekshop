@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
 package co.jueyi.geekshop.types.address;
 
 import co.jueyi.geekshop.types.common.Node;

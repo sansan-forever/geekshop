@@ -1,3 +1,5 @@
+# Copyright (c) 2020 掘艺网络(jueyi.co).
+# All rights reserved.
 mutation CreateRole($input: CreateRoleInput!) {
     createRole(input: $input) {
         ...Role

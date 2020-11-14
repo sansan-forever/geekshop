@@ -1,3 +1,5 @@
+# Copyright (c) 2020 掘艺网络(jueyi.co).
+# All rights reserved.
 mutation AdminAttemptLogin($username: String!, $password: String!, $rememberMe: Boolean) {
     adminLogin(username: $username, password: $password, rememberMe: $rememberMe) {
         user {

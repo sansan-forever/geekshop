@@ -115,6 +115,4 @@ public class AppConfig {
     public AuthenticationStrategy nativeAuthStrategy() {
         return new NativeAuthenticationStrategy();
     }
-
-
 }

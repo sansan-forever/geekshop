@@ -1,3 +1,5 @@
+# Copyright (c) 2020 掘艺网络(jueyi.co).
+# All rights reserved.
 mutation CreateAddress($id: ID!, $input: CreateAddressInput!) {
     adminCreateCustomerAddress(customerId: $id, input: $input) {
         id

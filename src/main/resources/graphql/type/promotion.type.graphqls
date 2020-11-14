@@ -1,3 +1,5 @@
+# Copyright (c) 2020 掘艺网络(jueyi.co).
+# All rights reserved.
 type Promotion implements Node {
     id: ID!
     createdAt: DateTime!

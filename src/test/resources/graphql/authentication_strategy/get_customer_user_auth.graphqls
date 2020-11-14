@@ -1,3 +1,5 @@
+# Copyright (c) 2020 掘艺网络(jueyi.co).
+# All rights reserved.
 query GetCustomerUserAuth($id: ID!) {
     customer(id: $id) {
         id
