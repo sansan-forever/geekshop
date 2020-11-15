@@ -32,6 +32,8 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -82,7 +84,7 @@ public class AuthenticationStrategyTest {
     @BeforeAll
     void beforeAll() throws IOException {
         mockDataService.populate(PopulateOptions.builder().customerCount(1).build());
-        shopClient.asSuperAdmin();
+        adminClient.asSuperAdmin();
 
         userData = new UserData();
         userData.setEmail("test@email.com");
@@ -146,12 +148,17 @@ public class AuthenticationStrategyTest {
         Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
         assertThat(customer.getHistory().getItems()).hasSize(2);
         assertThat(customer.getHistory().getTotalItems()).isEqualTo(2);
+
+        Set<HistoryEntryType> historyEntryTypeSet = customer.getHistory().getItems().stream()
+                .map(historyEntry -> historyEntry.getType()).collect(Collectors.toSet());
+        // 因时间精度问题，暂用InAnyOrder，实际'CUSTOMER_REGISTERED'在前，然后再'CUSTOMER_VERIFIED'
+        assertThat(historyEntryTypeSet).containsExactlyInAnyOrder(
+                HistoryEntryType.CUSTOMER_REGISTERED, HistoryEntryType.CUSTOMER_VERIFIED);
+
         HistoryEntry historyEntry0 = customer.getHistory().getItems().get(0);
-        assertThat(historyEntry0.getType()).isEqualTo(HistoryEntryType.CUSTOMER_REGISTERED);
         assertThat(historyEntry0.getData())
                 .containsOnly(entry(HistoryService.KEY_STRATEGY, TestAuthenticationStrategy.STRATEGY_NAME));
         HistoryEntry historyEntry1 = customer.getHistory().getItems().get(1);
-        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.CUSTOMER_VERIFIED);
         assertThat(historyEntry1.getData())
                 .containsOnly(entry(HistoryService.KEY_STRATEGY, TestAuthenticationStrategy.STRATEGY_NAME));
     }

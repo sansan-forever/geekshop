@@ -10,6 +10,8 @@ import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.email.EmailDetails;
 import co.jueyi.geekshop.email.EmailSender;
 import co.jueyi.geekshop.eventbus.events.IdentifierChangeEvent;
+import co.jueyi.geekshop.options.ConfigOptions;
+import co.jueyi.geekshop.types.auth.CurrentUser;
 import co.jueyi.geekshop.types.auth.LoginResult;
 import co.jueyi.geekshop.types.common.StringOperators;
 import co.jueyi.geekshop.types.customer.*;
@@ -25,7 +27,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
@@ -62,6 +63,8 @@ public class ShopAuthTest {
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "request_update_email_address");
     static final String UPDATE_EMAIL_ADDRESS =
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "update_email_address");
+    static final String GET_ME =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "get_me");
 
     static final String SHARED_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shared/%s.graphqls";
     static final String GET_CUSTOMER_LIST =
@@ -91,6 +94,9 @@ public class ShopAuthTest {
 
     @MockBean
     EmailSender emailSender;
+
+    @Autowired
+    ConfigOptions configOptions;
 
     @BeforeAll
     void beforeAll() throws IOException {
@@ -693,5 +699,168 @@ public class ShopAuthTest {
         assertThat(graphQLResponse.isOk());
 
         return graphQLResponse.get("$.data.customer", Customer.class);
+    }
+
+    private void beforeTest30() {
+        configOptions.getAuthOptions().setVerificationTokenDuration("1ms");
+    }
+
+    /**
+     * Expiring tokens
+     */
+    @Test
+    @Order(30)
+    public void attempting_to_verify_after_token_has_expired_throws() throws Exception {
+        beforeTest30();
+
+        RegisterCustomerInput input = new RegisterCustomerInput();
+        input.setFirstName("Barry");
+        input.setLastName("Wallace");
+        input.setEmailAddress("barry.wallace@test.com");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = shopClient.perform(REGISTER_ACCOUNT, variables);
+        Boolean result = graphQLResponse.get("$.data.registerCustomerAccount", Boolean.class);
+        assertThat(result).isTrue();
+
+        ArgumentCaptor<EmailDetails> captor = ArgumentCaptor.forClass(EmailDetails.class);
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(1)).send(captor.capture());
+        EmailDetails emailDetails = captor.getValue();
+        String verificationToken = (String) emailDetails.getModel().get("verificationToken");
+        assertThat(verificationToken).isNotNull();
+
+        try {
+            variables = objectMapper.createObjectNode();
+            variables.put("token", verificationToken);
+            variables.put("password", MockDataService.TEST_PASSWORD);
+
+            shopClient.perform(VERIFY_EMAIL, variables);
+
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage())
+                    .isEqualTo("Verification token has expired. Use refreshCustomerVerification to send a new token.");
+        }
+    }
+
+    @Test
+    @Order(31)
+    public void attempting_to_reset_password_after_token_has_expired_throws() throws Exception {
+        Customer customer = getCustomerById(1L);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("identifier", customer.getEmailAddress());
+
+        GraphQLResponse graphQLResponse = shopClient.perform(REQUEST_PASSWORD_RESET, variables);
+        Boolean result = graphQLResponse.get("$.data.requestPasswordReset", Boolean.class);
+        assertThat(result).isTrue();
+
+        ArgumentCaptor<EmailDetails> captor = ArgumentCaptor.forClass(EmailDetails.class);
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(1)).send(captor.capture());
+        EmailDetails emailDetails = captor.getValue();
+        String passwordResetToken = (String) emailDetails.getModel().get("passwordResetToken");
+        assertThat(passwordResetToken).isNotNull();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("password", MockDataService.TEST_PASSWORD);
+        variables.put("token", passwordResetToken);
+
+        try {
+            shopClient.perform(RESET_PASSWORD, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo("Password reset token has expired.");
+        }
+    }
+
+    /**
+     * Registration without email verification
+     */
+
+    private void beforeTest32() {
+        configOptions.getAuthOptions().setRequireVerification(false);
+    }
+
+    final String userEmailAddress = "glen.beardsley@test.com";
+
+    @Test
+    @Order(32)
+    public void errors_if_no_password_is_provided() throws IOException {
+        beforeTest32();
+
+        RegisterCustomerInput input = new RegisterCustomerInput();
+        input.setFirstName("Glen");
+        input.setLastName("Beardsley");
+        input.setEmailAddress(userEmailAddress);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            shopClient.perform(REGISTER_ACCOUNT, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage())
+                    .isEqualTo("A password must be provided when `authOptions.requireVerification` is set to \"false\"");
+        }
+    }
+
+    @Test
+    @Order(33)
+    public void register_a_new_account_with_password() throws Exception {
+        RegisterCustomerInput input = new RegisterCustomerInput();
+        input.setFirstName("Glen");
+        input.setLastName("Beardsley");
+        input.setEmailAddress(userEmailAddress);
+        input.setPassword(MockDataService.TEST_PASSWORD);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = shopClient.perform(REGISTER_ACCOUNT, variables);
+        Boolean result = graphQLResponse.get("$.data.registerCustomerAccount", Boolean.class);
+        assertThat(result).isTrue();
+
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(0)).send(any());
+    }
+
+
+    @Test
+    @Order(34)
+    public void can_login_after_registering() throws IOException {
+        shopClient.asUserWithCredentials(userEmailAddress, MockDataService.TEST_PASSWORD);
+
+        GraphQLResponse graphQLResponse = shopClient.perform(GET_ME, null);
+        CurrentUser currentUser = graphQLResponse.get("$.data.me", CurrentUser.class);
+        assertThat(currentUser.getIdentifier()).isEqualTo(userEmailAddress);
+    }
+
+    /**
+     * Updating email address without email verification
+     */
+    @Test
+    @Order(35)
+    public void updating_email_address_without_email_verification() throws Exception {
+        shopClient.asUserWithCredentials(userEmailAddress, MockDataService.TEST_PASSWORD);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables = objectMapper.createObjectNode();
+        variables.put("password", MockDataService.TEST_PASSWORD);
+        variables.put("newEmailAddress", "newest@address.com");
+
+        GraphQLResponse graphQLResponse = shopClient.perform(REQUEST_UPDATE_EMAIL_ADDRESS, variables);
+        assertThat(graphQLResponse.isOk());
+        Boolean result = graphQLResponse.get("$.data.requestUpdateCustomerEmailAddress", Boolean.class);
+        assertThat(result).isTrue();
+
+        ArgumentCaptor<EmailDetails> captor = ArgumentCaptor.forClass(EmailDetails.class);
+        verify(emailSender, timeout(ASYNC_TIMEOUT).times(1)).send(captor.capture());
+        EmailDetails emailDetails = captor.getValue();
+        assertThat(emailDetails.getEvent()).isInstanceOf(IdentifierChangeEvent.class);
     }
 }
