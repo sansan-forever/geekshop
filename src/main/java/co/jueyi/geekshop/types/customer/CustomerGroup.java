@@ -19,7 +19,7 @@ public class CustomerGroup implements Node {
     private Date createdAt;
     private Date updatedAt;
     private String name;
-    private CustomerList customers;
+//    private CustomerList customers;
 
     public CustomerList getCustomers(CustomerListOptions options) {
         return null; // TODO

@@ -8,10 +8,12 @@ package co.jueyi.geekshop.custom.graphql;
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.resolver.dataloader.*;
+import co.jueyi.geekshop.service.CustomerGroupService;
 import co.jueyi.geekshop.service.HistoryService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
+import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.history.HistoryEntryList;
 import co.jueyi.geekshop.types.role.Role;
 import co.jueyi.geekshop.types.user.AuthenticationMethod;
@@ -48,6 +50,7 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final UserRoleJoinEntityMapper userRoleJoinEntityMapper;
     private final RoleEntityMapper roleEntityMapper;
     private final AuthenticationMethodEntityMapper authenticationMethodEntityMapper;
+    private final CustomerGroupService customerGroupService;
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -108,12 +111,18 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
         dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_USER_ROLES, userRolesDataLoader);
 
-        DataLoader<Long, List<AuthenticationMethod>> userAuthenticationMethodsDataLoader =
-                DataLoader.newMappedDataLoader(
+        DataLoader<Long, List<AuthenticationMethod>> userAuthenticationMethodsDataLoader = DataLoader.newMappedDataLoader(
                 new UserAuthenticationMethodsDataLoader(this.authenticationMethodEntityMapper)
         );
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS, userAuthenticationMethodsDataLoader);
+
+        DataLoader<Long, CustomerList> customerGroupCustomersDataLoader = DataLoader.newMappedDataLoader(
+                        new CustomerGroupCustomersDataLoader(customerGroupService)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS, customerGroupCustomersDataLoader
+        );
 
         return dataLoaderRegistry;
     }

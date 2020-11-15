@@ -49,4 +49,5 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_CUSTOMER_HISTORY = "customerHistoryDataLoader";
     public static final String DATA_LOADER_NAME_USER_ROLES = "userRolesDataLoader";
     public static final String DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS = "userAuthenticationMethodsDataLoader";
+    public static final String DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS = "customerGroupCustomers";
 }

@@ -62,10 +62,17 @@ public class CustomerService {
     private final ObjectMapper objectMapper;
 
     public CustomerList findAll(CustomerListOptions options) {
+        return findAll(options, null);
+    }
+
+    public CustomerList findAll(CustomerListOptions options, List<Long> customerIds) {
         Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
         IPage<CustomerEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
         QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().isNull(CustomerEntity::getDeletedAt);
+        if (!CollectionUtils.isEmpty(customerIds)) {
+            queryWrapper.lambda().in(CustomerEntity::getId, customerIds);
+        }
+        queryWrapper.lambda().isNull(CustomerEntity::getDeletedAt); // 未删除
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());
             buildSortOrder(queryWrapper, options.getSort());
