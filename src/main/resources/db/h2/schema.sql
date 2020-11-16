@@ -190,6 +190,23 @@ create table tb_facet_value (
 
 create index idx_facet_value_facet_id on tb_facet_value(facet_id);
 
+create table asset (
+    id bigint not null auto_increment,
+    name varchar(100),
+    type varchar(50),
+    file_size integer,
+    width integer,
+    height integer,
+    mime_type varchar(50),
+    source varchar(255),
+    preview varchar(255),
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    primary key (id)
+);
+
 create table tb_session (
     id bigint not null auto_increment,
     token varchar(100) not null,
