@@ -6,6 +6,7 @@ type Facet implements Node {
     updatedAt: DateTime!
     name: String!
     code: String!
+    visibleToPublic: Boolean! # visiable to Admin only, aka private
     values: [FacetValue!]!
 }
 

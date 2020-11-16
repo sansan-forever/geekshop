@@ -160,6 +160,36 @@ create table tb_customer_group_join (
      foreign key (group_id) references tb_customer_group(id)
 );
 
+create table tb_facet (
+     id bigint not null auto_increment,
+     name varchar(50) not null,
+     code varchar(50) not null,
+     visible_to_public boolean,
+     created_by varchar(50),
+     created_at datetime,
+     updated_by varchar(50),
+     updated_at datetime,
+     unique key (code),
+     primary key (id)
+);
+
+create index idx_facet_code on tb_facet(code);
+
+create table tb_facet_value (
+     id bigint not null auto_increment,
+     name varchar(50) not null,
+     code varchar(50) not null,
+     facet_id bigint not null,
+     created_by varchar(50),
+     created_at datetime,
+     updated_by varchar(50),
+     updated_at datetime,
+     primary key (id),
+     foreign key (facet_id) references tb_facet(id)
+);
+
+create index idx_facet_value_facet_id on tb_facet_value(facet_id);
+
 create table tb_session (
     id bigint not null auto_increment,
     token varchar(100) not null,

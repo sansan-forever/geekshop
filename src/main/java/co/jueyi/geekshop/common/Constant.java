@@ -50,4 +50,6 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_USER_ROLES = "userRolesDataLoader";
     public static final String DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS = "userAuthenticationMethodsDataLoader";
     public static final String DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS = "customerGroupCustomers";
+    public static final String DATA_LOADER_NAME_FACET_VALUE_FACET = "facetValueFacetDataLoader";
+    public static final String DATA_LOADER_NAME_FACET_VALUES = "facetValuesDataLoader";
 }

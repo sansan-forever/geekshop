@@ -14,6 +14,8 @@ import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
 import co.jueyi.geekshop.types.customer.CustomerList;
+import co.jueyi.geekshop.types.facet.Facet;
+import co.jueyi.geekshop.types.facet.FacetValue;
 import co.jueyi.geekshop.types.history.HistoryEntryList;
 import co.jueyi.geekshop.types.role.Role;
 import co.jueyi.geekshop.types.user.AuthenticationMethod;
@@ -51,6 +53,8 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final RoleEntityMapper roleEntityMapper;
     private final AuthenticationMethodEntityMapper authenticationMethodEntityMapper;
     private final CustomerGroupService customerGroupService;
+    private final FacetEntityMapper facetEntityMapper;
+    private final FacetValueEntityMapper facetValueEntityMapper;
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -123,6 +127,17 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS, customerGroupCustomersDataLoader
         );
+
+        DataLoader<Long, Facet> facetValueFacetDataLoader = DataLoader.newMappedDataLoader(
+                new FacetValueFacetDataLoader((this.facetEntityMapper))
+        );
+        dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_FACET_VALUE_FACET, facetValueFacetDataLoader);
+
+        DataLoader<Long, List<FacetValue>> facetValuesDataLoader = DataLoader.newMappedDataLoader(
+                new FacetValuesDataLoader(this.facetValueEntityMapper)
+        );
+        dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_FACET_VALUES, facetValuesDataLoader);
+
 
         return dataLoaderRegistry;
     }

@@ -19,6 +19,7 @@ public class FacetValue implements Node {
     private Date createdAt;
     private Date updatedAt;
     private Facet facet;
+    private Long facetId; // 内部使用，GraphQL不可见
     private String name;
     private String code;
 }
