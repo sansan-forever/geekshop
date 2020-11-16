@@ -589,10 +589,10 @@ public class CustomerTest {
         HistoryEntryFilterParameter filter = new HistoryEntryFilterParameter();
         filter.setType(stringOperators);
         options.setFilter(filter);
-        JsonNode optionsNote = objectMapper.valueToTree(options);
+        JsonNode optionsNode = objectMapper.valueToTree(options);
         variables = objectMapper.createObjectNode();
         variables.put("id", firstCustomer.getId());
-        variables.set("options", optionsNote);
+        variables.set("options", optionsNode);
 
         graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
         assertThat(graphQLResponse.isOk());

@@ -59,6 +59,14 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
     }
 
     public CompletableFuture<List<CustomerGroup>> getGroups(Customer customer, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        if (ApiType.SHOP.equals(ctx.getApiType())) {
+            // admin only, normal customers should not be able to see this data
+            CompletableFuture<List<CustomerGroup>> completableFuture = new CompletableFuture<>();
+            completableFuture.complete(new ArrayList<>());
+            return completableFuture;
+        }
+
         final DataLoader<Long, List<CustomerGroup>> dataLoader = ((GraphQLContext) dfe.getContext())
                 .getDataLoaderRegistry().get()
                 .getDataLoader(Constant.DATA_LOADER_NAME_CUSTOMER_GROUPS);

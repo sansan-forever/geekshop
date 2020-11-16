@@ -5,13 +5,14 @@
 
 package co.jueyi.geekshop.e2e;
 
-import co.jueyi.geekshop.ApiClient;
-import co.jueyi.geekshop.GeekShopGraphQLTest;
-import co.jueyi.geekshop.MockDataService;
-import co.jueyi.geekshop.PopulateOptions;
+import co.jueyi.geekshop.*;
 import co.jueyi.geekshop.config.TestConfig;
+import co.jueyi.geekshop.types.common.DeletionResponse;
+import co.jueyi.geekshop.types.common.DeletionResult;
+import co.jueyi.geekshop.types.common.StringOperators;
 import co.jueyi.geekshop.types.customer.*;
 import co.jueyi.geekshop.types.history.HistoryEntry;
+import co.jueyi.geekshop.types.history.HistoryEntryFilterParameter;
 import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -58,6 +59,14 @@ public class CustomerGroupTest {
             String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_group");
     static final String UPDATE_CUSTOMER_GROUP =
             String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "update_customer_group");
+    static final String ADD_CUSTOMER_TO_GROUP =
+            String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "add_customer_to_group");
+    static final String GET_CUSTOMER_WITH_GROUPS =
+            String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_with_groups");
+    static final String REMOVE_CUSTOMERS_FROM_GROUP =
+            String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "remove_customers_from_group");
+    static final String DELETE_CUSTOMER_GROUP =
+            String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer_group");
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
@@ -176,4 +185,173 @@ public class CustomerGroupTest {
         CustomerGroup customerGroup = graphQLResponse.get("$.data.updateCustomerGroup", CustomerGroup.class);
         assertThat(customerGroup.getName()).isEqualTo(input.getName());
     }
+
+    @Test
+    @Order(6)
+    public void addCustomersToGroup_with_existing_customer() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("groupId", 1L);
+        variables.putArray("customerIds").add(customers.get(0).getId());
+
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(ADD_CUSTOMER_TO_GROUP, variables, Arrays.asList(CUSTOMER_GROUP_FRAGMENT));
+        CustomerGroup customerGroup = graphQLResponse.get("$.data.addCustomersToGroup", CustomerGroup.class);
+        assertThat(customerGroup.getCustomers().getItems().stream().map(Customer::getId).collect(Collectors.toSet()))
+                .containsExactlyInAnyOrder(customers.get(0).getId(), customers.get(1).getId());
+    }
+
+    @Test
+    @Order(7)
+    public void addCustomersToGroup_with_new_customers() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("groupId", 1L);
+        variables.putArray("customerIds").add(customers.get(2).getId())
+                      .add(customers.get(3).getId());
+
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(ADD_CUSTOMER_TO_GROUP, variables, Arrays.asList(CUSTOMER_GROUP_FRAGMENT));
+        CustomerGroup customerGroup = graphQLResponse.get("$.data.addCustomersToGroup", CustomerGroup.class);
+        assertThat(customerGroup.getCustomers().getItems().stream().map(Customer::getId).collect(Collectors.toSet()))
+                .containsExactlyInAnyOrder(
+                        customers.get(0).getId(),
+                        customers.get(1).getId(),
+                        customers.get(2).getId(),
+                        customers.get(3).getId());
+    }
+
+    @Test
+    @Order(8)
+    public void history_entry_for_CUSTOMER_ADDED_TO_GROUP_not_duplicated() throws IOException {
+        HistoryEntryListOptions options = new HistoryEntryListOptions();
+        StringOperators stringOperators = new StringOperators();
+        stringOperators.setEq(HistoryEntryType.CUSTOMER_ADDED_TO_GROUP.name());
+        HistoryEntryFilterParameter filter = new HistoryEntryFilterParameter();
+        filter.setType(stringOperators);
+        options.setFilter(filter);
+        JsonNode optionsNode = objectMapper.valueToTree(options);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", customers.get(0).getId());
+        variables.set("options", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer.getHistory().getItems()).hasSize(1);
+        assertThat(customer.getHistory().getTotalItems()).isEqualTo(1);
+
+        HistoryEntry historyEntry = customer.getHistory().getItems().get(0);
+        assertThat(historyEntry.getType()).isEqualTo(HistoryEntryType.CUSTOMER_ADDED_TO_GROUP);
+        assertThat(historyEntry.getData().get("groupName")).isEqualTo("group 1");
+    }
+
+    @Test
+    @Order(9)
+    public void history_entry_for_CUSTOMER_ADDED_TO_GROUP_after_customer_added() throws IOException {
+        HistoryEntryListOptions options = new HistoryEntryListOptions();
+        options.setPageSize(3); // skip 3
+        options.setCurrentPage(2);
+        JsonNode optionsNode = objectMapper.valueToTree(options);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", customers.get(2).getId());
+        variables.set("options", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer.getHistory().getItems()).hasSize(1);
+        assertThat(customer.getHistory().getTotalItems()).isEqualTo(4);
+
+        HistoryEntry historyEntry = customer.getHistory().getItems().get(0);
+        assertThat(historyEntry.getType()).isEqualTo(HistoryEntryType.CUSTOMER_ADDED_TO_GROUP);
+        assertThat(historyEntry.getData().get("groupName")).isEqualTo("group 1 updated");
+    }
+
+    @Test
+    @Order(10)
+    public void customer_dot_groups_field_resolver() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", customers.get(0).getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_CUSTOMER_WITH_GROUPS, variables);
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer.getGroups()).hasSize(1);
+        assertThat(customer.getGroups().get(0).getId()).isEqualTo(1L);
+        assertThat(customer.getGroups().get(0).getName()).isEqualTo("group 1 updated");
+    }
+
+    @Test
+    @Order(11)
+    public void removeCustomersFromGroup_with_invalid_customerId() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("groupId", 1L);
+        variables.putArray("customerIds").add(customers.get(4).getId());
+
+        try {
+            this.adminClient.perform(REMOVE_CUSTOMERS_FROM_GROUP, variables, Arrays.asList(CUSTOMER_GROUP_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo("Customer '5' does not belong to this CustomerGroup '1'");
+        }
+    }
+
+    @Test
+    @Order(12)
+    public void removeCustomersFromGroup_with_valid_customerIds() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("groupId", 1L);
+        variables.putArray("customerIds").add(customers.get(1).getId())
+                .add(customers.get(3).getId());
+
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(REMOVE_CUSTOMERS_FROM_GROUP, variables, Arrays.asList(CUSTOMER_GROUP_FRAGMENT));
+        CustomerGroup customerGroup = graphQLResponse.get("$.data.removeCustomersFromGroup", CustomerGroup.class);
+        assertThat(customerGroup.getCustomers().getItems().stream().map(Customer::getId).collect(Collectors.toSet()))
+                .containsExactlyInAnyOrder(customers.get(0).getId(), customers.get(2).getId());
+    }
+
+    @Test
+    @Order(13)
+    public void history_entry_for_CUSTOMER_REMOVED_FROM_GROUP() throws IOException {
+        HistoryEntryListOptions options = new HistoryEntryListOptions();
+        options.setPageSize(4); // skip 4
+        options.setCurrentPage(2);
+        JsonNode optionsNode = objectMapper.valueToTree(options);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", customers.get(1).getId());
+        variables.set("options", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_CUSTOMER_HISTORY, variables);
+        assertThat(graphQLResponse.isOk());
+
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+        assertThat(customer.getHistory().getItems()).hasSize(1);
+        assertThat(customer.getHistory().getTotalItems()).isEqualTo(5);
+
+        HistoryEntry historyEntry = customer.getHistory().getItems().get(0);
+        assertThat(historyEntry.getType()).isEqualTo(HistoryEntryType.CUSTOMER_REMOVED_FROM_GROUP);
+        assertThat(historyEntry.getData().get("groupName")).isEqualTo("group 1 updated");
+    }
+
+    @Test
+    @Order(14)
+    public void deleteCustomerGroup() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 1L);
+
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(DELETE_CUSTOMER_GROUP, variables);
+        DeletionResponse deletionResponse =
+                graphQLResponse.get("$.data.deleteCustomerGroup", DeletionResponse.class);
+        assertThat(deletionResponse.getMessage()).isNull();
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+
+        graphQLResponse = this.adminClient.perform(GET_CUSTOMER_GROUPS, null);
+        CustomerGroupList customerGroupList =
+                graphQLResponse.get("$.data.customerGroups", CustomerGroupList.class);
+
+        assertThat(customerGroupList.getTotalItems()).isEqualTo(0);
+    }
+
 }

@@ -27,6 +27,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -139,6 +140,7 @@ public class CustomerGroupService {
     }
 
 
+    @Transactional
     public DeletionResponse delete(Long id) {
         // 确保存在
         CustomerGroupEntity customerGroupEntity =
@@ -146,6 +148,11 @@ public class CustomerGroupService {
 
         DeletionResponse deletionResponse = new DeletionResponse();
         try {
+            // 先删除join关联表数据
+            QueryWrapper<CustomerGroupJoinEntity> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(CustomerGroupJoinEntity::getGroupId, id);
+            this.customerGroupJoinEntityMapper.delete(queryWrapper);
+            // 再删除group组数据
             this.customerGroupEntityMapper.deleteById(id);
             deletionResponse.setResult(DeletionResult.DELETED);
         } catch (Exception ex) {
@@ -199,6 +206,8 @@ public class CustomerGroupService {
                 throw new UserInputException(errorMessage);
             }
             this.customerGroupJoinEntityMapper.delete(queryWrapper);
+            this.createHistoryEntry(
+                    ctx, customerId, groupEntity.getName(), HistoryEntryType.CUSTOMER_REMOVED_FROM_GROUP);
         }
 
         return groupEntity;
