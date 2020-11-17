@@ -56,6 +56,14 @@ geekshop:
     verify-email-address-url: ${VERIFY_EMAIL_ADDRESS_URL:http://localhost:4201/verify}
     password-reset-url: ${PASSWORD_RESET_URL:http://localhost:4201/reset-password}
     change-email-address-url: ${CHANGE_EMAIL_ADDRESS_URL:http://localhost:4201/change-email-address}
+  asset-options:
+    upload-max-file-size: ${UPLOAD_MAX_FILE_SIZE:20971520}
+    permitted-file-types:
+      - image/*
+      - video/*
+      - audio/*
+      - .pdf
+
 
 #mybatis-plus:
 #  configuration:

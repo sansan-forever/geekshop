@@ -6,11 +6,13 @@
 package co.jueyi.geekshop;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ApiException extends RuntimeException {
     private final String errorCode;
     private final String errorMessage;

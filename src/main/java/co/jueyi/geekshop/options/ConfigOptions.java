@@ -20,7 +20,12 @@ public class ConfigOptions {
     private AuthOptions authOptions = new AuthOptions();
 
     /**
-     * Configuration for email;
+     * Configuration for email.
      */
     private EmailOptions emailOptions = new EmailOptions();
+
+    /**
+     * Configuration for assets.
+     */
+    private AssetOptions assetOptions = new AssetOptions();
 }

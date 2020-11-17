@@ -6,6 +6,10 @@
 package co.jueyi.geekshop.config;
 
 import co.jueyi.geekshop.common.Constant;
+import co.jueyi.geekshop.config.asset.AssetConfig;
+import co.jueyi.geekshop.config.asset.DefaultAssetNamingStrategy;
+import co.jueyi.geekshop.config.asset.NoAssetPreviewStrategy;
+import co.jueyi.geekshop.config.asset.NoAssetStorageStrategy;
 import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
@@ -114,5 +118,14 @@ public class AppConfig {
     @Bean
     public AuthenticationStrategy nativeAuthStrategy() {
         return new NativeAuthenticationStrategy();
+    }
+
+    @Bean
+    public AssetConfig assetConfig() {
+        return new AssetConfig(
+          new DefaultAssetNamingStrategy(),
+          new NoAssetPreviewStrategy(),
+          new NoAssetStorageStrategy()
+        );
     }
 }

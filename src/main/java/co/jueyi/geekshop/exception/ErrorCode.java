@@ -40,6 +40,10 @@ public enum ErrorCode {
 
     BAD_PASSWORD_REST_TOKEN("Password reset token not recognized"),
 
+    NO_ASSET_STORAGE_STRATEGY_CONFIGURED("No asset storage strategy configured"),
+
+    NO_ASSET_PREVIEW_STRATEGY_CONFIGURED("No asset preview strategy configured"),
+
     USER_INPUT_ERROR("Invalid request input parameters");
 
     public final String defaultMessage;
