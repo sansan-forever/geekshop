@@ -259,3 +259,29 @@ create table tb_order_history_entry (
     updated_at datetime,
     primary key (id)
 );
+
+create table tb_product_option_group (
+   id bigint not null auto_increment,
+   name varchar(50) not null,
+   code varchar(50) not null,
+   product_id bigint,
+   created_by varchar(30),
+   created_at datetime,
+   updated_by varchar(30),
+   updated_at datetime,
+   primary key (id)
+/* foreign key (product_id) references tb_product(id) */
+);
+
+create table tb_product_option (
+   id bigint not null auto_increment,
+   name varchar(50) not null,
+   code varchar(50) not null,
+   group_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (group_id) references tb_product_option_group(id)
+);

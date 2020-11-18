@@ -8,6 +8,7 @@ package co.jueyi.geekshop.types.product;
 import co.jueyi.geekshop.types.asset.Asset;
 import co.jueyi.geekshop.types.common.Node;
 import co.jueyi.geekshop.types.facet.FacetValue;
+import co.jueyi.geekshop.types.stock.StockMovementList;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -31,4 +32,12 @@ public class ProductVariant implements Node {
     private Integer price;
     private List<ProductOption> options = new ArrayList<>();
     private List<FacetValue> facetValues = new ArrayList<>();
+    private Boolean enabled; // admin only
+    private Integer stockOnHand; // admin only
+    private Boolean trackInventory; // admin only
+    private StockMovementList stockMovements; // admin only
+
+    public StockMovementList getStockMovements(StockMovementListOptions options) {
+        return null; // TODO
+    }
 }

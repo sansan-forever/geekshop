@@ -23,6 +23,7 @@ public class Product implements Node {
     private Long id;
     private Date createdAt;
     private Date updatedAt;
+    private Boolean enabled; // admin only
     private String name;
     private String slug;
     private String description;

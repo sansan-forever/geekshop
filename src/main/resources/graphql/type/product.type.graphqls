@@ -13,6 +13,7 @@ type Product implements Node {
     optionGroups: [ProductOptionGroup!]!
     facetValues: [FacetValue!]!
     collections: [Collection!]!
+    enabled: Boolean! # admin only
 }
 
 type ProductList implements PaginatedList {
@@ -33,4 +34,8 @@ type ProductVariant implements Node {
     price: Int!
     options: [ProductOption!]!
     facetValues: [FacetValue!]!
+    enabled: Boolean! # admin only
+    stockOnHand: Int! # admin only
+    trackInventory: Boolean! # admin only
+    stockMovements(options: StockMovementListOptions): StockMovementList! # admin only
 }
