@@ -5,12 +5,12 @@
 
 package co.jueyi.geekshop.service;
 
-import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.FacetEntity;
 import co.jueyi.geekshop.entity.FacetValueEntity;
 import co.jueyi.geekshop.mapper.FacetEntityMapper;
 import co.jueyi.geekshop.mapper.FacetValueEntityMapper;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
@@ -20,7 +20,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -40,8 +39,8 @@ public class FacetService {
     private final FacetValueEntityMapper facetValueEntityMapper;
 
     public FacetList findAll(FacetListOptions options) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<FacetEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<FacetEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<FacetEntity> queryWrapper = new QueryWrapper<>();
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());

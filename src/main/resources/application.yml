@@ -62,7 +62,7 @@ geekshop:
       - image/*
       - video/*
       - audio/*
-      - .pdf
+      - application/pdf
 
 
 #mybatis-plus:

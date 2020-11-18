@@ -23,7 +23,7 @@ public class AssetOptions {
      *
      * @default image, audio, video MIME types plus PDFs
      */
-    private List<String> permittedFileTypes = Arrays.asList("image/*", "video/*", "audio/*", ".pdf");
+    private List<String> permittedFileTypes = Arrays.asList("image/*", "video/*", "audio/*", "application/pdf");
 
     /**
      * The max file size in bytes for uploaded assets.

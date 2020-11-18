@@ -21,6 +21,7 @@ import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.*;
@@ -66,8 +67,8 @@ public class CustomerService {
     }
 
     public CustomerList findAll(CustomerListOptions options, List<Long> customerIds) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<CustomerEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<CustomerEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
         if (!CollectionUtils.isEmpty(customerIds)) {
             queryWrapper.lambda().in(CustomerEntity::getId, customerIds);

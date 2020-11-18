@@ -15,6 +15,7 @@ import co.jueyi.geekshop.mapper.CustomerEntityMapper;
 import co.jueyi.geekshop.mapper.CustomerGroupEntityMapper;
 import co.jueyi.geekshop.mapper.CustomerGroupJoinEntityMapper;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
@@ -25,7 +26,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -49,8 +49,8 @@ public class CustomerGroupService {
     private final CustomerService customerService;
 
     public CustomerGroupList findAll(CustomerGroupListOptions options) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<CustomerGroupEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<CustomerGroupEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<CustomerGroupEntity> queryWrapper = new QueryWrapper<>();
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());

@@ -14,6 +14,7 @@ import co.jueyi.geekshop.exception.ForbiddenException;
 import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.RoleEntityMapper;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
@@ -24,7 +25,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -38,13 +38,13 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("Duplicates")
 public class RoleService {
     private final RoleEntityMapper roleEntityMapper;
 
-    @SuppressWarnings("Duplicates")
     public RoleList findAll(RoleListOptions options) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<RoleEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<RoleEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<RoleEntity> queryWrapper = new QueryWrapper<>();
         if (options != null) {
             buildFilter(queryWrapper, options.getFilter());

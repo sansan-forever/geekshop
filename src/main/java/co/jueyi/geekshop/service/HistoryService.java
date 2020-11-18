@@ -8,12 +8,12 @@ package co.jueyi.geekshop.service;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.AdministratorEntity;
-import co.jueyi.geekshop.entity.CustomerEntity;
 import co.jueyi.geekshop.entity.CustomerHistoryEntryEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
 import co.jueyi.geekshop.mapper.CustomerHistoryEntryEntityMapper;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.history.*;
@@ -22,7 +22,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -47,8 +46,8 @@ public class HistoryService {
     @SuppressWarnings("Duplicates")
     public HistoryEntryList getHistoryForCustomer(
             Long customerId, HistoryEntryListOptions options) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<CustomerHistoryEntryEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<CustomerHistoryEntryEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<CustomerHistoryEntryEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(CustomerHistoryEntryEntity::getCustomerId, customerId);
         if (options != null) {

@@ -13,6 +13,7 @@ import co.jueyi.geekshop.mapper.AuthenticationMethodEntityMapper;
 import co.jueyi.geekshop.mapper.UserEntityMapper;
 import co.jueyi.geekshop.mapper.UserRoleJoinEntityMapper;
 import co.jueyi.geekshop.options.SuperadminCredentials;
+import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.administrator.*;
@@ -23,7 +24,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,8 +55,8 @@ public class AdministratorService {
     }
 
     public AdministratorList findAll(AdministratorListOptions options) {
-        Pair<Integer, Integer> currentAndSize = ServiceHelper.getListOptions(options);
-        IPage<AdministratorEntity> page = new Page<>(currentAndSize.getLeft(), currentAndSize.getRight());
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<AdministratorEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<AdministratorEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().isNull(AdministratorEntity::getDeletedAt);
         if (options != null) {

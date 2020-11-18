@@ -5,7 +5,9 @@
 
 package co.jueyi.geekshop.service;
 
+import co.jueyi.geekshop.config.asset.AssetConfig;
 import co.jueyi.geekshop.config.auth.AuthConfig;
+import co.jueyi.geekshop.options.AssetOptions;
 import co.jueyi.geekshop.options.AuthOptions;
 import co.jueyi.geekshop.options.ConfigOptions;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,8 @@ public class ConfigService {
     private final ConfigOptions configOptions;
     @Autowired
     private AuthConfig authConfig;
+    @Autowired
+    private AssetConfig assetConfig;
 
     public ConfigService(ConfigOptions configOptions) {
         this.configOptions = configOptions;
@@ -37,5 +41,11 @@ public class ConfigService {
         return this.authConfig;
     }
 
+    public AssetOptions getAssetOptions() {
+        return this.configOptions.getAssetOptions();
+    }
 
+    public AssetConfig getAssetConfig() {
+        return assetConfig;
+    }
 }

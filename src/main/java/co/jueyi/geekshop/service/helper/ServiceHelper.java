@@ -51,7 +51,7 @@ public abstract class ServiceHelper {
         return Arrays.stream(type.getDeclaredFields()).map(field -> field.getName()).collect(Collectors.toSet());
     }
 
-    public static Pair getListOptions(ListOptions options) {
+    public static PageInfo getListOptions(ListOptions options) {
         int currentPage = Constant.DEFAULT_CURRENT_PAGE;
         if (options != null && options.getCurrentPage() != null) {
             currentPage = options.getCurrentPage();
@@ -60,7 +60,7 @@ public abstract class ServiceHelper {
         if (options != null && options.getPageSize() != null) {
             pageSize = options.getPageSize();
         }
-        return Pair.of(currentPage, pageSize);
+        return PageInfo.builder().current(currentPage).size(pageSize).build();
     }
 
     public static CreateCustomerHistoryEntryArgs buildCreateCustomerHistoryEntryArgs(
