@@ -33,4 +33,32 @@ type ProductVariantList implements PaginatedList {
     totalItems: Int!
 }
 
-input ProductVariantListOptions
+input ProductVariantListOptions {
+    currentPage: Int
+    pageSize: Int
+    sort: ProductVariantSortParameter
+    filter: ProductVariantFilterParameter
+}
+
+input ProductVariantSortParameter {
+    stockOnHand: SortOrder
+    id: SortOrder
+    productId: SortOrder
+    createdAt: SortOrder
+    updatedAt: SortOrder
+    sku: SortOrder
+    name: SortOrder
+    price: SortOrder
+}
+
+input ProductVariantFilterParameter {
+    enabled: BooleanOperators
+    stockOnHand: NumberOperators
+    trackInventory: BooleanOperators
+    createdAt: DateOperators
+    updatedAt: DateOperators
+    sku: StringOperators
+    name: StringOperators
+    price: NumberOperators
+}
+

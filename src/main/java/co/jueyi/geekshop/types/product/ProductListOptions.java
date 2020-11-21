@@ -15,4 +15,6 @@ import lombok.Data;
 public class ProductListOptions implements ListOptions {
     private Integer currentPage;
     private Integer pageSize;
+    private ProductSortParameter sort;
+    private ProductFilterParameter filter;
 }

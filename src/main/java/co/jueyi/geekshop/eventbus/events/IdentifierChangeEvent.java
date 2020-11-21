@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * This event is fired when a registered user successfully changes the identifer (ie email address)
+ * This event is fired when a registered user successfully changes the identifier (ie email address)
  * associated with their account.
  *
  * Created on Nov, 2020 by @author bobo

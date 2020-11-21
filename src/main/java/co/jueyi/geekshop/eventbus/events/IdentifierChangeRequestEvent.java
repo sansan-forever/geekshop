@@ -11,6 +11,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
+ * This event is fired when a registered user requests to update the identifier (ie email address)
+ * associated with the account.
+ *
  * Created on Nov, 2020 by @author bobo
  */
 @EqualsAndHashCode(callSuper = true)

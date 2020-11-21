@@ -8,6 +8,7 @@ package co.jueyi.geekshop.types.stock;
 import co.jueyi.geekshop.types.common.PaginatedList;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +16,6 @@ import java.util.List;
  */
 @Data
 public class StockMovementList implements PaginatedList<StockMovement> {
-    private List<StockMovement> items;
+    private List<StockMovement> items = new ArrayList<>();
     private Integer totalItems;
 }

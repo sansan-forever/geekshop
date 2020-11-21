@@ -21,7 +21,9 @@ public class Sale implements Node, StockMovement {
     private Date createdAt;
     private Date updatedAt;
     private ProductVariant productVariant;
+    private Long productVariantId; // 内部使用，GraphQL不可见
     private StockMovementType type;
     private Integer quantity;
     private OrderLine orderLine;
+    private Long orderLineId; // 内部使用，GraphQL不可见
 }

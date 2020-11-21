@@ -24,6 +24,7 @@ public class OrderLine implements Node {
     private Date createdAt;
     private Date updatedAt;
     private ProductVariant productVariant;
+    private Long productVariantId; // 内部使用，GraphQL不可见
     private Asset featuredAsset;
     private Integer unitPrice;
     private Integer quantity;

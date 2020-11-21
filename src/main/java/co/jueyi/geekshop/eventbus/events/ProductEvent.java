@@ -6,18 +6,20 @@
 package co.jueyi.geekshop.eventbus.events;
 
 import co.jueyi.geekshop.common.RequestContext;
-import co.jueyi.geekshop.types.user.User;
+import co.jueyi.geekshop.entity.ProductEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * This event is fired when a user successfully logs in via the shop or admin API `login` mutation.
+ * This event is fired whenever a {@link co.jueyi.geekshop.types.product.Product} is added, updated
+ * or deleted.
  *
  * Created on Nov, 2020 by @author bobo
  */
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class LoginEvent extends BaseEvent {
+@Data
+public class ProductEvent extends BaseEvent {
     private final RequestContext ctx;
-    private final User uer;
+    private final ProductEntity productEntity;
+    private final String type; // 'created' | 'updated' | 'deleted'
 }

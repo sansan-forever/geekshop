@@ -8,7 +8,6 @@ package co.jueyi.geekshop.types.collection;
 import co.jueyi.geekshop.types.asset.Asset;
 import co.jueyi.geekshop.types.common.ConfigurableOperation;
 import co.jueyi.geekshop.types.common.Node;
-import co.jueyi.geekshop.types.product.ProductVariant;
 import co.jueyi.geekshop.types.product.ProductVariantList;
 import co.jueyi.geekshop.types.product.ProductVariantListOptions;
 import lombok.Data;

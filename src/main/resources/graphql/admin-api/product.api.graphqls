@@ -41,6 +41,26 @@ input StockMovementListOptions {
 input ProductListOptions {
     currentPage: Int
     pageSize: Int
+    sort: ProductSortParameter
+    filter: ProductFilterParameter
+}
+
+input ProductSortParameter {
+    id: SortOrder
+    createdAt: SortOrder
+    updatedAt: SortOrder
+    name: SortOrder
+    slug: SortOrder
+    description: SortOrder
+}
+
+input ProductFilterParameter {
+    enabled: BooleanOperators #admin only
+    createdAt: DateOperators
+    updatedAt: DateOperators
+    name: StringOperators
+    slug: StringOperators
+    description: StringOperators
 }
 
 input CreateProductInput {

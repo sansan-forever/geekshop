@@ -56,4 +56,25 @@ public abstract class QueryHelper {
             queryWrapper.orderByDesc(fieldName);
         }
     }
+
+    public static void buildOneNumberOperatorFilter(QueryWrapper queryWrapper, NumberOperators numberOperators,
+                                                    String fieldName) {
+        if (numberOperators == null) return;
+        if (numberOperators.getEq() != null) {
+            queryWrapper.eq(fieldName, numberOperators.getEq());
+        } else if (numberOperators.getGt() != null) {
+            queryWrapper.gt(fieldName, numberOperators.getGt());
+        } else if (numberOperators.getGte() != null) {
+            queryWrapper.ge(fieldName, numberOperators.getGte());
+        } else if (numberOperators.getLt() != null) {
+            queryWrapper.lt(fieldName, numberOperators.getLt());
+        } else if (numberOperators.getLte() != null) {
+            queryWrapper.le(fieldName, numberOperators.getLte());
+        } else if (numberOperators.getBetween() != null && numberOperators.getBetween().getStart() != null &&
+                numberOperators.getBetween().getEnd() != null) {
+            queryWrapper.between(
+                    fieldName, numberOperators.getBetween().getStart(), numberOperators.getBetween().getEnd());
+        }
+
+    }
 }

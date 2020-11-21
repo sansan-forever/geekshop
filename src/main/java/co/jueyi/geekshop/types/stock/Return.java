@@ -21,7 +21,9 @@ public class Return implements Node, StockMovement {
     private Date createdAt;
     private Date updatedAt;
     private ProductVariant productVariant;
+    private Long productVariantId; // 内部使用，GraphQL不可见
     private StockMovementType type;
     private Integer quantity;
     private OrderItem orderItem;
+    private Long orderItemId; // 内部使用，GraphQL不可见
 }

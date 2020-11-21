@@ -190,7 +190,7 @@ create table tb_facet_value (
 
 create index idx_facet_value_facet_id on tb_facet_value(facet_id);
 
-create table asset (
+create table tb_asset (
     id bigint not null auto_increment,
     name varchar(100),
     type varchar(50),
@@ -260,6 +260,24 @@ create table tb_order_history_entry (
     primary key (id)
 );
 
+create table tb_product (
+   id bigint not null auto_increment,
+   name varchar(255) not null,
+   slug varchar(255) not null,
+   description text,
+   enabled boolean default true,
+   featured_asset_id bigint,
+   deleted_at datetime default null,
+   created_by varchar(30),
+   created_at datetime,
+   updated_by varchar(30),
+   updated_at datetime,
+   primary key (id),
+   foreign key (featured_asset_id) references tb_asset(id)
+);
+
+create index idx_product_slug on tb_product(slug);
+
 create table tb_product_option_group (
    id bigint not null auto_increment,
    name varchar(50) not null,
@@ -269,8 +287,8 @@ create table tb_product_option_group (
    created_at datetime,
    updated_by varchar(30),
    updated_at datetime,
-   primary key (id)
-/* foreign key (product_id) references tb_product(id) */
+   primary key (id),
+   foreign key (product_id) references tb_product(id)
 );
 
 create table tb_product_option (
@@ -285,3 +303,151 @@ create table tb_product_option (
    primary key (id),
    foreign key (group_id) references tb_product_option_group(id)
 );
+
+create table tb_product_option_group_join (
+   id bigint not null auto_increment,
+   product_id bigint not null,
+   option_group_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_id, option_group_id),
+   foreign key (product_id) references tb_product(id),
+   foreign key (option_group_id) references tb_product_option_group(id)
+);
+
+create table tb_product_asset_join (
+   id bigint not null auto_increment,
+   product_id bigint not null,
+   asset_id bigint not null,
+   position bigint,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_id, asset_id),
+   foreign key (product_id) references tb_product(id),
+   foreign key (asset_id) references tb_asset(id)
+);
+
+create table tb_product_facet_value_join (
+   id bigint not null auto_increment,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   product_id bigint not null,
+   facet_value_id bigint not null,
+   primary key (id),
+   unique key(product_id, facet_value_id),
+   foreign key (product_id) references tb_product(id),
+   foreign key (facet_value_id) references tb_facet_value(id)
+);
+
+create table tb_product_variant (
+   id bigint not null auto_increment,
+   name varchar(100) not null,
+   sku varchar(100) not null,
+   price integer not null,
+   featured_asset_id bigint,
+   product_id bigint not null,
+   stock_on_hand bigint default 0,
+   track_inventory boolean,
+   deleted_at datetime default null,
+   enabled boolean default true,
+   created_by varchar(30),
+   created_at datetime,
+   updated_by varchar(30),
+   updated_at datetime,
+   primary key (id),
+   foreign key (featured_asset_id) references tb_asset(id),
+   foreign key (product_id) references tb_product(id)
+);
+
+create index idx_product_variant_product_id on tb_product_variant(product_id);
+
+create table tb_product_variant_asset_join (
+   id bigint not null auto_increment,
+   product_variant_id bigint not null,
+   asset_id bigint not null,
+   position bigint,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_variant_id, asset_id),
+   foreign key (product_variant_id) references tb_product_variant(id),
+   foreign key (asset_id) references tb_asset(id)
+);
+
+create table tb_product_variant_product_option_join (
+   id bigint not null auto_increment,
+   product_variant_id bigint not null,
+   product_option_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_variant_id, product_option_id),
+   foreign key (product_variant_id) references tb_product_variant(id),
+   foreign key (product_option_id) references tb_product_option(id)
+);
+
+create table tb_product_variant_facet_value_join (
+   id bigint not null auto_increment,
+   product_variant_id bigint not null,
+   facet_value_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_variant_id, facet_value_id),
+   foreign key (product_variant_id) references tb_product_variant(id),
+   foreign key (facet_value_id) references tb_facet_value(id)
+);
+
+create table tb_product_variant_collection_join (
+   id bigint not null auto_increment,
+   product_variant_id bigint not null,
+   collection_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_variant_id, collection_id),
+   foreign key (product_variant_id) references tb_product_variant(id)
+   /*foreign key (collection_id) references tb_collection(id)*/
+);
+
+create table tb_stock_movement (
+   id bigint not null auto_increment,
+   type varchar(50) not null,
+   product_variant_id bigint not null,
+   quantity bigint,
+   order_line_id bigint,
+   order_item_id bigint,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (product_variant_id) references tb_product_variant(id)
+);
+
+create table tb_global_settings (
+   id bigint not null auto_increment,
+   track_inventory boolean default false,
+   custom_fields text,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id)
+)

@@ -16,4 +16,5 @@ type OrderProcessState {
 type ServerConfig {
     orderProcess: [OrderProcessState!]!
     permittedAssetTypes: [String!]!
+    customFields: JSON
 }
