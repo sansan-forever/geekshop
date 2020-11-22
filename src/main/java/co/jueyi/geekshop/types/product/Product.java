@@ -28,6 +28,7 @@ public class Product implements Node {
     private String slug;
     private String description;
     private Asset featuredAsset;
+    private Long featuredAssetId; // 内部使用，GraphQL不可见
     private List<Asset> assets = new ArrayList<>();
     private List<ProductVariant> variants = new ArrayList<>();
     private List<ProductOptionGroup> optionGroups = new ArrayList<>();

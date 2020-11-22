@@ -50,6 +50,24 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_USER_ROLES = "userRolesDataLoader";
     public static final String DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS = "userAuthenticationMethodsDataLoader";
     public static final String DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS = "customerGroupCustomers";
+
     public static final String DATA_LOADER_NAME_FACET_VALUE_FACET = "facetValueFacetDataLoader";
     public static final String DATA_LOADER_NAME_FACET_VALUES = "facetValuesDataLoader";
+
+    public static final String DATA_LOADER_NAME_PRODUCT_OPTIONS = "productOptionsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_OPTION_GROUP = "productOptionGroupDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_FEATURED_ASSET = "productFeaturedAssetDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_ASSETS = "productAssetsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANTS = "productVariantsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_OPTION_GROUPS = "productOptionGroupsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_FACET_VALUES = "productFacetValuesDataLoader";
+
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_FEATURED_ASSET =
+            "productVariantFeaturedAssetDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_PRODUCT = "productVariantProductDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_ASSETS = "productVariantAssetsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_OPTIONS = "productVariantOptionsDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_FACET_VALUES = "productVariantFacetValuesDataLoader";
+    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_STOCK_MOVEMENTS =
+            "productVariantStockMovementsDataLoader";
 }

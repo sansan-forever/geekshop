@@ -10,14 +10,21 @@ import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.resolver.dataloader.*;
 import co.jueyi.geekshop.service.CustomerGroupService;
 import co.jueyi.geekshop.service.HistoryService;
+import co.jueyi.geekshop.service.StockMovementService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.administrator.Administrator;
+import co.jueyi.geekshop.types.asset.Asset;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.facet.Facet;
 import co.jueyi.geekshop.types.facet.FacetValue;
 import co.jueyi.geekshop.types.history.HistoryEntryList;
+import co.jueyi.geekshop.types.product.Product;
+import co.jueyi.geekshop.types.product.ProductOption;
+import co.jueyi.geekshop.types.product.ProductOptionGroup;
+import co.jueyi.geekshop.types.product.ProductVariant;
 import co.jueyi.geekshop.types.role.Role;
+import co.jueyi.geekshop.types.stock.StockMovementList;
 import co.jueyi.geekshop.types.user.AuthenticationMethod;
 import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
@@ -55,6 +62,18 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final CustomerGroupService customerGroupService;
     private final FacetEntityMapper facetEntityMapper;
     private final FacetValueEntityMapper facetValueEntityMapper;
+    private final ProductOptionEntityMapper productOptionEntityMapper;
+    private final ProductOptionGroupEntityMapper productOptionGroupEntityMapper;
+    private final AssetEntityMapper assetEntityMapper;
+    private final ProductAssetJoinEntityMapper productAssetJoinEntityMapper;
+    private final ProductVariantEntityMapper productVariantEntityMapper;
+    private final ProductOptionGroupJoinEntityMapper productOptionGroupJoinEntityMapper;
+    private final ProductFacetValueJoinEntityMapper productFacetValueJoinEntityMapper;
+    private final ProductEntityMapper productEntityMapper;
+    private final ProductVariantAssetJoinEntityMapper productVariantAssetJoinEntityMapper;
+    private final ProductVariantProductOptionJoinEntityMapper productVariantProductOptionJoinEntityMapper;
+    private final ProductVariantFacetValueJoinEntityMapper productVariantFacetValueJoinEntityMapper;
+    private final StockMovementService stockMovementService;
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -115,9 +134,9 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
         dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_USER_ROLES, userRolesDataLoader);
 
-        DataLoader<Long, List<AuthenticationMethod>> userAuthenticationMethodsDataLoader = DataLoader.newMappedDataLoader(
-                new UserAuthenticationMethodsDataLoader(this.authenticationMethodEntityMapper)
-        );
+        DataLoader<Long, List<AuthenticationMethod>> userAuthenticationMethodsDataLoader =
+                DataLoader.newMappedDataLoader(
+                        new UserAuthenticationMethodsDataLoader(this.authenticationMethodEntityMapper));
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS, userAuthenticationMethodsDataLoader);
 
@@ -138,6 +157,98 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
         dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_FACET_VALUES, facetValuesDataLoader);
 
+        DataLoader<Long, List<ProductOption>> productOptionsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductOptionsDataLoader(this.productOptionEntityMapper)
+        );
+        dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_PRODUCT_OPTIONS, productOptionsDataLoader);
+
+        DataLoader<Long, ProductOptionGroup> productOptionGroupDataLoader = DataLoader.newMappedDataLoader(
+                new ProductOptionGroupDataLoader(this.productOptionGroupEntityMapper)
+        );
+        dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_PRODUCT_OPTION_GROUP, productOptionGroupDataLoader);
+
+        DataLoader<Long, Asset> productFeaturedAssetDataLoader = DataLoader.newMappedDataLoader(
+                new FeaturedAssetDataLoader(this.assetEntityMapper)
+        ) ;
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_FEATURED_ASSET, productFeaturedAssetDataLoader
+        );
+
+        DataLoader<Long, List<Asset>> productAssetsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductAssetsDataLoader(this.productAssetJoinEntityMapper, this.assetEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_ASSETS, productAssetsDataLoader
+        );
+
+        DataLoader<Long, List<ProductVariant>> productVariantsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantsDataLoader(this.productVariantEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANTS, productVariantsDataLoader
+        );
+
+        DataLoader<Long, List<ProductOptionGroup>> productOptionGroupsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductOptionGroupsDataLoader(
+                        this.productOptionGroupJoinEntityMapper, this.productOptionGroupEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_OPTION_GROUPS, productOptionGroupsDataLoader
+        );
+
+        DataLoader<Long, List<FacetValue>> productFacetValuesDataLoader = DataLoader.newMappedDataLoader(
+                new ProductFacetValuesDataLoader(this.productFacetValueJoinEntityMapper, this.facetValueEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_FACET_VALUES, productFacetValuesDataLoader
+        );
+
+        DataLoader<Long, Asset> productVariantFeaturedAssetDataLoader = DataLoader.newMappedDataLoader(
+                new FeaturedAssetDataLoader(this.assetEntityMapper)
+        ) ;
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_FEATURED_ASSET, productVariantFeaturedAssetDataLoader
+        );
+
+        DataLoader<Long, Product> productVariantProductDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantProductDataLoader(this.productEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_PRODUCT, productVariantProductDataLoader
+        );
+
+        DataLoader<Long, List<Asset>> productVariantAssetsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantAssetsDataLoader(this.productVariantAssetJoinEntityMapper, this.assetEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_ASSETS, productVariantAssetsDataLoader
+        );
+
+        DataLoader<Long, List<ProductOption>> productVariantOptionsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantOptionsDataLoader(
+                        this.productVariantProductOptionJoinEntityMapper,this.productOptionEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_OPTIONS, productVariantOptionsDataLoader
+        );
+
+        DataLoader<Long, List<FacetValue>> productVariantFacetValuesDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantFacetValuesDataLoader(
+                        this.productVariantFacetValueJoinEntityMapper,
+                        this.facetValueEntityMapper,
+                        this.facetEntityMapper
+                )
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_FACET_VALUES, productVariantFacetValuesDataLoader
+        );
+
+        DataLoader<Long, StockMovementList> productVariantStockMovementsDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantStockMovementsDataLoader(this.stockMovementService)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_STOCK_MOVEMENTS, productVariantStockMovementsDataLoader
+        );
 
         return dataLoaderRegistry;
     }

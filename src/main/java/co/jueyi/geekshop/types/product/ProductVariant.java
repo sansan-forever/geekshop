@@ -27,6 +27,8 @@ public class ProductVariant implements Node {
     private Date updatedAt;
     private String sku;
     private String name;
+    // 该字段对GraphQL不可见，仅内部使用
+    private Long featuredAssetId;
     private Asset featuredAsset;
     private List<Asset> assets = new ArrayList<>();
     private Integer price;
@@ -36,8 +38,4 @@ public class ProductVariant implements Node {
     private Integer stockOnHand; // admin only
     private Boolean trackInventory; // admin only
     private StockMovementList stockMovements; // admin only
-
-    public StockMovementList getStockMovements(StockMovementListOptions options) {
-        return null; // TODO
-    }
 }

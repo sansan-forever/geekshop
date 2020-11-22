@@ -8,8 +8,12 @@ package co.jueyi.geekshop.service;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.FacetEntity;
 import co.jueyi.geekshop.entity.FacetValueEntity;
+import co.jueyi.geekshop.entity.ProductFacetValueJoinEntity;
+import co.jueyi.geekshop.entity.ProductVariantFacetValueJoinEntity;
 import co.jueyi.geekshop.mapper.FacetEntityMapper;
 import co.jueyi.geekshop.mapper.FacetValueEntityMapper;
+import co.jueyi.geekshop.mapper.ProductFacetValueJoinEntityMapper;
+import co.jueyi.geekshop.mapper.ProductVariantFacetValueJoinEntityMapper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -32,6 +37,8 @@ import java.util.List;
 public class FacetValueService {
     private final FacetValueEntityMapper facetValueEntityMapper;
     private final FacetEntityMapper facetEntityMapper;
+    private final ProductFacetValueJoinEntityMapper productFacetValueJoinEntityMapper;
+    private final ProductVariantFacetValueJoinEntityMapper productVariantFacetValueJoinEntityMapper;
 
     public List<FacetValueEntity> findAll() {
         return facetValueEntityMapper.selectList(null);
@@ -101,7 +108,29 @@ public class FacetValueService {
      * Checks for usage of the given FacetValues in any Products or Variants, and returns the counts.
      */
     FacetValueUsage checkFacetValueUsage(List<Long> facetValueIds) {
-        return null; // TODO
+        QueryWrapper<ProductFacetValueJoinEntity> productFacetValueJoinEntityQueryWrapper = new QueryWrapper<>();
+        productFacetValueJoinEntityQueryWrapper.lambda().
+                in(ProductFacetValueJoinEntity::getFacetValueId, facetValueIds);
+        List<ProductFacetValueJoinEntity> productFacetValueJoinEntities =
+                this.productFacetValueJoinEntityMapper.selectList(productFacetValueJoinEntityQueryWrapper);
+        int consumingProductsCount =
+                productFacetValueJoinEntities.stream()
+                        .map(ProductFacetValueJoinEntity::getProductId)
+                        .collect(Collectors.toSet()).size();
+
+        QueryWrapper<ProductVariantFacetValueJoinEntity> productVariantFacetValueJoinEntityQueryWrapper =
+                new QueryWrapper<>();
+        productVariantFacetValueJoinEntityQueryWrapper.lambda().
+                in(ProductVariantFacetValueJoinEntity::getFacetValueId, facetValueIds);
+        List<ProductVariantFacetValueJoinEntity> productVariantFacetValueJoinEntities =
+                this.productVariantFacetValueJoinEntityMapper
+                        .selectList(productVariantFacetValueJoinEntityQueryWrapper);
+        int consumingVariantsCount =
+                productVariantFacetValueJoinEntities.stream()
+                        .map(ProductVariantFacetValueJoinEntity::getProductVariantId)
+                        .collect(Collectors.toSet()).size();
+        return FacetValueUsage.builder().productCount(consumingProductsCount).variantCount(consumingVariantsCount)
+                .build();
     }
 
     @Data
