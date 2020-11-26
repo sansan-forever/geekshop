@@ -51,7 +51,6 @@ public class GraphQLConfig {
         schemaParserDictionary.add(Sale.class);
         schemaParserDictionary.add(Cancellation.class);
         schemaParserDictionary.add(Return.class);
-        schemaParserDictionary.add(CollectionList.class);
         schemaParserDictionary.add(PromotionList.class);
         schemaParserDictionary.add(ShippingMethodList.class);
         return schemaParserDictionary;

@@ -20,5 +20,5 @@ public class ConfigArgDefinition {
     private Boolean list;
     private String label;
     private String description;
-    private Map<String, String> ui = new HashMap<>();
+    private Map<String, Object> ui = new HashMap<>();
 }

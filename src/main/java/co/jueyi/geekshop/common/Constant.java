@@ -37,6 +37,8 @@ public abstract class Constant {
 
     public static final String NATIVE_AUTH_STRATEGY_NAME = "native";
 
+    public static final String ROOT_COLLECTION_NAME = "__root_collection__";
+
     public static final String DEFAULT_AUTH_TOKEN_HEADER_KEY = "geekshop-shared-token";
     public static final String SUPER_ADMIN_USER_IDENTIFIER = "superadmin";
     public static final String SUPER_ADMIN_USER_PASSWORD = "superadmin123";
@@ -46,10 +48,8 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_CUSTOMER_USER = "customerUserDataLoader";
     public static final String DATA_LOADER_NAME_CUSTOMER_ADDRESSES = "customerAddressesDataLoader";
     public static final String DATA_LOADER_NAME_CUSTOMER_GROUPS = "customerGroupsDataLoader";
-    public static final String DATA_LOADER_NAME_CUSTOMER_HISTORY = "customerHistoryDataLoader";
     public static final String DATA_LOADER_NAME_USER_ROLES = "userRolesDataLoader";
     public static final String DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS = "userAuthenticationMethodsDataLoader";
-    public static final String DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS = "customerGroupCustomers";
 
     public static final String DATA_LOADER_NAME_FACET_VALUE_FACET = "facetValueFacetDataLoader";
     public static final String DATA_LOADER_NAME_FACET_VALUES = "facetValuesDataLoader";
@@ -68,6 +68,10 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_ASSETS = "productVariantAssetsDataLoader";
     public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_OPTIONS = "productVariantOptionsDataLoader";
     public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_FACET_VALUES = "productVariantFacetValuesDataLoader";
-    public static final String DATA_LOADER_NAME_PRODUCT_VARIANT_STOCK_MOVEMENTS =
-            "productVariantStockMovementsDataLoader";
+
+    public static final String DATA_LOADER_NAME_COLLECTION_FEATURED_ASSET =
+            "collectionFeaturedAssetDataLoader";
+    public static final String DATA_LOADER_NAME_COLLECTION_ASSETS = "collectionAssetsDataLoader";
+    public static final String DATA_LOADER_NAME_COLLECTION_PARENT = "collectionParentDataLoader";
+    public static final String DATA_LOADER_NAME_COLLECTION_CHILDREN = "collectionChildrenDataLoader";
 }

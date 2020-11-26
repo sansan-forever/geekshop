@@ -412,20 +412,6 @@ create table tb_product_variant_facet_value_join (
    foreign key (facet_value_id) references tb_facet_value(id)
 );
 
-create table tb_product_variant_collection_join (
-   id bigint not null auto_increment,
-   product_variant_id bigint not null,
-   collection_id bigint not null,
-   created_by varchar(50),
-   created_at datetime,
-   updated_by varchar(50),
-   updated_at datetime,
-   primary key (id),
-   unique key (product_variant_id, collection_id),
-   foreign key (product_variant_id) references tb_product_variant(id)
-   /*foreign key (collection_id) references tb_collection(id)*/
-);
-
 create table tb_stock_movement (
    id bigint not null auto_increment,
    type varchar(50) not null,
@@ -450,4 +436,55 @@ create table tb_global_settings (
    updated_by varchar(50),
    updated_at datetime,
    primary key (id)
-)
+);
+
+create table tb_collection (
+   id bigint not null auto_increment,
+   root boolean default false,
+   visible_to_public boolean default false,
+   position integer,
+   name varchar(255),
+   slug varchar(255),
+   description text,
+   featured_asset_id bigint,
+   parent_id bigint,
+   filters text,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (featured_asset_id) references tb_asset(id),
+   foreign key (parent_id) references tb_collection(id)
+);
+
+create index idx_collection_parent_id on tb_collection(parent_id);
+
+create table tb_product_variant_collection_join (
+   id bigint not null auto_increment,
+   product_variant_id bigint not null,
+   collection_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (product_variant_id, collection_id),
+   foreign key (product_variant_id) references tb_product_variant(id),
+   foreign key (collection_id) references tb_collection(id)
+);
+
+create table tb_collection_asset_join (
+   id bigint not null auto_increment,
+   collection_id bigint not null,
+   asset_id bigint not null,
+   position bigint,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   unique key (collection_id, asset_id),
+   foreign key (collection_id) references tb_collection(id),
+   foreign key (asset_id) references tb_asset(id)
+);

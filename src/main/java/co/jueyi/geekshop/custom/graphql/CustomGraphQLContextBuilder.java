@@ -8,23 +8,18 @@ package co.jueyi.geekshop.custom.graphql;
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.resolver.dataloader.*;
-import co.jueyi.geekshop.service.CustomerGroupService;
-import co.jueyi.geekshop.service.HistoryService;
-import co.jueyi.geekshop.service.StockMovementService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.asset.Asset;
+import co.jueyi.geekshop.types.collection.Collection;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
-import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.facet.Facet;
 import co.jueyi.geekshop.types.facet.FacetValue;
-import co.jueyi.geekshop.types.history.HistoryEntryList;
 import co.jueyi.geekshop.types.product.Product;
 import co.jueyi.geekshop.types.product.ProductOption;
 import co.jueyi.geekshop.types.product.ProductOptionGroup;
 import co.jueyi.geekshop.types.product.ProductVariant;
 import co.jueyi.geekshop.types.role.Role;
-import co.jueyi.geekshop.types.stock.StockMovementList;
 import co.jueyi.geekshop.types.user.AuthenticationMethod;
 import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
@@ -55,11 +50,9 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final AddressEntityMapper addressEntityMapper;
     private final CustomerGroupJoinEntityMapper customerGroupJoinEntityMapper;
     private final CustomerGroupEntityMapper customerGroupEntityMapper;
-    private final HistoryService historyService;
     private final UserRoleJoinEntityMapper userRoleJoinEntityMapper;
     private final RoleEntityMapper roleEntityMapper;
     private final AuthenticationMethodEntityMapper authenticationMethodEntityMapper;
-    private final CustomerGroupService customerGroupService;
     private final FacetEntityMapper facetEntityMapper;
     private final FacetValueEntityMapper facetValueEntityMapper;
     private final ProductOptionEntityMapper productOptionEntityMapper;
@@ -73,7 +66,8 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final ProductVariantAssetJoinEntityMapper productVariantAssetJoinEntityMapper;
     private final ProductVariantProductOptionJoinEntityMapper productVariantProductOptionJoinEntityMapper;
     private final ProductVariantFacetValueJoinEntityMapper productVariantFacetValueJoinEntityMapper;
-    private final StockMovementService stockMovementService;
+    private final CollectionAssetJoinEntityMapper collectionAssetJoinEntityMapper;
+    private final CollectionEntityMapper collectionEntityMapper;
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -124,11 +118,6 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
         dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_CUSTOMER_GROUPS, customerGroupDataLoader);
 
-        DataLoader<Long, HistoryEntryList> customerHistoryDataLoader = DataLoader.newMappedDataLoader(
-                new CustomerHistoryDataLoader(this.historyService)
-        );
-        dataLoaderRegistry.register(Constant.DATA_LOADER_NAME_CUSTOMER_HISTORY, customerHistoryDataLoader);
-
         DataLoader<Long, List<Role>> userRolesDataLoader = DataLoader.newMappedDataLoader(
                 new UserRolesDataLoader(this.userRoleJoinEntityMapper, this.roleEntityMapper)
         );
@@ -139,13 +128,6 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
                         new UserAuthenticationMethodsDataLoader(this.authenticationMethodEntityMapper));
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_USER_AUTHENTICATION_METHODS, userAuthenticationMethodsDataLoader);
-
-        DataLoader<Long, CustomerList> customerGroupCustomersDataLoader = DataLoader.newMappedDataLoader(
-                        new CustomerGroupCustomersDataLoader(customerGroupService)
-        );
-        dataLoaderRegistry.register(
-                Constant.DATA_LOADER_NAME_CUSTOMER_GROUP_CUSTOMERS, customerGroupCustomersDataLoader
-        );
 
         DataLoader<Long, Facet> facetValueFacetDataLoader = DataLoader.newMappedDataLoader(
                 new FacetValueFacetDataLoader((this.facetEntityMapper))
@@ -243,11 +225,32 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
                 Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_FACET_VALUES, productVariantFacetValuesDataLoader
         );
 
-        DataLoader<Long, StockMovementList> productVariantStockMovementsDataLoader = DataLoader.newMappedDataLoader(
-                new ProductVariantStockMovementsDataLoader(this.stockMovementService)
+        DataLoader<Long, Asset> collectionFeaturedAssetDataLoader = DataLoader.newMappedDataLoader(
+                new FeaturedAssetDataLoader(this.assetEntityMapper)
+        ) ;
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_COLLECTION_FEATURED_ASSET, collectionFeaturedAssetDataLoader
+        );
+
+        DataLoader<Long, List<Asset>> collectionAssetsDataLoader = DataLoader.newMappedDataLoader(
+                new CollectionAssetsDataLoader(this.collectionAssetJoinEntityMapper, this.assetEntityMapper)
         );
         dataLoaderRegistry.register(
-                Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_STOCK_MOVEMENTS, productVariantStockMovementsDataLoader
+                Constant.DATA_LOADER_NAME_COLLECTION_ASSETS, collectionAssetsDataLoader
+        );
+
+        DataLoader<Long, Collection> collectionParentDataLoader = DataLoader.newMappedDataLoader(
+                new CollectionParentDataLoader(this.collectionEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_COLLECTION_PARENT, collectionParentDataLoader
+        );
+
+        DataLoader<Long, List<Collection>> collectionChildrenDataLoader = DataLoader.newMappedDataLoader(
+                new CollectionChildrenDataLoader(this.collectionEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_COLLECTION_CHILDREN, collectionChildrenDataLoader
         );
 
         return dataLoaderRegistry;

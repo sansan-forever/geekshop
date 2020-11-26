@@ -8,6 +8,7 @@ package co.jueyi.geekshop.resolver;
 import co.jueyi.geekshop.common.ApiType;
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.service.HistoryService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.common.BooleanOperators;
 import co.jueyi.geekshop.types.common.SortOrder;
@@ -21,6 +22,7 @@ import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.GraphQLContext;
 import graphql.kickstart.tools.GraphQLResolver;
 import graphql.schema.DataFetchingEnvironment;
+import lombok.RequiredArgsConstructor;
 import org.dataloader.DataLoader;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +34,11 @@ import java.util.concurrent.CompletableFuture;
  * Created on Nov, 2020 by @author bobo
  */
 @Component
+@RequiredArgsConstructor
 public class CustomerResolver implements GraphQLResolver<Customer> {
+
+    private final HistoryService historyService;
+
     public CompletableFuture<User> getUser(Customer customer, DataFetchingEnvironment dfe) {
         final DataLoader<Long, User> dataLoader = ((GraphQLContext) dfe.getContext())
                 .getDataLoaderRegistry().get()
@@ -74,11 +80,8 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
         return dataLoader.load(customer.getId());
     }
 
-    public CompletableFuture<HistoryEntryList> getHistory(Customer customer, HistoryEntryListOptions options,
+    public HistoryEntryList getHistory(Customer customer, HistoryEntryListOptions options,
                                                           DataFetchingEnvironment dfe) {
-        final DataLoader<Long, HistoryEntryList> dataLoader = ((GraphQLContext) dfe.getContext())
-                .getDataLoaderRegistry().get()
-                .getDataLoader(Constant.DATA_LOADER_NAME_CUSTOMER_HISTORY);
 
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         if (options == null) {
@@ -100,6 +103,6 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
             options.setSort(sort);
         }
 
-        return dataLoader.load(customer.getId(), options);
+        return historyService.getHistoryForCustomer(customer.getId(), options);
     }
 }

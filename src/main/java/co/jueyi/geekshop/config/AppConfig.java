@@ -13,6 +13,10 @@ import co.jueyi.geekshop.config.asset.NoAssetStorageStrategy;
 import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
+import co.jueyi.geekshop.config.collection.CatalogConfig;
+import co.jueyi.geekshop.config.collection.CollectionFilter;
+import co.jueyi.geekshop.config.collection.FacetValueCollectionFilter;
+import co.jueyi.geekshop.config.collection.VariantNameCollectionFilter;
 import co.jueyi.geekshop.config.session_cache.InMemorySessionCacheStrategy;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.email.EmailSender;
@@ -35,6 +39,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.management.MXBean;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
@@ -127,5 +132,22 @@ public class AppConfig {
           new NoAssetPreviewStrategy(),
           new NoAssetStorageStrategy()
         );
+    }
+
+    @Bean
+    public CatalogConfig catalogConfig() {
+        return new CatalogConfig(
+                Arrays.asList(facetValueCollectionFilter(), variantNameCollectionFilter())
+        );
+    }
+
+    @Bean
+    public CollectionFilter facetValueCollectionFilter() {
+        return new FacetValueCollectionFilter();
+    }
+
+    @Bean
+    public CollectionFilter variantNameCollectionFilter() {
+        return new VariantNameCollectionFilter();
     }
 }

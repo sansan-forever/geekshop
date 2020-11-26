@@ -2,6 +2,7 @@
 # All rights reserved.
 type Collection implements Node {
     id: ID!
+    visibleToPublic: Boolean! # admin only
     createdAt: DateTime!
     updatedAt: DateTime!
     name: String!

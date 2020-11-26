@@ -7,6 +7,7 @@ package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.config.asset.AssetConfig;
 import co.jueyi.geekshop.config.auth.AuthConfig;
+import co.jueyi.geekshop.config.collection.CatalogConfig;
 import co.jueyi.geekshop.options.AssetOptions;
 import co.jueyi.geekshop.options.AuthOptions;
 import co.jueyi.geekshop.options.ConfigOptions;
@@ -25,6 +26,8 @@ public class ConfigService {
     private AuthConfig authConfig;
     @Autowired
     private AssetConfig assetConfig;
+    @Autowired
+    private CatalogConfig catalogConfig;
 
     public ConfigService(ConfigOptions configOptions) {
         this.configOptions = configOptions;
@@ -47,5 +50,9 @@ public class ConfigService {
 
     public AssetConfig getAssetConfig() {
         return assetConfig;
+    }
+
+    public CatalogConfig getCatalogConfig() {
+        return catalogConfig;
     }
 }

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  * Created on Nov, 2020 by @author bobo
  */
 @RequiredArgsConstructor
+@SuppressWarnings("Duplicates")
 public class ProductAssetsDataLoader implements MappedBatchLoader<Long, List<Asset>> {
     private final ProductAssetJoinEntityMapper productAssetJoinEntityMapper;
     private final AssetEntityMapper assetEntityMapper;
