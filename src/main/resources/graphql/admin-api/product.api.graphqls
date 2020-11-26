@@ -1,7 +1,7 @@
 extend type Query {
-    products(options: ProductListOptions): ProductList!
+    adminProducts(options: ProductListOptions): ProductList!
     "Get a Product either by id or slug. If neither id nor slug is specified, an error will result."
-    product(id: ID, slug: String): Product
+    adminProduct(id: ID, slug: String): Product
     "Get a ProductVariant by id"
     productVariant(id: ID!): ProductVariant
 }

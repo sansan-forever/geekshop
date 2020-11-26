@@ -33,7 +33,7 @@ public class CollectionQuery implements GraphQLQueryResolver {
     private final CollectionService collectionService;
 
     @Allow(Permission.ReadCatalog)
-    public CollectionList collections(CollectionListOptions options, DataFetchingEnvironment dfe) {
+    public CollectionList adminCollections(CollectionListOptions options, DataFetchingEnvironment dfe) {
         return this.collectionService.findAll(options);
     }
 
@@ -41,7 +41,7 @@ public class CollectionQuery implements GraphQLQueryResolver {
      * Get a Collection either by id or slug. If neither id nor slug is specified, an error will result.
      */
     @Allow(Permission.ReadCatalog)
-    public Collection collection(Long id, String slug, DataFetchingEnvironment dfe) {
+    public Collection adminCollection(Long id, String slug, DataFetchingEnvironment dfe) {
         if (id != null) {
             CollectionEntity collectionEntity = this.collectionService.findOne(id);
             if (collectionEntity == null) return null;

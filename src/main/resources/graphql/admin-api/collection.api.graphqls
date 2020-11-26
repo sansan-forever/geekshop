@@ -1,7 +1,7 @@
 extend type Query {
-    collections(options: CollectionListOptions): CollectionList!
+    adminCollections(options: CollectionListOptions): CollectionList!
     "Get a Collection either by id or slug. If neither id nor slug is specified, an error will result."
-    collection(id: ID, slug: String): Collection
+    adminCollection(id: ID, slug: String): Collection
     collectionFilters: [ConfigurableOperationDefinition!]!
 }
 

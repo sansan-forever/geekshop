@@ -157,7 +157,7 @@ public class CollectionService {
 
     public List<CollectionEntity> getCollectionsByProductId(Long productId, boolean publicOnly) {
         QueryWrapper<ProductVariantEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().in(ProductVariantEntity::getProductId, productId).select(ProductVariantEntity::getId);
+        queryWrapper.lambda().eq(ProductVariantEntity::getProductId, productId).select(ProductVariantEntity::getId);
         List<ProductVariantEntity> productVariantEntities = this.productVariantEntityMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(productVariantEntities)) return new ArrayList<>();
         List<Long> variantIds = productVariantEntities.stream()
@@ -172,6 +172,12 @@ public class CollectionService {
                 .map(ProductVariantCollectionJoinEntity::getCollectionId).distinct().collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collectionIds)) return new ArrayList<>();
 
+        QueryWrapper<CollectionEntity> collectionEntityQueryWrapper = new QueryWrapper<>();
+        collectionEntityQueryWrapper.lambda()
+                .in(CollectionEntity::getId, collectionIds).orderByAsc(CollectionEntity::getId);
+        if (publicOnly) {
+            collectionEntityQueryWrapper.lambda().eq(CollectionEntity::isVisibleToPublic, true);
+        }
         return this.collectionEntityMapper.selectBatchIds(collectionIds);
     }
 

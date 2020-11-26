@@ -33,7 +33,7 @@ public class ProductQuery implements GraphQLQueryResolver {
     private final ProductVariantService productVariantService;
 
     @Allow(Permission.ReadCatalog)
-    public ProductList products(ProductListOptions options, DataFetchingEnvironment dfe) {
+    public ProductList adminProducts(ProductListOptions options, DataFetchingEnvironment dfe) {
         return this.productService.findAll(options);
     }
 
@@ -41,7 +41,7 @@ public class ProductQuery implements GraphQLQueryResolver {
      * Get a Product either by id or slug. If neither id nor slug is specified, an error will result.
      */
     @Allow(Permission.ReadCatalog)
-    public Product product(Long id, String slug, DataFetchingEnvironment dfe) {
+    public Product adminProduct(Long id, String slug, DataFetchingEnvironment dfe) {
         if (id != null) {
             ProductEntity productEntity = this.productService.findOne(id);
             if (productEntity == null) return null;

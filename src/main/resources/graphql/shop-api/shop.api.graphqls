@@ -6,6 +6,20 @@ extend type Query {
 
     "Return information about the current authenticated User"
     me: CurrentUser
+
+    "A list of Collections available to the shop"
+    collections(options: CollectionListOptions): CollectionList!
+
+    "Return a Collection either by its id or slug. If neither 'id' nor 'slug' is specified, an error will result."
+    collection(id: ID, slug: String): Collection
+
+    "Get a Product either by id or slug. If neither 'id' nor 'slug' is specified, an error will result."
+    product(id: ID, slug: String): Product
+
+    "Get list of Products"
+    products(options: ProductListOptions): ProductList!
+
+    # TODO add search
 }
 
 extend type Mutation {

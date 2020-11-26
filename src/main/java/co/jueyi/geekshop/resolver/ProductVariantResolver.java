@@ -86,7 +86,6 @@ public class ProductVariantResolver implements GraphQLResolver<ProductVariant> {
                 .getDataLoader(Constant.DATA_LOADER_NAME_PRODUCT_VARIANT_FACET_VALUES);
 
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
-
         return dataLoader.load(productVariant.getId(), ctx);
     }
 
