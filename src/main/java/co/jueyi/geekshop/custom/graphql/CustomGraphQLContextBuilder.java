@@ -179,7 +179,10 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
 
         DataLoader<Long, List<FacetValue>> productFacetValuesDataLoader = DataLoader.newMappedDataLoader(
-                new ProductFacetValuesDataLoader(this.productFacetValueJoinEntityMapper, this.facetValueEntityMapper)
+                new ProductFacetValuesDataLoader(
+                        this.productFacetValueJoinEntityMapper,
+                        this.facetValueEntityMapper,
+                        this.facetEntityMapper)
         );
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_PRODUCT_FACET_VALUES, productFacetValuesDataLoader
