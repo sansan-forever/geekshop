@@ -7,4 +7,7 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml" />
     <logger name="org.springframework" level="INFO"/>
+    <logger name="graphql" level="ERROR"/>
+    <logger name="notprivacysafe.graphql" level="ERROR"/>
+    <logger name="io.geekshop" level="INFO"/>
 </configuration>

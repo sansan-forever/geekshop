@@ -15,12 +15,12 @@ spring:
       enabled: always
 
 # Logging
-logging:
-  level:
-    graphql: error
-    notprivacysafe.graphql: error
-    org.springframework: info
-    io.geekshop: info
+#logging:
+#  level:
+#    graphql: error
+#    notprivacysafe.graphql: error
+#    org.springframework: info
+#    io.geekshop: info
 
 geekshop:
   company-name: ${COMPANY_NAME:GEEKSHOP}

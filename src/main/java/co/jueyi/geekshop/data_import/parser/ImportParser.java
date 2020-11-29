@@ -55,7 +55,7 @@ public class ImportParser {
             return this.processRawRecords(records);
         } catch (Exception e) {
             List<String> errors = new ArrayList<>();
-            errors.add(e.getMessage());
+            errors.add(e.toString());
             ParseResult parseResult = new ParseResult();
             parseResult.setErrors(errors);
             parseResult.setProcessed(0L);
@@ -80,6 +80,7 @@ public class ImportParser {
         if (columnError != null) {
             parseResult.getErrors().add(columnError);
             parseResult.setProcessed(0L);
+            return parseResult;
         }
         int line = 1;
         for(String[] record : rest) {
@@ -90,17 +91,18 @@ public class ImportParser {
                 continue;
             }
             RawProductRecord r = mapRowToObject(headerRow, record);
-            if (r.getName() != null) {
+            if (!StringUtils.isEmpty(r.getName())) {
                 if (currentRow != null) {
                     populateOptionGroupValues(currentRow);
                     results.add(currentRow);
                 }
                 currentRow = new ParsedProductWithVariants();
                 currentRow.setProduct(parseProductFromRecord(r));
-                currentRow.setVariants(Arrays.asList(parseVariantFromRecord(r)));
+                currentRow.getVariants().add(parseVariantFromRecord(r));
             } else {
                 if (currentRow != null) {
-                    currentRow.getVariants().add(parseVariantFromRecord(r));
+                    ParsedProductVariant parsedProductVariant = parseVariantFromRecord(r);
+                    currentRow.getVariants().add(parsedProductVariant);
                 }
             }
             String optionError = validateOptionValueCount(r, currentRow);
@@ -164,7 +166,7 @@ public class ImportParser {
         rawProductRecord.setAssets(objMap.get("assets"));
         rawProductRecord.setFacets(objMap.get("facets"));
         rawProductRecord.setOptionGroups(objMap.get("optionGroups"));
-        rawProductRecord.setOptionGroups(objMap.get("optionValues"));
+        rawProductRecord.setOptionValues(objMap.get("optionValues"));
         rawProductRecord.setSku(objMap.get("sku"));
         rawProductRecord.setPrice(objMap.get("price"));
         rawProductRecord.setSockOnHand(objMap.get("stockOnHand"));
