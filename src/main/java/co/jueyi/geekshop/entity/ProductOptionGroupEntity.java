@@ -20,5 +20,5 @@ import lombok.EqualsAndHashCode;
 public class ProductOptionGroupEntity extends BaseEntity {
     private String name;
     private String code;
-    private Long productId;
+//    private Long productId;
 }

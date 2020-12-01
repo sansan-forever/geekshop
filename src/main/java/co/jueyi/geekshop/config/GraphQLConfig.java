@@ -47,10 +47,6 @@ public class GraphQLConfig {
     public SchemaParserDictionary schemaParserDictionary() {
         SchemaParserDictionary schemaParserDictionary = new SchemaParserDictionary();
         schemaParserDictionary.add(PaymentMethod.class);
-        schemaParserDictionary.add(StockAdjustment.class);
-        schemaParserDictionary.add(Sale.class);
-        schemaParserDictionary.add(Cancellation.class);
-        schemaParserDictionary.add(Return.class);
         schemaParserDictionary.add(PromotionList.class);
         schemaParserDictionary.add(ShippingMethodList.class);
         return schemaParserDictionary;

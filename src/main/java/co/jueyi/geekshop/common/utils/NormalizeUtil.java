@@ -22,6 +22,10 @@ public class NormalizeUtil {
         return input.trim().toLowerCase();
     }
 
+    public static String normalizeString(String input) {
+        return normalizeString(input, " ");
+    }
+
     public static String normalizeString(String input, String spaceReplacer) {
         if (input == null) input = "";
         input = Normalizer.normalize(input, java.text.Normalizer.Form.NFD);

@@ -11,6 +11,7 @@ import co.jueyi.geekshop.config.collection.CatalogConfig;
 import co.jueyi.geekshop.options.AssetOptions;
 import co.jueyi.geekshop.options.AuthOptions;
 import co.jueyi.geekshop.options.ConfigOptions;
+import co.jueyi.geekshop.options.ImportExportOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,4 +56,6 @@ public class ConfigService {
     public CatalogConfig getCatalogConfig() {
         return catalogConfig;
     }
+
+    public ImportExportOptions getImportExportOptions() { return this.configOptions.getImportExportOptions(); }
 }

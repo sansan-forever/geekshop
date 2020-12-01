@@ -17,5 +17,5 @@ import java.util.List;
 public class ParseResult<T> {
     private List<T> results = new ArrayList<>();
     private List<String> errors = new ArrayList<>();
-    private Long processed;
+    private Integer processed;
 }

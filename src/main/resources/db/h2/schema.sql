@@ -200,6 +200,7 @@ create table tb_asset (
     mime_type varchar(50),
     source varchar(255),
     preview varchar(255),
+    focal_point text,
     created_by varchar(50),
     created_at datetime,
     updated_by varchar(50),

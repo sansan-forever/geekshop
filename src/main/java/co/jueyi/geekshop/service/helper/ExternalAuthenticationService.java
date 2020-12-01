@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * This is a helper service which exposes methods related to looking up and creating Users based on an
+ * This is a helper importer which exposes methods related to looking up and creating Users based on an
  * external {@link co.jueyi.geekshop.config.auth.AuthenticationStrategy}
  *
  * Created on Nov, 2020 by @author bobo

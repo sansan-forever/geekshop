@@ -73,7 +73,11 @@ public class RoleTest {
 
     @BeforeAll
     void beforeAll() throws IOException {
-        mockDataService.populate(PopulateOptions.builder().customerCount(1).build());
+        PopulateOptions populateOptions = PopulateOptions.builder().customerCount(1).build();
+        populateOptions.setInitialData(TestHelper.getInitialData());
+        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+
+        mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();
     }
 

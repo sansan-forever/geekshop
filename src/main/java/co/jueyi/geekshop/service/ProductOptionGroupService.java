@@ -7,7 +7,9 @@ package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.ProductOptionGroupEntity;
+import co.jueyi.geekshop.entity.ProductOptionGroupJoinEntity;
 import co.jueyi.geekshop.mapper.ProductOptionGroupEntityMapper;
+import co.jueyi.geekshop.mapper.ProductOptionGroupJoinEntityMapper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
 import co.jueyi.geekshop.types.product.CreateProductOptionGroupInput;
 import co.jueyi.geekshop.types.product.CreateProductOptionInput;
@@ -18,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -27,6 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductOptionGroupService {
     private final ProductOptionGroupEntityMapper productOptionGroupEntityMapper;
+    private final ProductOptionGroupJoinEntityMapper productOptionGroupJoinEntityMapper;
     private final ProductOptionService productOptionService;
 
     public List<ProductOptionGroupEntity> findAll(String filterTerm) {
@@ -44,10 +49,16 @@ public class ProductOptionGroupService {
     }
 
     public List<ProductOptionGroupEntity> getOptionGroupsByProductId(Long productId) {
-        QueryWrapper<ProductOptionGroupEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(ProductOptionGroupEntity::getProductId, productId)
-                .orderByAsc(ProductOptionGroupEntity::getId);
-        return this.productOptionGroupEntityMapper.selectList(queryWrapper);
+        QueryWrapper<ProductOptionGroupJoinEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ProductOptionGroupJoinEntity::getProductId, productId);
+        List<ProductOptionGroupJoinEntity> productOptionGroupJoinEntities =
+                this.productOptionGroupJoinEntityMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(productOptionGroupJoinEntities)) return new ArrayList<>();
+
+        List<Long> productGroupIds = productOptionGroupJoinEntities.stream()
+                .map(ProductOptionGroupJoinEntity::getOptionGroupId).distinct().sorted().collect(Collectors.toList());
+
+        return this.productOptionGroupEntityMapper.selectBatchIds(productGroupIds);
     }
 
     @Transactional
@@ -60,7 +71,7 @@ public class ProductOptionGroupService {
             input.getOptions().forEach(createGroupOptionInput -> {
                 CreateProductOptionInput createProductOptionInput =
                         BeanMapper.map(createGroupOptionInput, CreateProductOptionInput.class);
-                createProductOptionInput.setProductOptionGroupId(productOptionGroupEntity.getProductId());
+                createProductOptionInput.setProductOptionGroupId(productOptionGroupEntity.getId());
                 productOptionService.create(createProductOptionInput);
             });
         }

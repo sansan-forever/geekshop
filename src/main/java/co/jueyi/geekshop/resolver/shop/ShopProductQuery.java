@@ -18,6 +18,7 @@ import co.jueyi.geekshop.types.collection.CollectionListOptions;
 import co.jueyi.geekshop.types.common.BooleanOperators;
 import co.jueyi.geekshop.types.product.*;
 import graphql.kickstart.tools.GraphQLQueryResolver;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
     private final ProductService productService;
     private final CollectionService collectionService;
 
-    public ProductList products(ProductListOptions options) {
+    public ProductList products(ProductListOptions options, DataFetchingEnvironment dfe) {
 
         if (options == null) {
             options = new ProductListOptions();
@@ -48,7 +49,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
         return this.productService.findAll(options);
     }
 
-    public Product product(Long id, String slug) {
+    public Product product(Long id, String slug, DataFetchingEnvironment dfe) {
         ProductEntity productEntity = null;
         if (id != null) {
             productEntity = this.productService.findOne(id);
@@ -62,7 +63,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
         return BeanMapper.map(productEntity, Product.class);
     }
 
-    public CollectionList collections(CollectionListOptions options) {
+    public CollectionList collections(CollectionListOptions options, DataFetchingEnvironment dfe) {
         if (options == null) {
             options = new CollectionListOptions();
         }
@@ -77,7 +78,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
         return this.collectionService.findAll(options);
     }
 
-    public Collection collection(Long id, String slug) {
+    public Collection collection(Long id, String slug, DataFetchingEnvironment dfe) {
         CollectionEntity collectionEntity = null;
         if (id != null) {
             collectionEntity = this.collectionService.findOne(id);

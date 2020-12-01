@@ -6,10 +6,7 @@
 package co.jueyi.geekshop.config;
 
 import co.jueyi.geekshop.common.Constant;
-import co.jueyi.geekshop.config.asset.AssetConfig;
-import co.jueyi.geekshop.config.asset.DefaultAssetNamingStrategy;
-import co.jueyi.geekshop.config.asset.NoAssetPreviewStrategy;
-import co.jueyi.geekshop.config.asset.NoAssetStorageStrategy;
+import co.jueyi.geekshop.config.asset.*;
 import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
@@ -39,7 +36,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.management.MXBean;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
@@ -126,12 +122,18 @@ public class AppConfig {
     }
 
     @Bean
-    public AssetConfig assetConfig() {
-        return new AssetConfig(
-          new DefaultAssetNamingStrategy(),
-          new NoAssetPreviewStrategy(),
-          new NoAssetStorageStrategy()
-        );
+    public AssetNamingStrategy assetNamingStrategy() {
+        return new DefaultAssetNamingStrategy();
+    }
+
+    @Bean
+    public AssetStorageStrategy assetStorageStrategy() {
+        return new NoAssetStorageStrategy();
+    }
+
+    @Bean
+    public AssetPreviewStrategy assetPreviewStrategy() {
+        return new NoAssetPreviewStrategy();
     }
 
     @Bean

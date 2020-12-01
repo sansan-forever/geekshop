@@ -49,6 +49,7 @@ public class ProductVariantService {
     private final ProductOptionGroupEntityMapper productOptionGroupEntityMapper;
     private final AssetEntityMapper assetEntityMapper;
     private final ProductVariantAssetJoinEntityMapper productVariantAssetJoinEntityMapper;
+    private final ProductOptionGroupJoinEntityMapper productOptionGroupJoinEntityMapper;
 
     private final GlobalSettingsService globalSettingsService;
     private final StockMovementService stockMovementService;
@@ -103,8 +104,6 @@ public class ProductVariantService {
         });
 
         return variantList;
-
-
     }
 
     private void buildSortOrder(QueryWrapper queryWrapper, ProductVariantSortParameter sortParameter) {
@@ -363,19 +362,26 @@ public class ProductVariantService {
                 .select(AssetEntity::getId);
         List<Long> validAssetIds = this.assetEntityMapper.selectList(queryWrapper)
                 .stream().map(AssetEntity::getId).collect(Collectors.toList());
+        int pos = 0;
         for(Long assetId : validAssetIds) {
             ProductVariantAssetJoinEntity joinEntity = new ProductVariantAssetJoinEntity();
             joinEntity.setProductVariantId(variantId);
             joinEntity.setAssetId(assetId);
+            joinEntity.setPosition(pos);
             this.productVariantAssetJoinEntityMapper.insert(joinEntity);
+            pos++;
         }
     }
 
     private void validateVariantOptionIds(CreateProductVariantInput input) {
-        QueryWrapper<ProductOptionGroupEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(ProductOptionGroupEntity::getProductId, input.getProductId());
+        QueryWrapper<ProductOptionGroupJoinEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ProductOptionGroupJoinEntity::getProductId, input.getProductId());
+        List<ProductOptionGroupJoinEntity> productOptionGroupJoinEntities =
+                this.productOptionGroupJoinEntityMapper.selectList(queryWrapper);
+        List<Long> productGroupIds = productOptionGroupJoinEntities.stream()
+                .map(ProductOptionGroupJoinEntity::getOptionGroupId).distinct().sorted().collect(Collectors.toList());
         List<ProductOptionGroupEntity> optionGroupEntities =
-                this.productOptionGroupEntityMapper.selectList(queryWrapper);
+                this.productOptionGroupEntityMapper.selectBatchIds(productGroupIds);
 
         if (input.getOptionIds().size() != optionGroupEntities.size()) {
             this.throwIncompatibleOptionsError(optionGroupEntities);

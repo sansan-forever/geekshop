@@ -370,11 +370,14 @@ public class CollectionService {
     }
 
     private void joinCollectionWithAssets(Long collectionId, List<Long> assetIds) {
+        int pos = 0;
         for(Long assetId : assetIds) {
             CollectionAssetJoinEntity joinEntity = new CollectionAssetJoinEntity();
             joinEntity.setCollectionId(collectionId);
             joinEntity.setAssetId(assetId);
+            joinEntity.setPosition(pos);
             this.collectionAssetJoinEntityMapper.insert(joinEntity);
+            pos++;
         }
     }
 

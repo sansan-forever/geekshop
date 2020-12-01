@@ -28,4 +28,9 @@ public class ConfigOptions {
      * Configuration for assets.
      */
     private AssetOptions assetOptions = new AssetOptions();
+
+    /**
+     * Configuration settings for data import and export.
+     */
+    private ImportExportOptions importExportOptions = new ImportExportOptions();
 }

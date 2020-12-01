@@ -5,10 +5,10 @@
 
 package co.jueyi.geekshop.entity;
 
+import co.jueyi.geekshop.custom.mybatis_plus.ConfigurableOperationListTypeHandler;
 import co.jueyi.geekshop.types.common.ConfigurableOperation;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -32,7 +32,7 @@ public class CollectionEntity extends BaseEntity {
     private String description;
     private String slug;
     private Long featuredAssetId;
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = ConfigurableOperationListTypeHandler.class)
     private List<ConfigurableOperation> filters = new ArrayList<>();
     private Long parentId;
 }

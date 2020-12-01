@@ -7,6 +7,11 @@ package co.jueyi.geekshop.config;
 
 import co.jueyi.geekshop.ApiClient;
 import co.jueyi.geekshop.MockDataService;
+import co.jueyi.geekshop.TestHelper;
+import co.jueyi.geekshop.config.asset.AssetConfig;
+import co.jueyi.geekshop.config.asset.AssetPreviewStrategy;
+import co.jueyi.geekshop.config.asset.AssetStorageStrategy;
+import co.jueyi.geekshop.config.asset.DefaultAssetNamingStrategy;
 import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
 import co.jueyi.geekshop.config.auth.NativeAuthenticationStrategy;
@@ -14,6 +19,8 @@ import co.jueyi.geekshop.config.auth.TestAuthenticationStrategy;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.config.session_cache.TestingSessionCacheStrategy;
+import co.jueyi.geekshop.service.ConfigService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +28,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +42,9 @@ public class TestConfig {
 
     public static final String ADMIN_CLIENT_BEAN = "adminClient";
     public static final String SHOP_CLIENT_BEAN = "shopClient";
+
+    @Autowired
+    private ConfigService configService;
 
     @Bean(name=ADMIN_CLIENT_BEAN)
     public ApiClient adminClient() {
@@ -95,5 +106,24 @@ public class TestConfig {
     @Bean
     public Map<String, CachedSession> testSessionCache() {
         return new HashMap<>();
+    }
+
+    @Bean
+    @Primary
+    public AssetStorageStrategy testAssetStorageStrategy() {
+        return new TestAssetStorageStrategy();
+    }
+
+    @Bean
+    @Primary
+    public AssetPreviewStrategy testAssetPreviewStrategy() {
+        return new TestAssetPreviewStrategy();
+    }
+
+
+
+    @PostConstruct
+    void initTestConfig() {
+        this.configService.getImportExportOptions().setImportAssetsDir(TestHelper.getImportAssetsDir());
     }
 }

@@ -271,11 +271,14 @@ public class ProductService {
                 .select(AssetEntity::getId);
         List<Long> validAssetIds = this.assetEntityMapper.selectList(queryWrapper)
                 .stream().map(AssetEntity::getId).collect(Collectors.toList());
+        int pos = 0;
         for(Long assetId : validAssetIds) {
             ProductAssetJoinEntity joinEntity = new ProductAssetJoinEntity();
             joinEntity.setProductId(productId);
             joinEntity.setAssetId(assetId);
+            joinEntity.setPosition(pos);
             this.productAssetJoinEntityMapper.insert(joinEntity);
+            pos++;
         }
     }
 

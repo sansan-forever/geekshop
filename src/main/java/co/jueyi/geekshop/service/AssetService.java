@@ -43,6 +43,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -173,6 +174,20 @@ public class AssetService {
         return assetEntity;
     }
 
+    /**
+     * Create an Asset from a file stream created during data import.
+     */
+    public AssetEntity createFromFileStream(InputStream stream, String filename) {
+        try {
+            String mimeType = URLConnection.guessContentTypeFromName(filename);
+            AssetEntity assetEntity = createAssetInternal(stream, filename, mimeType);
+            return assetEntity;
+        } catch (IOException ex) {
+            log.error("Fail to create asset from file steam", ex);
+            throw new InternalServerError("Fail to create asset");
+        }
+    }
+
     public DeletionResponse delete(RequestContext ctx, List<Long> ids) {
         return this.delete(ctx, ids, false);
     }
@@ -253,7 +268,7 @@ public class AssetService {
         assetEntity.setType(type);
         assetEntity.setWidth(dimensions.width);
         assetEntity.setHeight(dimensions.height);
-        assetEntity.setName(FilenameUtils.getBaseName(sourceFileName));
+        assetEntity.setName(FilenameUtils.getName(sourceFileName));
         assetEntity.setMimeType(mimeType);
         assetEntity.setSource(sourceFileIdentifier);
         assetEntity.setPreview(previewFileIdentifier);

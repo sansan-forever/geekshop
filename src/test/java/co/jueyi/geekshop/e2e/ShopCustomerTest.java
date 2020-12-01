@@ -93,7 +93,11 @@ public class ShopCustomerTest {
 
     @BeforeAll
     void beforeAll() throws IOException {
-        mockDataService.populate(PopulateOptions.builder().customerCount(2).build());
+        PopulateOptions populateOptions = PopulateOptions.builder().customerCount(2).build();
+        populateOptions.setInitialData(TestHelper.getInitialData());
+        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-full.csv"));
+
+        mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();
 
         CustomerList customerList = getCustomerList();

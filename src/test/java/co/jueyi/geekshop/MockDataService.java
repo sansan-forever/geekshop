@@ -6,7 +6,10 @@
 package co.jueyi.geekshop;
 
 import co.jueyi.geekshop.config.TestConfig;
+import co.jueyi.geekshop.data_import.importer.Importer;
+import co.jueyi.geekshop.data_import.populator.Populator;
 import co.jueyi.geekshop.service.ConfigService;
+import co.jueyi.geekshop.types.ImportInfo;
 import co.jueyi.geekshop.types.common.CreateAddressInput;
 import co.jueyi.geekshop.types.common.CreateCustomerInput;
 import co.jueyi.geekshop.types.customer.Customer;
@@ -18,11 +21,13 @@ import com.graphql.spring.boot.test.GraphQLResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.stream.Collectors;
 
 /**
- * A service for creating mock data via the GraphQL API.
+ * A importer for creating mock data via the GraphQL API.
  *
  * Created on Nov, 2020 by @author bobo
  */
@@ -47,21 +52,33 @@ public class MockDataService {
     @Autowired
     ConfigService configService;
 
+    @Autowired
+    Importer importer;
+    @Autowired
+    Populator populator;
+
     private final Faker faker = Faker.instance();
 
+    /**
+     * Clears all tables from the database and populates with (deterministic) random data.
+     */
     public void populate(PopulateOptions options) throws IOException {
         boolean originalRequiredVerification = this.configService.getAuthOptions().isRequireVerification();
         this.configService.getAuthOptions().setRequireVerification(false);
-        adminClient.asSuperAdmin();
 
-        Integer customerCount = options.getCustomerCount() == null ? 5 : options.getCustomerCount();
+        populator.populateInitialData(options.getInitialData());
+        this.populateProducts(options.getProductCsvPath(), options.isLogging());
+        populator.populateCollections(options.getInitialData());
+        Integer customerCount = options.getCustomerCount() == null ? 10 : options.getCustomerCount();
+
+        adminClient.asSuperAdmin();
         populateCustomers(customerCount);
 
         this.configService.getAuthOptions().setRequireVerification(originalRequiredVerification);
     }
 
     public void populateCustomers() throws IOException {
-        this.populateCustomers(5);
+        this.populateCustomers(10);
     }
 
     public void populateCustomers(int count) throws IOException {
@@ -101,4 +118,22 @@ public class MockDataService {
         }
         log.info("Created " + count + " Customers");
     }
+
+    public void populateProducts(String productsCsvPath, boolean logging) throws FileNotFoundException {
+        ImportInfo importResult = importProductsFromCsv(productsCsvPath);
+        if (!CollectionUtils.isEmpty(importResult.getErrors())) {
+            log.error(importResult.getErrors().size() + " errors encountered when importing product data:");
+            log.error(importResult.getErrors().stream().collect(Collectors.joining("\n")));
+        }
+        if (logging) {
+            log.info("Imported " + importResult.getImported() + " products");
+        }
+    }
+
+    private ImportInfo importProductsFromCsv(String productCsvPath) throws FileNotFoundException {
+        InputStream productDataInputStream = new FileInputStream(new File(productCsvPath));
+        return importer.parseAndImport(productDataInputStream);
+    }
+
+
 }

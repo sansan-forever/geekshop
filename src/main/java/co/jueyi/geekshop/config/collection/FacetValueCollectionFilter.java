@@ -83,6 +83,8 @@ public class FacetValueCollectionFilter extends CollectionFilter {
         List<ProductVariantFacetValueJoinEntity> variantFacetValueJoinEntities =
                 this.productVariantFacetValueJoinEntityMapper.selectList(variantFacetValueJoinEntityQueryWrapper);
 
+        if (CollectionUtils.isEmpty(variantFacetValueJoinEntities)) return resultQueryWrapper;
+
         List<TempEntry> tempEntries = new ArrayList<>();
         variantFacetValueJoinEntities.forEach(joinEntity -> {
             TempEntry tempEntry = new TempEntry();

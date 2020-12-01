@@ -6,6 +6,9 @@
 package co.jueyi.geekshop.config.asset;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 /**
  *
@@ -14,19 +17,23 @@ import lombok.Data;
  * Created on Nov, 2020 by @author bobo
  */
 @Data
+@Configuration
 public class AssetConfig {
     /**
      * Defines how asset files and preview images are named before being saved.
      */
-    private final AssetNamingStrategy assetNamingStrategy;
+    @Autowired
+    private AssetNamingStrategy assetNamingStrategy;
 
     /**
      * Defines the strategy used for creating preview images of uploaded assets.
      */
-    private final AssetPreviewStrategy assetPreviewStrategy;
+    @Autowired
+    private AssetPreviewStrategy assetPreviewStrategy;
 
     /**
      *  Defines the strategy used for storing uploaded binary files.
      */
-    private final AssetStorageStrategy assetStorageStrategy;
+    @Autowired
+    private AssetStorageStrategy assetStorageStrategy;
 }

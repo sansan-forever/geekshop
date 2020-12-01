@@ -10,6 +10,7 @@ import co.jueyi.geekshop.options.SuperadminCredentials;
 import co.jueyi.geekshop.service.ConfigService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -17,16 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -253,103 +258,6 @@ public class ApiClient {
         return handleResponse(response);
     }
 
-//    /**
-//     * 参考：
-//     * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
-//     * https://github.com/jaydenseric/graphql-multipart-request-spec
-//     *
-//     * @param path
-//     * @param mediaType
-//     * @return
-//     * @throws IOException
-//     */
-//    public GraphQLResponse uploadMultipleFiles(String path, String mediaType) throws IOException {
-//        File dir = new File(path);
-//        if (!dir.exists()) throw new IOException("Path [" + path + "] does not exist");
-//        List<File> fileList = Arrays.asList(dir.listFiles());
-//        int size = fileList.size();
-//        if (size == 0) throw new IOException("No file exists in path [" + path + "]");
-//
-//        String graphql = loadQuery(CREATE_ASSETS);
-//        ObjectNode variables = objectMapper.createObjectNode();
-//        ArrayNode fileArray = objectMapper.createArrayNode();
-//        for (int i = 0; i < size; i++) {
-//            fileArray.addNull();
-//        }
-//        variables.set("files", fileArray);
-//        String jsonQuery = createJsonQuery(graphql, variables);
-//
-//        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        body.add("operations", forJson(jsonQuery, new HttpHeaders()));
-//
-//        ObjectNode map = objectMapper.createObjectNode();
-//        for (int i = 0; i < size; i++) {
-//            map.set("" + i, objectMapper.createArrayNode().add("variables.files." + i));
-//        }
-//        String jsonMap = objectMapper.writeValueAsString(map);
-//        body.add("map", forJson(jsonMap, new HttpHeaders()));
-//
-//        for(int i = 0; i < size; i++) {
-//            File file = fileList.get(i);
-//            Resource resource = new FileSystemResource(file);
-//            String fileName = file.getName();
-//
-//            MultiValueMap<String, String> fileMeta = new LinkedMultiValueMap<>();
-//            ContentDisposition contentDisposition = ContentDisposition
-//                    .builder("form-data").name("" + i).filename(fileName).build();
-//            fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-//            fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
-//            body.add("" + i, new HttpEntity<>(resource, fileMeta));
-//        }
-//
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//        HttpEntity httpEntity = new HttpEntity<>(body, headers);
-//
-//        return postRequest(httpEntity);
-//    }
-
-//    /**
-//     * 参考：
-//     * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
-//     * https://github.com/jaydenseric/graphql-multipart-request-spec
-//     *
-//     *
-//     * @param fileName
-//     * @param mediaType
-//     * @return
-//     * @throws IOException
-//     */
-//    public GraphQLResponse uploadSingleFile(String fileName, String mediaType)
-//            throws IOException {
-//        String graphql = loadQuery(CREATE_ASSET);
-//        ObjectNode variables = objectMapper.createObjectNode();
-//        variables.set("file", null);
-//        String jsonQuery = createJsonQuery(graphql, variables);
-//
-//        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        body.add("operations", forJson(jsonQuery, new HttpHeaders()));
-//
-//        ObjectNode map = objectMapper.createObjectNode();
-//        map.set("0", objectMapper.createArrayNode().add("variables.file"));
-//        String jsonMap = objectMapper.writeValueAsString(map);
-//        body.add("map", forJson(jsonMap, new HttpHeaders()));
-//
-//        File imageFile = new File(MockDataService.TEST_ASSET_PATH + fileName);
-//        Resource resource = new FileSystemResource(imageFile);
-//
-//        MultiValueMap<String, String> fileMeta = new LinkedMultiValueMap<>();
-//        ContentDisposition contentDisposition = ContentDisposition
-//                .builder("form-data").name("0").filename(fileName).build();
-//        fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-//        fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
-//        body.add("0", new HttpEntity<>(resource, fileMeta));
-//
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//        HttpEntity httpEntity = new HttpEntity<>(body, headers);
-//
-//        return postRequest(httpEntity);
-//    }
-
     private GraphQLResponse handleResponse(GraphQLResponse response) throws IOException {
         boolean hasErrors = response.readTree().has("errors");
         if (hasErrors) {
@@ -368,5 +276,95 @@ public class ApiClient {
             this.setAuthToken(authToken);
         }
         return response;
+    }
+
+    /**
+     * GraphQL上传多个文件
+     *
+     * 参考：
+     * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
+     * https://github.com/jaydenseric/graphql-multipart-request-spec
+     */
+    public GraphQLResponse uploadMultipleFiles(String graphqlFile, String path, String mediaType) throws IOException {
+        File dir = new File(path);
+        if (!dir.exists()) throw new IOException("Path [" + path + "] does not exist");
+        List<File> fileList = Arrays.asList(dir.listFiles());
+        int size = fileList.size();
+        if (size == 0) throw new IOException("No file exists in path [" + path + "]");
+
+        String graphql = loadQuery(graphqlFile);
+        ObjectNode variables = objectMapper.createObjectNode();
+        ArrayNode fileArray = objectMapper.createArrayNode();
+        for (int i = 0; i < size; i++) {
+            fileArray.addNull();
+        }
+        variables.set("files", fileArray);
+        String jsonQuery = createJsonQuery(graphql, variables);
+
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("operations", forJson(jsonQuery, new HttpHeaders()));
+
+        ObjectNode map = objectMapper.createObjectNode();
+        for (int i = 0; i < size; i++) {
+            map.set("" + i, objectMapper.createArrayNode().add("variables.files." + i));
+        }
+        String jsonMap = objectMapper.writeValueAsString(map);
+        body.add("map", forJson(jsonMap, new HttpHeaders()));
+
+        for(int i = 0; i < size; i++) {
+            File file = fileList.get(i);
+            Resource resource = new FileSystemResource(file);
+            String fileName = file.getName();
+
+            MultiValueMap<String, String> fileMeta = new LinkedMultiValueMap<>();
+            ContentDisposition contentDisposition = ContentDisposition
+                    .builder("form-data").name("" + i).filename(fileName).build();
+            fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
+            fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
+            body.add("" + i, new HttpEntity<>(resource, fileMeta));
+        }
+
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity httpEntity = new HttpEntity<>(body, headers);
+
+        return postRequest(httpEntity);
+    }
+
+    /**
+     * GraphQL上传单个文件
+     *
+     * 参考：
+     * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
+     * https://github.com/jaydenseric/graphql-multipart-request-spec
+     */
+    public GraphQLResponse uploadSingleFile(String graphqlFile, String filePath, String fileName, String mediaType)
+            throws IOException{
+        String graphql = loadQuery(graphqlFile);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("file", null);
+        String jsonQuery = createJsonQuery(graphql, variables);
+
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("operations", forJson(jsonQuery, new HttpHeaders()));
+
+        ObjectNode map = objectMapper.createObjectNode();
+        map.set("0", objectMapper.createArrayNode().add("variables.file"));
+        String jsonMap = objectMapper.writeValueAsString(map);
+        body.add("map", forJson(jsonMap, new HttpHeaders()));
+
+        File imageFile = new File(filePath + "/" + fileName);
+        Resource resource = new FileSystemResource(imageFile);
+
+        MultiValueMap<String, String> fileMeta = new LinkedMultiValueMap<>();
+        ContentDisposition contentDisposition = ContentDisposition
+                .builder("form-data").name("0").filename(fileName).build();
+        fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
+        fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
+        body.add("0", new HttpEntity<>(resource, fileMeta));
+
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity httpEntity = new HttpEntity<>(body, headers);
+
+        return postRequest(httpEntity);
     }
 }

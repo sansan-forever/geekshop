@@ -46,7 +46,7 @@ public class StockMovementService {
         IPage<StockMovementEntity> page = new Page<>(pageInfo.current, pageInfo.size);
         QueryWrapper<StockMovementEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(StockMovementEntity::getProductVariantId, productVariantId);
-        if (options.getType() != null) {
+        if (options != null && options.getType() != null) {
             queryWrapper.lambda().eq(StockMovementEntity::getType, options.getType());
         }
         IPage<StockMovementEntity> stockMovementEntityPage =
@@ -60,25 +60,14 @@ public class StockMovementService {
 
         // 将持久化实体类型转换成GraphQL传输类型
         stockMovementEntityPage.getRecords().forEach(stockMovementEntity -> {
-            if (StockMovementType.ADJUSTMENT.equals(stockMovementEntity.getType())) {
-                StockAdjustment stockAdjustment = BeanMapper.map(stockMovementEntity, StockAdjustment.class);
-                stockMovementList.getItems().add(stockAdjustment);
-            } else if (StockMovementType.SALE.equals(stockMovementEntity.getType())) {
-                Sale sale = BeanMapper.map(stockMovementEntity, Sale.class);
-                stockMovementList.getItems().add(sale);
-            } else if (StockMovementType.CANCELLATION.equals(stockMovementEntity.getType())) {
-                Cancellation cancellation = BeanMapper.map(stockMovementEntity, Cancellation.class);
-                stockMovementList.getItems().add(cancellation);
-            } else if (StockMovementType.RETURN.equals(stockMovementEntity.getType())) {
-                Return aReturn = BeanMapper.map(stockMovementEntity, Return.class);
-                stockMovementList.getItems().add(aReturn);
-            }
+            StockMovement stockMovement = BeanMapper.map(stockMovementEntity, StockMovement.class);
+            stockMovementList.getItems().add(stockMovement);
         });
 
         return stockMovementList;
     }
 
-    public StockAdjustment adjustProductVariantStock(
+    public StockMovement adjustProductVariantStock(
             Long productVariantId, Integer oldStockLevel, Integer newStockLevel) {
         if (oldStockLevel.equals(newStockLevel)) {
             return null;
@@ -93,16 +82,16 @@ public class StockMovementService {
 
         this.stockMovementEntityMapper.insert(adjustment);
 
-        return BeanMapper.map(adjustment, StockAdjustment.class);
+        return BeanMapper.map(adjustment, StockMovement.class);
     }
 
     @Transactional
-    public List<Sale> createSalesForOrder(Order order) { // TODO OrderEntity?
+    public List<StockMovement> createSalesForOrder(Order order) { // TODO OrderEntity?
         if (BooleanUtils.isTrue(order.getActive())) {
             throw new InternalServerError("Cannot create a Sale for an Order which is still active");
         }
 
-        List<Sale> saleList = new ArrayList<>();
+        List<StockMovement> saleList = new ArrayList<>();
         for(OrderLine line : order.getLines()) {
             StockMovementEntity saleEntity = new StockMovementEntity();
             saleEntity.setType(StockMovementType.SALE);
@@ -120,14 +109,14 @@ public class StockMovementService {
                 this.productVariantEntityMapper.updateById(productVariantEntity);
             }
 
-            Sale sale = BeanMapper.map(saleEntity, Sale.class);
+            StockMovement sale = BeanMapper.map(saleEntity, StockMovement.class);
             saleList.add(sale);
         }
 
         return saleList;
     }
 
-    public List<Cancellation> createCancellationsForOrderItems(List<OrderItem> items) { // TODO OrderItemEntity?
+    public List<StockMovement> createCancellationsForOrderItems(List<OrderItem> items) { // TODO OrderItemEntity?
         return null; // TODO
     }
 }

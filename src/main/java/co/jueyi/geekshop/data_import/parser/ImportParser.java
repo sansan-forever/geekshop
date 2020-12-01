@@ -10,9 +10,12 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
  *
  * Created on Nov, 2020 by @author bobo
  */
+@Component
+@Slf4j
 public class ImportParser {
 
     private List<String> requiredColumns = Arrays.asList(
@@ -42,13 +47,13 @@ public class ImportParser {
 
         // 参考：
         // https://www.baeldung.com/opencsv
-        CSVParser parser = new CSVParserBuilder()
-                .withIgnoreQuotations(true)
-                .withIgnoreLeadingWhiteSpace(true)
-                .build();
-        CSVReader csvReader = new CSVReaderBuilder(reader)
-                .withCSVParser(parser)
-                .build();
+        CSVReader csvReader = new CSVReader(reader);
+//        CSVParser parser = new CSVParserBuilder()
+//                .withIgnoreLeadingWhiteSpace(true)
+//                .build();
+//        CSVReader csvReader = new CSVReaderBuilder(reader)
+//                .withCSVParser(parser)
+//                .build();
 
         try {
             List<String[]> records = csvReader.readAll();
@@ -58,20 +63,24 @@ public class ImportParser {
             errors.add(e.toString());
             ParseResult parseResult = new ParseResult();
             parseResult.setErrors(errors);
-            parseResult.setProcessed(0L);
+            parseResult.setProcessed(0);
             return parseResult;
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException ex) {
+                log.error("Fail to close reader", ex);
+            }
         }
     }
 
     private ParseResult<ParsedProductWithVariants> processRawRecords(List<String[]> records) {
         ParseResult<ParsedProductWithVariants> parseResult = new ParseResult<>();
 
-        List<ParsedProductWithVariants> results = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
         ParsedProductWithVariants currentRow = null;
         String[] headerRow = records.get(0);
         List<String[]> rest = records.subList(1, records.size());
-        long totalProducts = rest.stream().map(row -> row[0])
+        int totalProducts = (int) rest.stream().map(row -> row[0])
                 .filter(name -> {
                     if (name == null) return false;
                     return !StringUtils.isEmpty(name.trim());
@@ -79,7 +88,7 @@ public class ImportParser {
         String columnError = validateRequiredColumns(headerRow);
         if (columnError != null) {
             parseResult.getErrors().add(columnError);
-            parseResult.setProcessed(0L);
+            parseResult.setProcessed(0);
             return parseResult;
         }
         int line = 1;
@@ -87,14 +96,14 @@ public class ImportParser {
             line++;
             String columnCountError = validateColumnCount(headerRow, record);
             if (columnCountError != null) {
-                errors.add(columnCountError + " on line " + line);
+                parseResult.getErrors().add(columnCountError + " on line " + line);
                 continue;
             }
             RawProductRecord r = mapRowToObject(headerRow, record);
             if (!StringUtils.isEmpty(r.getName())) {
                 if (currentRow != null) {
                     populateOptionGroupValues(currentRow);
-                    results.add(currentRow);
+                    parseResult.getResults().add(currentRow);
                 }
                 currentRow = new ParsedProductWithVariants();
                 currentRow.setProduct(parseProductFromRecord(r));
@@ -107,16 +116,14 @@ public class ImportParser {
             }
             String optionError = validateOptionValueCount(r, currentRow);
             if(optionError != null) {
-                errors.add(optionError + " on line " + line);
+                parseResult.getErrors().add(optionError + " on line " + line);
             }
         }
         if (currentRow != null) {
             populateOptionGroupValues(currentRow);
-            results.add(currentRow);
+            parseResult.getResults().add(currentRow);
         }
 
-        parseResult.setResults(results);
-        parseResult.setErrors(errors);
         parseResult.setProcessed(totalProducts);
         return parseResult;
     }

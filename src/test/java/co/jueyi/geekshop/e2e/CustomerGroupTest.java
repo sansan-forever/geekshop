@@ -82,7 +82,11 @@ public class CustomerGroupTest {
 
     @BeforeAll
     void beforeAll() throws IOException {
-        mockDataService.populate(PopulateOptions.builder().customerCount(5).build());
+        PopulateOptions populateOptions = PopulateOptions.builder().customerCount(5).build();
+        populateOptions.setInitialData(TestHelper.getInitialData());
+        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+
+        mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();
 
         customers = getCustomerList().getItems();

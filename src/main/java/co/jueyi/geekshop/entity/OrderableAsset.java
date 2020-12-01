@@ -18,5 +18,5 @@ import lombok.Setter;
 @Setter
 public abstract class OrderableAsset extends BaseEntity{
     private Long assetId;
-    private Integer number;
+    private Integer position;
 }
