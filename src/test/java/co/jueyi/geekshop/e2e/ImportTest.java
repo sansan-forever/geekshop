@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 @DirtiesContext
 public class ImportTest {
 
-    static final String IMPORT_PRODUCTS = "graphql/import/import_products.graphqls";
-    static final String GET_PRODUCTS = "graphql/import/get_products.graphqls";
+    static final String IMPORT_PRODUCTS = "graphql/admin/import/import_products.graphqls";
+    static final String GET_PRODUCTS = "graphql/admin/import/get_products.graphqls";
     static final String PRODUCT_IMPORT_CSV_FILE = "src/test/resources/fixtures/product-import.csv";
 
     @Autowired

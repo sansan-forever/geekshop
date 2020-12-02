@@ -345,25 +345,4 @@ public class AssetTest {
         Asset asset = graphQLResponse.get("$.data.asset", Asset.class);
         assertThat(asset).isNotNull();
     }
-
-    @Test
-    @Order(11)
-    public void featured_asset_force_deleted() throws IOException {
-        ObjectNode variables = objectMapper.createObjectNode();
-        variables.put("id", firstProduct.getId());
-
-        GraphQLResponse graphQLResponse = this.adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables, Arrays.asList(
-                PRODUCT_VARIANT_FRAGMENT, PRODUCT_WITH_VARIANTS_FRAGMENT, ASSET_FRAGMENT
-        ));
-
-        Product p1 = graphQLResponse.get("$.data.adminProduct", Product.class);
-        assertThat(p1.getAssets()).hasSize(1);
-
-        variables = objectMapper.createObjectNode();
-        variables.put("id", firstProduct.getFeaturedAsset().getId());
-        variables.put("force", true);
-
-        graphQLResponse = this.adminClient.perform(DELETE_ASSET, variables);
-        DeletionResponse deletionResponse = graphQLResponse.get("$.data.deleteAsset", DeletionResponse.class);
-    }
 }
