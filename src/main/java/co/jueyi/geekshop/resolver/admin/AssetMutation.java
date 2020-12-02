@@ -84,17 +84,17 @@ public class AssetMutation implements GraphQLMutationResolver {
      * Delete an Asset
      */
     @Allow(Permission.DeleteCatalog)
-    public DeletionResponse deleteAsset(Long id, Boolean force, DataFetchingEnvironment dfe) {
+    public DeletionResponse deleteAsset(Long id, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
-        return this.assetService.delete(ctx, Arrays.asList(id), BooleanUtils.toBoolean(force));
+        return this.assetService.delete(ctx, Arrays.asList(id));
     }
 
     /**
      * Delete multiple Assets
      */
     @Allow(Permission.DeleteCatalog)
-    public DeletionResponse deleteAssets(List<Long> ids, Boolean force, DataFetchingEnvironment dfe) {
+    public DeletionResponse deleteAssets(List<Long> ids, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
-        return this.assetService.delete(ctx, ids, BooleanUtils.toBoolean(force));
+        return this.assetService.delete(ctx, ids);
     }
 }

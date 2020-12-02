@@ -75,6 +75,7 @@ public class ProductFacetValuesDataLoader implements MappedBatchLoaderWithContex
 
             Map<Long, FacetValueEntity> facetValueEntityMap = facetValueEntities.stream()
                     .collect(Collectors.toMap(FacetValueEntity::getId, facetValueEntity -> facetValueEntity));
+            if (CollectionUtils.isEmpty(facetValueEntityMap)) return facetValuesMap;
 
             joinEntities.forEach(facetValueJoinEntity -> {
                 Long productId = facetValueJoinEntity.getProductId();

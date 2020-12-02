@@ -36,6 +36,7 @@ public class ImportTest {
 
     static final String IMPORT_PRODUCTS = "graphql/import/import_products.graphqls";
     static final String GET_PRODUCTS = "graphql/import/get_products.graphqls";
+    static final String PRODUCT_IMPORT_CSV_FILE = "src/test/resources/fixtures/product-import.csv";
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
@@ -61,9 +62,7 @@ public class ImportTest {
     public void import_products() throws IOException {
         GraphQLResponse graphQLResponse = adminClient.uploadSingleFile(
                 IMPORT_PRODUCTS,
-                "src/test/resources/fixtures",
-                "product-import.csv",
-                "text/csv"
+                PRODUCT_IMPORT_CSV_FILE
         );
         assertThat(graphQLResponse.isOk());
 

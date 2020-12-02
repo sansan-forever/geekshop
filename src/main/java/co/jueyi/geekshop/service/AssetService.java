@@ -12,10 +12,16 @@ import co.jueyi.geekshop.config.asset.AssetNamingStrategy;
 import co.jueyi.geekshop.config.asset.AssetPreviewStrategy;
 import co.jueyi.geekshop.config.asset.AssetStorageStrategy;
 import co.jueyi.geekshop.entity.AssetEntity;
+import co.jueyi.geekshop.entity.CollectionEntity;
+import co.jueyi.geekshop.entity.ProductEntity;
+import co.jueyi.geekshop.entity.ProductVariantEntity;
 import co.jueyi.geekshop.eventbus.events.AssetEvent;
 import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.AssetEntityMapper;
+import co.jueyi.geekshop.mapper.CollectionEntityMapper;
+import co.jueyi.geekshop.mapper.ProductEntityMapper;
+import co.jueyi.geekshop.mapper.ProductVariantEntityMapper;
 import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
@@ -58,6 +64,9 @@ public class AssetService {
     private final ConfigService configService;
     private final EventBus eventBus;
     private final AssetEntityMapper assetEntityMapper;
+    private final ProductEntityMapper productEntityMapper;
+    private final ProductVariantEntityMapper productVariantEntityMapper;
+    private final CollectionEntityMapper collectionEntityMapper;
 
     private List<MimeType> permittedMimeTypes = new ArrayList<>();
 
@@ -163,12 +172,19 @@ public class AssetService {
     public AssetEntity update(RequestContext ctx, UpdateAssetInput input) {
         AssetEntity assetEntity =
                 ServiceHelper.getEntityOrThrow(this.assetEntityMapper, AssetEntity.class, input.getId());
+
+        BeanMapper.patch(input, assetEntity);
+
         if (input.getFocalPoint() != null) {
             CoordinateInput fp = input.getFocalPoint();
-            fp.setX(to3dp(fp.getX()));
-            fp.setY(to3dp(fp.getY()));
+            Coordinate coordinate = new Coordinate();
+            coordinate.setX(to3dp(fp.getX()));
+            coordinate.setY(to3dp(fp.getY()));
+            assetEntity.setFocalPoint(coordinate);
+        } else {
+            assetEntity.setFocalPoint(null);
         }
-        BeanMapper.patch(input, assetEntity);
+
         this.assetEntityMapper.updateById(assetEntity);
         this.eventBus.post(new AssetEvent(ctx, assetEntity, "updated"));
         return assetEntity;
@@ -189,10 +205,6 @@ public class AssetService {
     }
 
     public DeletionResponse delete(RequestContext ctx, List<Long> ids) {
-        return this.delete(ctx, ids, false);
-    }
-
-    public DeletionResponse delete(RequestContext ctx, List<Long> ids, boolean force) {
         List<AssetEntity> assetEntityList = this.assetEntityMapper.selectBatchIds(ids);
         UsageCount usageCount = UsageCount.builder().build();
 
@@ -206,7 +218,7 @@ public class AssetService {
         boolean hasUsages = usageCount.products + usageCount.variants + usageCount.collections > 0;
 
         DeletionResponse deletionResponse = new DeletionResponse();
-        if (hasUsages && !force) {
+        if (hasUsages) {
             deletionResponse.setResult(DeletionResult.NOT_DELETED);
             String message = "The selected {%d} asset(s) is featured by {%d} product(s) " +
                     "and {%d} variant(s) and {%d} collection(s)";
@@ -269,6 +281,7 @@ public class AssetService {
         assetEntity.setWidth(dimensions.width);
         assetEntity.setHeight(dimensions.height);
         assetEntity.setName(FilenameUtils.getName(sourceFileName));
+        assetEntity.setFileSize(sourceFile.length);
         assetEntity.setMimeType(mimeType);
         assetEntity.setSource(sourceFileIdentifier);
         assetEntity.setPreview(previewFileIdentifier);
@@ -309,7 +322,25 @@ public class AssetService {
      * Find the entities which reference the given Asset as a featuredAsset.
      */
     private UsageCount findAssetUsages(AssetEntity assetEntity) {
-        return UsageCount.builder().build(); // TODO
+        QueryWrapper<ProductEntity> productEntityQueryWrapper = new QueryWrapper<>();
+        productEntityQueryWrapper.lambda().eq(ProductEntity::getFeaturedAssetId, assetEntity.getId())
+                .isNull(ProductEntity::getDeletedAt);
+        int productUsageCount = this.productEntityMapper.selectCount(productEntityQueryWrapper);
+
+        QueryWrapper<ProductVariantEntity> productVariantEntityQueryWrapper = new QueryWrapper<>();
+        productVariantEntityQueryWrapper.lambda().eq(ProductVariantEntity::getFeaturedAssetId, assetEntity.getId())
+                .isNull(ProductVariantEntity::getDeletedAt);
+        int productVariantUsageCount = this.productVariantEntityMapper.selectCount(productVariantEntityQueryWrapper);
+
+        QueryWrapper<CollectionEntity> collectionEntityQueryWrapper = new QueryWrapper<>();
+        collectionEntityQueryWrapper.lambda().eq(CollectionEntity::getFeaturedAssetId, assetEntity.getId());
+        int collectionUsageCount = this.collectionEntityMapper.selectCount(collectionEntityQueryWrapper);
+
+        return UsageCount.builder()
+                .products(productUsageCount)
+                .variants(productVariantUsageCount)
+                .collections(collectionUsageCount)
+                .build();
     }
 
     @Builder

@@ -22,14 +22,12 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -285,12 +283,13 @@ public class ApiClient {
      * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
      * https://github.com/jaydenseric/graphql-multipart-request-spec
      */
-    public GraphQLResponse uploadMultipleFiles(String graphqlFile, String path, String mediaType) throws IOException {
-        File dir = new File(path);
-        if (!dir.exists()) throw new IOException("Path [" + path + "] does not exist");
-        List<File> fileList = Arrays.asList(dir.listFiles());
-        int size = fileList.size();
-        if (size == 0) throw new IOException("No file exists in path [" + path + "]");
+    public GraphQLResponse uploadMultipleFiles(String graphqlFile, List<String> files) throws IOException {
+//        File dir = new File(path);
+//        if (!dir.exists()) throw new IOException("Path [" + path + "] does not exist");
+//        List<File> fileList = Arrays.asList(dir.listFiles());
+//        int size = fileList.size();
+        if (CollectionUtils.isEmpty(files)) throw new IOException("No files input");
+        int size = files.size();
 
         String graphql = loadQuery(graphqlFile);
         ObjectNode variables = objectMapper.createObjectNode();
@@ -312,7 +311,7 @@ public class ApiClient {
         body.add("map", forJson(jsonMap, new HttpHeaders()));
 
         for(int i = 0; i < size; i++) {
-            File file = fileList.get(i);
+            File file = new File(files.get(i));
             Resource resource = new FileSystemResource(file);
             String fileName = file.getName();
 
@@ -320,7 +319,8 @@ public class ApiClient {
             ContentDisposition contentDisposition = ContentDisposition
                     .builder("form-data").name("" + i).filename(fileName).build();
             fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-            fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
+            String mimeType = URLConnection.guessContentTypeFromName(fileName);
+            fileMeta.add(HttpHeaders.CONTENT_TYPE, mimeType); // MediaType.IMAGE_JPEG_VALUE
             body.add("" + i, new HttpEntity<>(resource, fileMeta));
         }
 
@@ -337,7 +337,7 @@ public class ApiClient {
      * https://medium.com/red6-es/uploading-a-file-with-a-filename-with-spring-resttemplate-8ec5e7dc52ca
      * https://github.com/jaydenseric/graphql-multipart-request-spec
      */
-    public GraphQLResponse uploadSingleFile(String graphqlFile, String filePath, String fileName, String mediaType)
+    public GraphQLResponse uploadSingleFile(String graphqlFile, String fileName)
             throws IOException{
         String graphql = loadQuery(graphqlFile);
         ObjectNode variables = objectMapper.createObjectNode();
@@ -352,14 +352,15 @@ public class ApiClient {
         String jsonMap = objectMapper.writeValueAsString(map);
         body.add("map", forJson(jsonMap, new HttpHeaders()));
 
-        File imageFile = new File(filePath + "/" + fileName);
+        File imageFile = new File(fileName);
         Resource resource = new FileSystemResource(imageFile);
 
         MultiValueMap<String, String> fileMeta = new LinkedMultiValueMap<>();
         ContentDisposition contentDisposition = ContentDisposition
-                .builder("form-data").name("0").filename(fileName).build();
+                .builder("form-data").name("0").filename(imageFile.getName()).build();
         fileMeta.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-        fileMeta.add(HttpHeaders.CONTENT_TYPE, mediaType); // MediaType.IMAGE_JPEG_VALUE
+        String mimeType = URLConnection.guessContentTypeFromName(imageFile.getName());
+        fileMeta.add(HttpHeaders.CONTENT_TYPE, mimeType); // MediaType.IMAGE_JPEG_VALUE
         body.add("0", new HttpEntity<>(resource, fileMeta));
 
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
