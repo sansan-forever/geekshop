@@ -40,7 +40,7 @@ public class StockMovementService {
     private final StockMovementEntityMapper stockMovementEntityMapper;
     private final ProductVariantEntityMapper productVariantEntityMapper;
 
-    public StockMovementList getStockMovementsByProductVaraintId(
+    public StockMovementList getStockMovementsByProductVariantId(
             Long productVariantId, StockMovementListOptions options) {
         PageInfo pageInfo = ServiceHelper.getListOptions(options);
         IPage<StockMovementEntity> page = new Page<>(pageInfo.current, pageInfo.size);

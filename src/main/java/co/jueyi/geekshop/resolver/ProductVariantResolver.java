@@ -98,6 +98,6 @@ public class ProductVariantResolver implements GraphQLResolver<ProductVariant> {
             return null;
         }
 
-        return stockMovementService.getStockMovementsByProductVaraintId(productVariant.getId(), options);
+        return stockMovementService.getStockMovementsByProductVariantId(productVariant.getId(), options);
     }
 }
