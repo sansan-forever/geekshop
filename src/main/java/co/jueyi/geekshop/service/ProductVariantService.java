@@ -143,8 +143,9 @@ public class ProductVariantService {
                 .map(ProductVariantCollectionJoinEntity::getProductVariantId).distinct().collect(Collectors.toList());
 
         QueryWrapper<ProductVariantEntity> productVariantQueryWrapper = new QueryWrapper<>();
-        productVariantQueryWrapper.lambda().in(ProductVariantEntity::getId, variantIds)
-                .select(ProductVariantEntity::getId).select(ProductVariantEntity::getProductId);
+        productVariantQueryWrapper.lambda()
+                .in(ProductVariantEntity::getId, variantIds)
+                .select(ProductVariantEntity::getId, ProductVariantEntity::getProductId);
         List<ProductVariantEntity> variants =
                 this.productVariantEntityMapper.selectList(productVariantQueryWrapper);
 

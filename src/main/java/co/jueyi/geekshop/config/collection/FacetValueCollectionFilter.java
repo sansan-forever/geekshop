@@ -73,7 +73,10 @@ public class FacetValueCollectionFilter extends CollectionFilter {
             ConfigArgValues configArgValues,
             QueryWrapper<ProductVariantEntity> resultQueryWrapper) {
         List<Long> facetValueIds = configArgValues.getIdList(CONFIG_NAME_FACET_VALUE_IDS);
-        if (CollectionUtils.isEmpty(facetValueIds)) return resultQueryWrapper;
+        if (CollectionUtils.isEmpty(facetValueIds)) {
+            resultQueryWrapper.apply("1 = 0");
+            return resultQueryWrapper;
+        }
 
         // 查询ProductVariant <> FacetValue关联关系
         QueryWrapper<ProductVariantFacetValueJoinEntity> variantFacetValueJoinEntityQueryWrapper
@@ -82,8 +85,6 @@ public class FacetValueCollectionFilter extends CollectionFilter {
                 .in(ProductVariantFacetValueJoinEntity::getFacetValueId, facetValueIds);
         List<ProductVariantFacetValueJoinEntity> variantFacetValueJoinEntities =
                 this.productVariantFacetValueJoinEntityMapper.selectList(variantFacetValueJoinEntityQueryWrapper);
-
-        if (CollectionUtils.isEmpty(variantFacetValueJoinEntities)) return resultQueryWrapper;
 
         List<TempEntry> tempEntries = new ArrayList<>();
         variantFacetValueJoinEntities.forEach(joinEntity -> {
@@ -105,8 +106,8 @@ public class FacetValueCollectionFilter extends CollectionFilter {
 
         QueryWrapper<ProductVariantEntity> productVariantEntityQueryWrapper = new QueryWrapper<>();
         productVariantEntityQueryWrapper.lambda()
-                .in(ProductVariantEntity::getProductId, productIds)
-                .select(ProductVariantEntity::getId).select(ProductVariantEntity::getProductId);
+                .in(ProductVariantEntity::getProductId, productIds).select()
+                .select(ProductVariantEntity::getId, ProductVariantEntity::getProductId);
         List<ProductVariantEntity> productVariantEntities =
                 this.productVariantEntityMapper.selectList(productVariantEntityQueryWrapper);
 
@@ -117,6 +118,9 @@ public class FacetValueCollectionFilter extends CollectionFilter {
                     TempEntry tempEntry = new TempEntry();
                     tempEntry.setVariantId(variantEntity.getId());
                     tempEntry.setFacetValueId(joinEntity.getFacetValueId());
+                    if (!tempEntries.contains(tempEntry)) {
+                        tempEntries.add(tempEntry);
+                    }
                 }
             }
         });
@@ -135,6 +139,11 @@ public class FacetValueCollectionFilter extends CollectionFilter {
                 resultVariantIds.add(variantId);
             }
         });
+
+        if (CollectionUtils.isEmpty(resultVariantIds)) {
+            resultQueryWrapper.apply("1 = 0");
+            return resultQueryWrapper;
+        }
 
         resultQueryWrapper.lambda().in(ProductVariantEntity::getId, resultVariantIds);
         return resultQueryWrapper;

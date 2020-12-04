@@ -27,7 +27,7 @@ import java.util.List;
 public class CollectionEntity extends BaseEntity {
     private boolean root;
     private Integer position;
-    private boolean visibleToPublic;
+    private boolean privateOnly;
     private String name;
     private String description;
     private String slug;

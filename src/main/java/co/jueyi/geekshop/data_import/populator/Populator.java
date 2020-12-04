@@ -81,7 +81,7 @@ public class Populator {
             if (createCollectionInput.getSlug() == null) {
                 createCollectionInput.setSlug(collectionDef.getName());
             }
-            createCollectionInput.setVisibleToPublic(collectionDef.isVisibleToPublic());
+            createCollectionInput.setPrivateOnly(collectionDef.isPrivateOnly());
             createCollectionInput.setParentId(parentId);
             createCollectionInput.setAssetIds(assets.stream().map(a -> a.getId()).collect(Collectors.toList()));
             if (assets.size() > 0) {

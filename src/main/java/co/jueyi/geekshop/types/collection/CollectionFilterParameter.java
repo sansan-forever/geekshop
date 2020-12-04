@@ -16,7 +16,7 @@ import lombok.Data;
  */
 @Data
 public class CollectionFilterParameter {
-    private BooleanOperators visibleToPublic;
+    private BooleanOperators privateOnly;
     private DateOperators createdAt;
     private DateOperators updatedAt;
     private StringOperators name;

@@ -73,7 +73,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
         CollectionFilterParameter filter = options.getFilter();
         BooleanOperators booleanOperators = new BooleanOperators();
         booleanOperators.setEq(true);
-        filter.setVisibleToPublic(booleanOperators);
+        filter.setPrivateOnly(booleanOperators);
 
         return this.collectionService.findAll(options);
     }
@@ -91,7 +91,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
             throw new UserInputException("Either the Collection id or slug must be provided");
         }
         if (collectionEntity == null) return null;
-        if (!collectionEntity.isVisibleToPublic()) return null;
+        if (collectionEntity.isPrivateOnly()) return null;
         return BeanMapper.map(collectionEntity, Collection.class);
     }
 }

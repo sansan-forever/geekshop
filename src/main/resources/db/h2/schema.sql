@@ -442,7 +442,7 @@ create table tb_global_settings (
 create table tb_collection (
    id bigint not null auto_increment,
    root boolean default false,
-   visible_to_public boolean default false,
+   private_only boolean default false,
    position integer,
    name varchar(255),
    slug varchar(255),

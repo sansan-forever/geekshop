@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Data
 public class CreateCollectionInput {
-    private Boolean visibleToPublic;
+    private Boolean privateOnly;
     private Long featuredAssetId;
     private List<Long> assetIds = new ArrayList<>();
     private Long parentId;

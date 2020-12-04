@@ -49,6 +49,10 @@ geekshop:
       - image/*
       - application/pdf
 
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 
 
 

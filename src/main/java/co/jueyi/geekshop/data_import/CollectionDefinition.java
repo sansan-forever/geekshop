@@ -18,7 +18,7 @@ public class CollectionDefinition {
     private String name;
     private String description;
     private String slug;
-    private boolean visibleToPublic;
+    private boolean privateOnly;
     private List<FacetValueCollectionFilterDefinition> filters = new ArrayList<>();
     private String parentName;
     private List<String> assetPaths = new ArrayList<>();

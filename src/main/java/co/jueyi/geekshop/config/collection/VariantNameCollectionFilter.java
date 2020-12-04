@@ -81,16 +81,16 @@ public class VariantNameCollectionFilter extends CollectionFilter {
         };
         switch (operator) {
             case "contains":
-                resultQueryWrapper.lambda().like(ProductVariantEntity::getName, term);
+                resultQueryWrapper.like("lower(name)", term.toLowerCase());
                 break;
             case "doesNotContain":
-                resultQueryWrapper.lambda().notLike(ProductVariantEntity::getName, term);
+                resultQueryWrapper.notLike("lower(name)", term.toLowerCase());
                 break;
             case "startsWith":
-                resultQueryWrapper.lambda().likeLeft(ProductVariantEntity::getName, term);
+                resultQueryWrapper.likeLeft("lower(name)", term.toLowerCase());
                 break;
             case "endsWith":
-                resultQueryWrapper.lambda().likeRight(ProductVariantEntity::getName, term);
+                resultQueryWrapper.likeRight("lower(name)", term.toLowerCase());
                 break;
             default:
                 throw new UserInputException("'" + operator + "' is not a valid operator");

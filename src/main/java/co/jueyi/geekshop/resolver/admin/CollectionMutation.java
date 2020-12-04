@@ -64,7 +64,8 @@ public class CollectionMutation implements GraphQLMutationResolver {
      */
     @Allow(Permission.UpdateCatalog)
     public Collection moveCollection(MoveCollectionInput input, DataFetchingEnvironment dfe) {
-        CollectionEntity collectionEntity = this.collectionService.move(input);
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        CollectionEntity collectionEntity = this.collectionService.move(ctx, input);
         return BeanMapper.map(collectionEntity, Collection.class);
     }
 }

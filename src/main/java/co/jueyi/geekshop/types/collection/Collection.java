@@ -22,7 +22,7 @@ import java.util.List;
 @Data
 public class Collection implements Node {
     private Long id;
-    private Boolean visibleToPublic; // admin only
+    private Boolean privateOnly; // admin only
     private Date createdAt;
     private Date updatedAt;
     private String name;

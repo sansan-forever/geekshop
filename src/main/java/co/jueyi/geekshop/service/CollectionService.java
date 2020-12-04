@@ -93,7 +93,7 @@ public class CollectionService {
         QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getSlug(), "slug");
         QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getDescription(), "description");
         QueryHelper.buildOneBooleanOperatorFilter(
-                queryWrapper, filterParameter.getVisibleToPublic(), "visible_to_public");
+                queryWrapper, filterParameter.getPrivateOnly(), "private_only");
         QueryHelper.buildOneNumberOperatorFilter(queryWrapper, filterParameter.getPosition(), "position");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getCreatedAt(), "created_at");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
@@ -176,9 +176,9 @@ public class CollectionService {
         collectionEntityQueryWrapper.lambda()
                 .in(CollectionEntity::getId, collectionIds).orderByAsc(CollectionEntity::getId);
         if (publicOnly) {
-            collectionEntityQueryWrapper.lambda().eq(CollectionEntity::isVisibleToPublic, true);
+            collectionEntityQueryWrapper.lambda().eq(CollectionEntity::isPrivateOnly, false);
         }
-        return this.collectionEntityMapper.selectBatchIds(collectionIds);
+        return this.collectionEntityMapper.selectList(collectionEntityQueryWrapper);
     }
 
     public List<CollectionEntity> getAncestors(Long collectionId) {
@@ -193,7 +193,8 @@ public class CollectionService {
                 }
             }
         }
-        return collectionEntities;
+        return collectionEntities.stream()
+                .sorted(Comparator.comparing(CollectionEntity::getId)).collect(Collectors.toList());
     }
 
     public List<CollectionEntity> getDescendants(Long rootId) {
@@ -225,7 +226,7 @@ public class CollectionService {
         CollectionEntity parent = this.getParentCollection(input.getParentId());
         if (parent == null) throw new EntityNotFoundException("Parent collection", input.getParentId());
 
-        CollectionEntity collectionEntity = BeanMapper.map(input, CollectionEntity.class);
+        CollectionEntity collectionEntity = BeanMapper.patch(input, CollectionEntity.class);
         collectionEntity.setParentId(parent.getId());
         collectionEntity.setPosition(this.getNextPositionInParent(input.getParentId()));
         if (!CollectionUtils.isEmpty(input.getFilters())) {
@@ -238,11 +239,9 @@ public class CollectionService {
             this.joinCollectionWithAssets(collectionEntity.getId(), input.getAssetIds());
         }
 
-        if (!CollectionUtils.isEmpty(input.getFilters())) {
-            ApplyCollectionFilterEvent event =
-                    new ApplyCollectionFilterEvent(ctx, Arrays.asList(collectionEntity.getId()));
-            this.eventBus.post(event);
-        }
+        ApplyCollectionFilterEvent event =
+                new ApplyCollectionFilterEvent(ctx, Arrays.asList(collectionEntity.getId()));
+        this.eventBus.post(event);
 
         return collectionEntity;
     }
@@ -267,15 +266,21 @@ public class CollectionService {
             collectionEntity.setFilters(this.getCollectionFiltersFromInput(input.getFilters()));
         }
 
+        if (input.getFeaturedAssetId() == null || (input.getAssetIds() != null && input.getAssetIds().size() == 0)) {
+            collectionEntity.setFeaturedAssetId(null);
+        }
+
         this.collectionEntityMapper.updateById(collectionEntity);
 
-        if (!CollectionUtils.isEmpty(input.getAssetIds())) {
+        if (input.getAssetIds() != null) {
             // 先删除现有关联关系
             QueryWrapper<CollectionAssetJoinEntity> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(CollectionAssetJoinEntity::getCollectionId, collectionEntity.getId());
             this.collectionAssetJoinEntityMapper.delete(queryWrapper);
             // 再添加关联关系
-            this.joinCollectionWithAssets(collectionEntity.getId(), input.getAssetIds());
+            if (input.getAssetIds().size() > 0) {
+                this.joinCollectionWithAssets(collectionEntity.getId(), input.getAssetIds());
+            }
         }
 
         if (!CollectionUtils.isEmpty(input.getFilters())) {
@@ -310,7 +315,7 @@ public class CollectionService {
         return deletionResponse;
     }
 
-    public CollectionEntity move(MoveCollectionInput input) {
+    public CollectionEntity move(RequestContext ctx, MoveCollectionInput input) {
         CollectionEntity target = ServiceHelper.getEntityOrThrow(
                 this.collectionEntityMapper, CollectionEntity.class, input.getCollectionId());
         List<CollectionEntity> descendants = this.getDescendants(input.getCollectionId());
@@ -333,9 +338,9 @@ public class CollectionService {
             this.collectionEntityMapper.updateById(sibling);
         }
 
-        // TODO
-        // 异步处理ApplyCollectionFilterEvent
-        // 异步发送CollectionModificationEvent
+        ApplyCollectionFilterEvent event =
+                new ApplyCollectionFilterEvent(ctx, Arrays.asList(target.getId()));
+        this.eventBus.post(event);
 
         return target;
     }
@@ -346,7 +351,7 @@ public class CollectionService {
      */
     private List<CollectionEntity> moveToIndex(
             int index, CollectionEntity target, List<CollectionEntity> siblings) {
-        int normalizdIndex = Math.max(Math.min(index, siblings.size()), 0);
+        int normalizdIndex = Math.max(Math.min(index, siblings.size() - 1), 0);
         int currentIndex = IntStream.range(0, siblings.size())
                 .filter(i -> Objects.equals(siblings.get(i).getId(), target.getId())).findFirst().orElse(-1);
         Collections.sort(siblings, (a, b) -> a.getPosition() > b.getPosition() ? 1 : -1);
