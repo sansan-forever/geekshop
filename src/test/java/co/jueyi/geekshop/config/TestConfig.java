@@ -43,9 +43,6 @@ public class TestConfig {
     public static final String ADMIN_CLIENT_BEAN = "adminClient";
     public static final String SHOP_CLIENT_BEAN = "shopClient";
 
-    @Autowired
-    private ConfigService configService;
-
     @Bean(name=ADMIN_CLIENT_BEAN)
     public ApiClient adminClient() {
         return new ApiClient(true);
@@ -118,12 +115,5 @@ public class TestConfig {
     @Primary
     public AssetPreviewStrategy testAssetPreviewStrategy() {
         return new TestAssetPreviewStrategy();
-    }
-
-
-
-    @PostConstruct
-    void initTestConfig() {
-        this.configService.getImportExportOptions().setImportAssetsDir(TestHelper.getImportAssetsDir());
     }
 }

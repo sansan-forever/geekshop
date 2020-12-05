@@ -19,7 +19,7 @@ public abstract class QueryHelper {
         if (!StringUtils.isEmpty(stringOperators.getEq())) {
             queryWrapper.eq(fieldName, stringOperators.getEq());
         } else if (!StringUtils.isEmpty(stringOperators.getContains())) {
-            queryWrapper.like(fieldName, stringOperators.getContains().trim());
+            queryWrapper.like("lower(" + fieldName + ")", stringOperators.getContains().trim().toLowerCase());
         }
     }
 

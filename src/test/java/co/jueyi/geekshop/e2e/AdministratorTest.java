@@ -54,6 +54,9 @@ public class AdministratorTest {
             String.format(ADMINISTRATOR_GRAPHQL_RESOURCE_TEMPLATE, "delete_administrator");
 
     @Autowired
+    TestHelper testHelper;
+
+    @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
 
@@ -68,8 +71,8 @@ public class AdministratorTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(1).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-minimal.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();

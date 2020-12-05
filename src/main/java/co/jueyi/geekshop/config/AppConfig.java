@@ -73,7 +73,7 @@ public class AppConfig {
     }
 
     @Bean
-    public Executor asyncExecutor() {
+    public ThreadPoolTaskExecutor asyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(50);

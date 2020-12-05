@@ -15,7 +15,7 @@ import co.jueyi.geekshop.types.collection.Collection;
 import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.facet.FacetList;
 import co.jueyi.geekshop.types.facet.FacetValue;
-import co.jueyi.geekshop.types.product.Product;
+import co.jueyi.geekshop.types.product.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -56,6 +56,16 @@ public class CollectionTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "configurable_fragment");
     static final String UPDATE_COLLECTION =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_collection");
+    static final String UPDATE_PRODUCT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product");
+    static final String PRODUCT_WITH_VARIANTS_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_with_variants_fragment");
+    static final String PRODUCT_VARIANT_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_variant_fragment");
+    static final String UPDATE_PRODUCT_VARIANTS =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product_variants");
+    static final String DELETE_PRODUCT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "delete_product");
 
     static final String COLLECTION_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/collection/%s.graphqls";
     static final String GET_FACET_VALUES =
@@ -78,6 +88,15 @@ public class CollectionTest {
             String.format(COLLECTION_GRAPHQL_RESOURCE_TEMPLATE, "delete_collection");
     static final String GET_PRODUCT_COLLECTIONS =
             String.format(COLLECTION_GRAPHQL_RESOURCE_TEMPLATE, "get_product_collections");
+    static final String CREATE_COLLECTION_SELECT_VARIANTS =
+            String.format(COLLECTION_GRAPHQL_RESOURCE_TEMPLATE, "create_collection_select_variants");
+    static final String GET_PRODUCTS_WITH_VARIANTS_IDS =
+            String.format(COLLECTION_GRAPHQL_RESOURCE_TEMPLATE, "get_products_with_variant_ids");
+    static final String GET_COLLECTIONS_FOR_PRODUCTS =
+            String.format(COLLECTION_GRAPHQL_RESOURCE_TEMPLATE, "get_collections_for_products");
+
+    @Autowired
+    TestHelper testHelper;
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
@@ -106,8 +125,8 @@ public class CollectionTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(1).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-collections.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-collections.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();
@@ -550,16 +569,21 @@ public class CollectionTest {
     @Test
     @Order(20)
     public void re_evaluates_collection_contents_on_move() throws IOException {
-        // TODO, 此处需要确保ApplyCollectionFilterEvent异步事件处理完毕，否则测试可能不稳定，待完善
+        testHelper.awaitRunningTasks();
+
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", pearCollection.getId());
 
         GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
         Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
         assertThat(collection.getProductVariants().getItems().stream()
-                .map(v -> v.getName()).collect(Collectors.toList())).containsExactlyInAnyOrder(
-                        "Laptop 13 inch 8GB", "Laptop 15 inch 8GB", "Laptop 13 inch 16GB", "Laptop 15 inch 16GB",
-                "Instant Camera");
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                        "Laptop 13 inch 8GB",
+                        "Laptop 15 inch 8GB",
+                        "Laptop 13 inch 16GB",
+                        "Laptop 15 inch 16GB",
+                        "Instant Camera"
+        );
     }
 
     @Test
@@ -736,12 +760,7 @@ public class CollectionTest {
                 Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
         collectionToDeleteChild = graphQLResponse.get("$.data.createCollection", Collection.class);
 
-        // TODO, 此处需要确保ApplyCollectionFilterEvent异步事件处理完毕，否则测试可能不稳定，暂时用Thread.sleep，待完善
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        testHelper.awaitRunningTasks();
     }
 
     @Test
@@ -779,6 +798,692 @@ public class CollectionTest {
         graphQLResponse = adminClient.perform(GET_PRODUCT_COLLECTIONS, variables);
         Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
         assertThat(product.getCollections()).hasSize(5);
+
+        Collection collection1 = product.getCollections().get(0);
+        assertThat(collection1.getId()).isEqualTo(3L);
+        assertThat(collection1.getName()).isEqualTo("Electronics");
+
+        Collection collection2 = product.getCollections().get(1);
+        assertThat(collection2.getId()).isEqualTo(4L);
+        assertThat(collection2.getName()).isEqualTo("Computers");
+
+        Collection collection3 = product.getCollections().get(2);
+        assertThat(collection3.getId()).isEqualTo(5L);
+        assertThat(collection3.getName()).isEqualTo("Pear");
+
+        Collection collection4 = product.getCollections().get(3);
+        assertThat(collection4.getId()).isEqualTo(8L);
+        assertThat(collection4.getName()).isEqualTo("Delete Me Parent");
+
+        Collection collection5 = product.getCollections().get(4);
+        assertThat(collection5.getId()).isEqualTo(9L);
+        assertThat(collection5.getName()).isEqualTo("Delete Me Child");
+    }
+
+    @Test
+    @Order(28)
+    public void delete_collection_works() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", collectionToDeleteParent.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(DELETE_COLLECTION, variables);
+        DeletionResponse deletionResponse =
+                graphQLResponse.get("$.data.deleteCollection", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+    }
+
+    @Test
+    @Order(29)
+    public void deleted_parent_collection_is_null() throws IOException {
+        verifyCollectionDeleted(collectionToDeleteParent.getId());
+    }
+
+    @Test
+    @Order(30)
+    public void deleted_child_collection_is_null() throws IOException {
+        verifyCollectionDeleted(collectionToDeleteChild.getId());
+    }
+
+    @Test
+    @Order(31)
+    public void product_no_longer_lists_collection() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", laptopProductId);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_COLLECTIONS, variables);
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        assertThat(product.getCollections()).hasSize(3);
+
+        Collection collection1 = product.getCollections().get(0);
+        assertThat(collection1.getId()).isEqualTo(3L);
+        assertThat(collection1.getName()).isEqualTo("Electronics");
+
+        Collection collection2 = product.getCollections().get(1);
+        assertThat(collection2.getId()).isEqualTo(4L);
+        assertThat(collection2.getName()).isEqualTo("Computers");
+
+        Collection collection3 = product.getCollections().get(2);
+        assertThat(collection3.getId()).isEqualTo(5L);
+        assertThat(collection3.getName()).isEqualTo("Pear");
+    }
+
+    /**
+     * filters
+     */
+
+    @Test
+    @Order(32)
+    public void collection_with_no_filters_has_no_product_variants() throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+
+        createCollectionInput.setName("Empty");
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug("empty");
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION_SELECT_VARIANTS, variables);
+        Collection collection = graphQLResponse.get("$.data.createCollection", Collection.class);
+
+        assertThat(collection.getProductVariants().getTotalItems()).isEqualTo(0);
+    }
+
+    /**
+     * facetValue filter
+     */
+    @Test
+    @Order(33)
+    public void electronics() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", electronicsCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Gaming PC R7-2700 240GB SSD",
+                "Gaming PC i7-8700 120GB SSD",
+                "Gaming PC R7-2700 120GB SSD",
+                "Hard Drive 1TB",
+                "Hard Drive 2TB",
+                "Hard Drive 3TB",
+                "Hard Drive 4TB",
+                "Hard Drive 6TB",
+                "Clacky Keyboard",
+                "USB Cable",
+                "Instant Camera",
+                "Camera Lens",
+                "Tripod",
+                "SLR Camera"
+        );
+    }
+
+    @Test
+    @Order(34)
+    public void computers() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", computersCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Gaming PC R7-2700 240GB SSD",
+                "Gaming PC i7-8700 120GB SSD",
+                "Gaming PC R7-2700 120GB SSD",
+                "Hard Drive 1TB",
+                "Hard Drive 2TB",
+                "Hard Drive 3TB",
+                "Hard Drive 4TB",
+                "Hard Drive 6TB",
+                "Clacky Keyboard",
+                "USB Cable"
+        );
+    }
+
+    @Test
+    @Order(35)
+    public void photo_and_pear() throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValueCollectionFilter.getCode());
+
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("facetValueIds");
+        configArgInput.setValue("[\"" + this.getFacetValueId("pear") +"\",\"" + this.getFacetValueId("photo")+ "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("containsAny");
+        configArgInput.setValue("false");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        createCollectionInput.getFilters().add(configurableOperationInput);
+
+        createCollectionInput.setName("Photo AND Pear");
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug("photo-and-pear");
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION_SELECT_VARIANTS, variables);
+        Collection result = graphQLResponse.get("$.data.createCollection", Collection.class);
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", result.getId());
+
+        graphQLResponse = adminClient.perform(GET_COLLECTION, variables,
+                Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection.getProductVariants().getItems().stream()
+                .map(ProductVariant::getName)).containsExactly("Instant Camera");
+    }
+
+    @Test
+    @Order(36)
+    public void photo_or_pear() throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValueCollectionFilter.getCode());
+
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("facetValueIds");
+        configArgInput.setValue("[\"" + this.getFacetValueId("pear") +"\",\"" + this.getFacetValueId("photo")+ "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("containsAny");
+        configArgInput.setValue("true");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        createCollectionInput.getFilters().add(configurableOperationInput);
+
+        createCollectionInput.setName("Photo OR Pear");
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug("photo-or-pear");
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION_SELECT_VARIANTS, variables);
+        Collection result = graphQLResponse.get("$.data.createCollection", Collection.class);
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", result.getId());
+
+        graphQLResponse = adminClient.perform(GET_COLLECTION, variables,
+                Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection.getProductVariants().getItems().stream()
+                .map(ProductVariant::getName)).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Instant Camera",
+                "Camera Lens",
+                "Tripod",
+                "SLR Camera",
+                "Hat"
+        );
+    }
+
+    @Test
+    @Order(37)
+    public void bell_or_pear_in_computers() throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValueCollectionFilter.getCode());
+
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("facetValueIds");
+        configArgInput.setValue(
+                "[\"" + this.getFacetValueId("pear") +"\",\"" + this.getFacetValueId("bell")+ "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("containsAny");
+        configArgInput.setValue("true");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        createCollectionInput.getFilters().add(configurableOperationInput);
+
+        createCollectionInput.setName("Bell OR Pear Computers");
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug("bell-or-pear");
+        createCollectionInput.setParentId(computersCollection.getId());
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION_SELECT_VARIANTS, variables);
+        Collection result = graphQLResponse.get("$.data.createCollection", Collection.class);
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", result.getId());
+
+        graphQLResponse = adminClient.perform(GET_COLLECTION, variables,
+                Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection.getProductVariants().getItems().stream()
+                .map(ProductVariant::getName)).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch"
+        );
+    }
+
+    @Test
+    @Order(38)
+    public void contains_operator() throws IOException {
+        Collection collection = createVariantNameFilteredCollection("contains", "camera");
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", collection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Instant Camera",
+                "Camera Lens",
+                "SLR Camera"
+        );
+    }
+
+    @Test
+    @Order(39)
+    public void starts_with_operator() throws IOException {
+        Collection collection = createVariantNameFilteredCollection("startsWith", "camera");
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", collection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Camera Lens"
+        );
+    }
+
+    @Test
+    @Order(40)
+    public void ends_with_operator() throws IOException {
+        Collection collection = createVariantNameFilteredCollection("endsWith", "camera");
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", collection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Instant Camera",
+                "SLR Camera"
+        );
+    }
+
+    @Test
+    @Order(41)
+    public void does_not_contain_operator() throws IOException {
+        Collection collection = createVariantNameFilteredCollection("doesNotContain", "camera");
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", collection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Gaming PC R7-2700 240GB SSD",
+                "Gaming PC i7-8700 120GB SSD",
+                "Gaming PC R7-2700 120GB SSD",
+                "Hard Drive 1TB",
+                "Hard Drive 2TB",
+                "Hard Drive 3TB",
+                "Hard Drive 4TB",
+                "Hard Drive 6TB",
+                "Clacky Keyboard",
+                "USB Cable",
+                "Tripod",
+                "Hat"
+        );
+    }
+
+    List<Product> products;
+
+    private void before_test_42() throws IOException {
+        GraphQLResponse graphQLResponse =
+                this.adminClient.perform(GET_PRODUCTS_WITH_VARIANTS_IDS, null);
+        ProductList productList = graphQLResponse.get("$.data.adminProducts", ProductList.class);
+        products = productList.getItems();
+    }
+
+    @Test
+    @Order(41)
+    public void updates_contents_when_product_is_updated() throws IOException {
+        before_test_42();
+
+        UpdateProductInput input = new UpdateProductInput();
+        input.setId(products.get(1).getId());
+        input.getFacetValueIds().add(getFacetValueId("electronics"));
+        input.getFacetValueIds().add(getFacetValueId("computers"));
+        input.getFacetValueIds().add(getFacetValueId("pear"));
+
+        JsonNode optionsNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        this.adminClient.perform(UPDATE_PRODUCT, variables, Arrays.asList(
+                ASSET_FRAGMENT, PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT
+        ));
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", pearCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Instant Camera"
+        );
+    }
+
+    @Test
+    @Order(42)
+    public void updates_contents_when_product_variant_is_updated() throws IOException {
+        ProductVariant gamingPc240GB = products.stream()
+                .filter(p -> Objects.equals(p.getName(), "Gaming PC"))
+                .findFirst().get()
+                .getVariants().stream()
+                .filter(v -> v.getName().contains("240GB"))
+                .findFirst().get();
+
+        UpdateProductVariantInput input = new UpdateProductVariantInput();
+        input.setId(gamingPc240GB.getId());
+        input.getFacetValueIds().add(getFacetValueId("pear"));
+
+        JsonNode optionsNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables, Arrays.asList(
+                ASSET_FRAGMENT, PRODUCT_VARIANT_FRAGMENT
+        ));
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", pearCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Instant Camera"
+        );
+    }
+
+    @Test
+    @Order(43)
+    public void correctly_filters_when_product_variant_and_product_both_have_matching_facet_value() throws IOException {
+        ProductVariant gamingPc240GB = products.stream()
+                .filter(p -> Objects.equals(p.getName(), "Gaming PC"))
+                .findFirst().get()
+                .getVariants().stream()
+                .filter(v -> v.getName().contains("240GB"))
+                .findFirst().get();
+
+        UpdateProductVariantInput input = new UpdateProductVariantInput();
+        input.setId(gamingPc240GB.getId());
+        input.getFacetValueIds().add(getFacetValueId("electronics"));
+        input.getFacetValueIds().add(getFacetValueId("pear"));
+
+        JsonNode optionsNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables, Arrays.asList(
+                ASSET_FRAGMENT, PRODUCT_VARIANT_FRAGMENT
+        ));
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", pearCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Instant Camera"
+        );
+    }
+
+    @Test
+    @Order(44)
+    public void filter_inheritance_of_nested_collections() throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+        createCollectionInput.setParentId(electronicsCollection.getId());
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValueCollectionFilter.getCode());
+
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("facetValueIds");
+        configArgInput.setValue("[\"" + this.getFacetValueId("pear") +"\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("containsAny");
+        configArgInput.setValue("false");
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        createCollectionInput.getFilters().add(configurableOperationInput);
+
+        createCollectionInput.setName("pear electronics");
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug("pear-electronics");
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION_SELECT_VARIANTS, variables);
+        Collection pearElectronics = graphQLResponse.get("$.data.createCollection", Collection.class);
+
+        testHelper.awaitRunningTasks();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", pearElectronics.getId());
+
+        graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Curvy Monitor 24 inch",
+                "Curvy Monitor 27 inch",
+                "Gaming PC i7-8700 240GB SSD",
+                "Instant Camera"
+                // no "Hat"
+        );
+    }
+
+    /**
+     * Product collections property
+     */
+    @Test
+    @Order(45)
+    public void returns_all_collections_to_which_the_product_belongs() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("term", "camera");
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(GET_COLLECTIONS_FOR_PRODUCTS, variables);
+        ProductList productList = graphQLResponse.get("$.data.adminProducts", ProductList.class);
+        assertThat(productList.getItems().get(0).getCollections()).hasSize(7);
+
+        List<Collection> collectionList = productList.getItems().get(0).getCollections();
+        Collection collection1 = collectionList.get(0);
+        assertThat(collection1.getId()).isEqualTo(3L);
+        assertThat(collection1.getName()).isEqualTo("Electronics");
+
+        Collection collection2 = collectionList.get(1);
+        assertThat(collection2.getId()).isEqualTo(5L);
+        assertThat(collection2.getName()).isEqualTo("Pear");
+
+        Collection collection3 = collectionList.get(2);
+        assertThat(collection3.getId()).isEqualTo(11L);
+        assertThat(collection3.getName()).isEqualTo("Photo AND Pear");
+
+        Collection collection4 = collectionList.get(3);
+        assertThat(collection4.getId()).isEqualTo(12L);
+        assertThat(collection4.getName()).isEqualTo("Photo OR Pear");
+
+        Collection collection5 = collectionList.get(4);
+        assertThat(collection5.getId()).isEqualTo(14L);
+        assertThat(collection5.getName()).isEqualTo("contains camera");
+
+        Collection collection6 = collectionList.get(5);
+        assertThat(collection6.getId()).isEqualTo(16L);
+        assertThat(collection6.getName()).isEqualTo("endsWith camera");
+
+        Collection collection7 = collectionList.get(6);
+        assertThat(collection7.getId()).isEqualTo(18L);
+        assertThat(collection7.getName()).isEqualTo("pear electronics");
+    }
+
+    @Test
+    @Order(46)
+    public void collection_does_not_list_deleted_products() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L); // curvy monitor
+
+        this.adminClient.perform(DELETE_PRODUCT, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", pearCollection.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION_PRODUCT_VARIANTS, variables);
+        Collection resultCollection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(resultCollection.getProductVariants().getItems().stream()
+                .map(v -> v.getName()).collect(Collectors.toList())).containsExactly(
+                "Laptop 13 inch 8GB",
+                "Laptop 15 inch 8GB",
+                "Laptop 13 inch 16GB",
+                "Laptop 15 inch 16GB",
+                "Gaming PC i7-8700 240GB SSD",
+                "Instant Camera"
+        );
+    }
+
+    private Collection createVariantNameFilteredCollection(String operator, String term) throws IOException {
+        CreateCollectionInput createCollectionInput = new CreateCollectionInput();
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(variantNameCollectionFilter.getCode());
+
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("operator");
+        configArgInput.setValue(operator);
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("term");
+        configArgInput.setValue(term);
+        configurableOperationInput.getArguments().add(configArgInput);
+
+        createCollectionInput.getFilters().add(configurableOperationInput);
+
+        createCollectionInput.setName(operator + " " +term);
+        createCollectionInput.setDescription("");
+        createCollectionInput.setSlug(operator + " " +term);
+
+        JsonNode optionsNode = objectMapper.valueToTree(createCollectionInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_COLLECTION, variables,
+                Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
+
+        testHelper.awaitRunningTasks();
+
+        return graphQLResponse.get("$.data.createCollection", Collection.class);
+    }
+
+    private void verifyCollectionDeleted(Long id) throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", id);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_COLLECTION, variables,
+                Arrays.asList(COLLECTION_FRAGMENT, ASSET_FRAGMENT, CONFIGURABLE_FRAGMENT));
+        Collection collection = graphQLResponse.get("$.data.adminCollection", Collection.class);
+        assertThat(collection).isNull();
     }
 
     private List<Pair> getChildrenOf(Long parentId) throws IOException {

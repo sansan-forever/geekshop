@@ -87,10 +87,10 @@ public class VariantNameCollectionFilter extends CollectionFilter {
                 resultQueryWrapper.notLike("lower(name)", term.toLowerCase());
                 break;
             case "startsWith":
-                resultQueryWrapper.likeLeft("lower(name)", term.toLowerCase());
+                resultQueryWrapper.likeRight("lower(name)", term.toLowerCase());
                 break;
             case "endsWith":
-                resultQueryWrapper.likeRight("lower(name)", term.toLowerCase());
+                resultQueryWrapper.likeLeft("lower(name)", term.toLowerCase());
                 break;
             default:
                 throw new UserInputException("'" + operator + "' is not a valid operator");

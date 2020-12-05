@@ -30,6 +30,7 @@ import com.google.common.eventbus.EventBus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.TestOnly;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -302,8 +303,22 @@ public class CollectionService {
         List<CollectionEntity> collections = new ArrayList(descendents);
         collections.add(collectionEntity);
         for(CollectionEntity coll : collections) {
-            Set<Long> affectedVariantIds = this.getCollectionProductVariantIds(coll.getId());
+            // 先删除关联关系
+            QueryWrapper<ProductVariantCollectionJoinEntity> productVariantCollectionJoinEntityQueryWrapper =
+                    new QueryWrapper<>();
+            productVariantCollectionJoinEntityQueryWrapper.lambda()
+                    .eq(ProductVariantCollectionJoinEntity::getCollectionId, coll.getId());
+            this.productVariantCollectionJoinEntityMapper.delete(productVariantCollectionJoinEntityQueryWrapper);
+
+            QueryWrapper<CollectionAssetJoinEntity> collectionAssetJoinEntityQueryWrapper =
+                    new QueryWrapper<>();
+            collectionAssetJoinEntityQueryWrapper.lambda()
+                    .eq(CollectionAssetJoinEntity::getCollectionId, coll.getId());
+            this.collectionAssetJoinEntityMapper.delete(collectionAssetJoinEntityQueryWrapper);
+
+            // 再删除Collection实体
             this.collectionEntityMapper.deleteById(coll.getId());
+            Set<Long> affectedVariantIds = this.getCollectionProductVariantIds(coll.getId());
             CollectionModificationEvent event =
                     new CollectionModificationEvent(ctx, collectionEntity, affectedVariantIds);
             this.eventBus.post(event);

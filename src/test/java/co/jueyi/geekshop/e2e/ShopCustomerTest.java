@@ -70,6 +70,9 @@ public class ShopCustomerTest {
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "update_password");
 
     @Autowired
+    TestHelper testHelper;
+
+    @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
 
@@ -94,8 +97,8 @@ public class ShopCustomerTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(2).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-full.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-full.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();

@@ -57,6 +57,8 @@ public class RoleTest {
     static final String DELETE_ROLE =
             String.format(ADMIN_ROLE_GRAPHQL_RESOURCE_TEMPLATE, "delete_role");
 
+    @Autowired
+    TestHelper testHelper;
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
@@ -74,8 +76,8 @@ public class RoleTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(1).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-minimal.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();

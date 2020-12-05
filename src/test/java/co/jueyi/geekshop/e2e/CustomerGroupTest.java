@@ -69,6 +69,9 @@ public class CustomerGroupTest {
             String.format(CUSTOMER_GROUP_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer_group");
 
     @Autowired
+    TestHelper testHelper;
+
+    @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
 
@@ -83,8 +86,8 @@ public class CustomerGroupTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(5).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-minimal.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();

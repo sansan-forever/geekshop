@@ -39,6 +39,9 @@ public class ImportTest {
     static final String PRODUCT_IMPORT_CSV_FILE = "src/test/resources/fixtures/product-import.csv";
 
     @Autowired
+    TestHelper testHelper;
+
+    @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
 
@@ -51,8 +54,8 @@ public class ImportTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(0).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-empty.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-empty.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();

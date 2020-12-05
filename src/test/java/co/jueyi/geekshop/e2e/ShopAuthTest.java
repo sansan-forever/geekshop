@@ -79,6 +79,9 @@ public class ShopAuthTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_history");
 
     @Autowired
+    TestHelper testHelper;
+
+    @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
 
@@ -101,8 +104,8 @@ public class ShopAuthTest {
     @BeforeAll
     void beforeAll() throws IOException {
         PopulateOptions populateOptions = PopulateOptions.builder().customerCount(2).build();
-        populateOptions.setInitialData(TestHelper.getInitialData());
-        populateOptions.setProductCsvPath(TestHelper.getTestFixture("e2e-products-minimal.csv"));
+        populateOptions.setInitialData(testHelper.getInitialData());
+        populateOptions.setProductCsvPath(testHelper.getTestFixture("e2e-products-minimal.csv"));
 
         mockDataService.populate(populateOptions);
         adminClient.asSuperAdmin();
