@@ -1,5 +1,5 @@
 query GetProductList($options: ProductListOptions) {
-    adminProducts(options: $options) {
+    products(options: $options) {
         items {
             id
             name
