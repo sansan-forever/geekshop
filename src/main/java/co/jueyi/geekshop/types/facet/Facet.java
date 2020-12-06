@@ -22,6 +22,6 @@ public class Facet implements Node {
     private Date updatedAt;
     private String name;
     private String code;
-    private Boolean visibleToPublic; // admin only
+    private Boolean privateOnly; // admin only
     private List<FacetValue> values = new ArrayList<>();
 }

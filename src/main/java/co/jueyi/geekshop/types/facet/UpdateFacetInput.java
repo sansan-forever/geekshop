@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 public class UpdateFacetInput {
     private Long id;
-    private Boolean visibleToPublic;
+    private Boolean privateOnly;
     private String code;
     private String name;
 }

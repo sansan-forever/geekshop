@@ -17,7 +17,7 @@ import lombok.Data;
 public class FacetFilterParameter {
     private StringOperators name;
     private StringOperators code;
-    private BooleanOperators visibleToPublic;
+    private BooleanOperators privateOnly;
     private DateOperators createdAt;
     private DateOperators updatedAt;
 }

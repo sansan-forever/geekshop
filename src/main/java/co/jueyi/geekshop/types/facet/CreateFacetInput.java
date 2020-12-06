@@ -17,6 +17,6 @@ import java.util.List;
 public class CreateFacetInput {
     private String code;
     private String name;
-    private Boolean visibleToPublic;
+    private Boolean privateOnly;
     private List<CreateFacetValueWithFacetInput> values = new ArrayList<>();
 }

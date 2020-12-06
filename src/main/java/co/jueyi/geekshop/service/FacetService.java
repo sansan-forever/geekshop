@@ -69,7 +69,7 @@ public class FacetService {
         QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getCode(), "code");
         QueryHelper.buildOneStringOperatorFilter(queryWrapper, filterParameter.getName(), "name");
         QueryHelper.buildOneBooleanOperatorFilter(
-                queryWrapper, filterParameter.getVisibleToPublic(), "visible_to_public");
+                queryWrapper, filterParameter.getPrivateOnly(), "private_only");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getCreatedAt(), "created_at");
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
     }

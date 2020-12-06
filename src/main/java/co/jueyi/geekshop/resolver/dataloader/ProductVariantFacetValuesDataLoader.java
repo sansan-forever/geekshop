@@ -68,7 +68,7 @@ public class ProductVariantFacetValuesDataLoader implements MappedBatchLoaderWit
                 facetValueEntities = facetValueEntities.stream()
                         .filter(facetValueEntity -> {
                             FacetEntity facetEntity = facetEntityMap.get(facetValueEntity.getFacetId());
-                            if (facetEntity.isVisibleToPublic()) return true;
+                            if (!facetEntity.isPrivateOnly()) return true;
                             return false;
                         }).collect(Collectors.toList());
             }

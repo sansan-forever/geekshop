@@ -164,7 +164,7 @@ create table tb_facet (
      id bigint not null auto_increment,
      name varchar(50) not null,
      code varchar(50) not null,
-     visible_to_public boolean,
+     private_only boolean,
      created_by varchar(50),
      created_at datetime,
      updated_by varchar(50),

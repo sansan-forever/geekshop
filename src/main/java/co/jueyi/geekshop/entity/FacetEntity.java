@@ -27,6 +27,6 @@ import lombok.EqualsAndHashCode;
 public class FacetEntity extends BaseEntity {
     private String name;
     private String code;
-    private boolean visibleToPublic; // private
+    private boolean privateOnly; // private
 
 }

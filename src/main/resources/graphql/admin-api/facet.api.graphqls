@@ -32,14 +32,14 @@ input FacetListOptions {
 
 input CreateFacetInput {
     code: String!
-    visibleToPublic: Boolean!
+    privateOnly: Boolean!
     name: String!
     values: [CreateFacetValueWithFacetInput!]
 }
 
 input UpdateFacetInput {
     id: ID!
-    visibleToPublic: Boolean
+    privateOnly: Boolean
     code: String
     name: String
 }
@@ -72,7 +72,7 @@ input FacetSortParameter {
 input FacetFilterParameter {
     name: StringOperators
     code: StringOperators
-    visibleToPublic: BooleanOperators # admin only
+    privateOnly: BooleanOperators # admin only
     createdAt: DateOperators
     updatedAt: DateOperators
 }

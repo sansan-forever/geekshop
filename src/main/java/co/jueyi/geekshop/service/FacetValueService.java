@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -108,6 +109,9 @@ public class FacetValueService {
      * Checks for usage of the given FacetValues in any Products or Variants, and returns the counts.
      */
     FacetValueUsage checkFacetValueUsage(List<Long> facetValueIds) {
+        if (CollectionUtils.isEmpty(facetValueIds))
+            return FacetValueUsage.builder().productCount(0).variantCount(0).build();
+
         QueryWrapper<ProductFacetValueJoinEntity> productFacetValueJoinEntityQueryWrapper = new QueryWrapper<>();
         productFacetValueJoinEntityQueryWrapper.lambda().
                 in(ProductFacetValueJoinEntity::getFacetValueId, facetValueIds);

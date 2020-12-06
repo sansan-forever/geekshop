@@ -169,7 +169,7 @@ public class Importer {
                     facetEntity = existing;
                 } else {
                     CreateFacetInput createFacetInput = new CreateFacetInput();
-                    createFacetInput.setVisibleToPublic(true);
+                    createFacetInput.setPrivateOnly(false);
                     createFacetInput.setCode(NormalizeUtil.normalizeString(facetName, "-"));
                     createFacetInput.setName(facetName);
                     facetEntity = this.facetService.create(createFacetInput);
