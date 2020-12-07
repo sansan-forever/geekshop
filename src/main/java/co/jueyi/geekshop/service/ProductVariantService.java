@@ -15,6 +15,7 @@ import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.service.helper.PageInfo;
 import co.jueyi.geekshop.service.helper.QueryHelper;
 import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.types.collection.Collection;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.product.*;
@@ -403,7 +404,7 @@ public class ProductVariantService {
         variantOptionsMap.forEach((variantId, options) -> {
             String variantOptionIds = options.stream().map(option -> option.getId().toString())
                     .sorted().collect(Collectors.joining(","));
-            if (!variantOptionIds.equals(inputOptionIds)) {
+            if (variantOptionIds.equals(inputOptionIds)) {
                 String optionNames = options.stream().map(ProductOptionEntity::getCode).sorted()
                         .collect(Collectors.joining(", "));
                 String errorMessage = "A ProductVariant already exists with the options: " +
@@ -421,6 +422,7 @@ public class ProductVariantService {
                 this.productVariantEntityMapper.selectList(productVariantEntityQueryWrapper);
         List<Long> productVariantIds = variantEntities.stream().map(ProductVariantEntity::getId).distinct()
                 .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(productVariantIds)) return new HashMap<>();
 
         QueryWrapper<ProductVariantProductOptionJoinEntity> productVariantProductOptionJoinEntityQueryWrapper =
                 new QueryWrapper<>();
@@ -429,6 +431,7 @@ public class ProductVariantService {
         List<ProductVariantProductOptionJoinEntity> productVariantProductOptionJoinEntities =
                 this.productVariantProductOptionJoinEntityMapper
                         .selectList(productVariantProductOptionJoinEntityQueryWrapper);
+        if (CollectionUtils.isEmpty(productVariantProductOptionJoinEntities)) return new HashMap<>();
 
 
         List<Long> productOptionIds = productVariantProductOptionJoinEntities.stream()

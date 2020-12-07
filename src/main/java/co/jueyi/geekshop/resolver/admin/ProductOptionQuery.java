@@ -36,7 +36,7 @@ public class ProductOptionQuery implements GraphQLQueryResolver {
     }
 
     @Allow(Permission.ReadCatalog)
-    public ProductOptionGroup productOptionGroup(Long id) {
+    public ProductOptionGroup productOptionGroup(Long id, DataFetchingEnvironment dfe) {
         ProductOptionGroupEntity productOptionGroupEntity = this.productOptionGroupService.findOne(id);
         if (productOptionGroupEntity == null) return null;
         return BeanMapper.map(productOptionGroupEntity, ProductOptionGroup.class);

@@ -129,7 +129,7 @@ public class ProductService {
 
     public ProductEntity create(RequestContext ctx, CreateProductInput input) {
         if (input.getSlug() != null) {
-            String validatedSlug = this.validateSlug(input.getSlug());
+            String validatedSlug = this.validateSlug(input.getSlug(), null);
             input.setSlug(validatedSlug);
         }
 
@@ -156,6 +156,10 @@ public class ProductService {
     }
 
     public ProductEntity update(RequestContext ctx, UpdateProductInput input) {
+        if (input.getSlug() != null) {
+            String validatedSlug = this.validateSlug(input.getSlug(), input.getId());
+            input.setSlug(validatedSlug);
+        }
         ProductEntity existingProductEntity =
                 ServiceHelper.getEntityOrThrow(this.productEntityMapper, ProductEntity.class, input.getId());
 
@@ -291,13 +295,16 @@ public class ProductService {
      * Normalizes the slug to be URL-safe, and ensure it is unique for the product.
      * Mutates the input.
      */
-    private String validateSlug(String inputStug) {
-        String slug = NormalizeUtil.normalizeString(inputStug, "-");
+    private String validateSlug(String inputSlug, Long selfProductId) {
+        String slug = NormalizeUtil.normalizeString(inputSlug, "-");
         int suffix = 1;
         boolean match = false;
         do {
             QueryWrapper<ProductEntity> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(ProductEntity::getSlug, slug);
+            if (selfProductId != null) {
+                queryWrapper.lambda().ne(ProductEntity::getId, selfProductId);
+            }
             match = this.productEntityMapper.selectCount(queryWrapper) > 0;
             if (match) {
                 suffix++;

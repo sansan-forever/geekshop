@@ -10,6 +10,8 @@ import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.types.asset.Asset;
 import co.jueyi.geekshop.types.asset.AssetList;
 import co.jueyi.geekshop.types.asset.AssetType;
+import co.jueyi.geekshop.types.common.DeletionResponse;
+import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.common.SortOrder;
 import co.jueyi.geekshop.types.common.StringOperators;
 import co.jueyi.geekshop.types.facet.FacetValue;
@@ -26,6 +28,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,10 +62,24 @@ public class ProductTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_asset_list");
     static final String UPDATE_PRODUCT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product");
+    static final String CREATE_PRODUCT_VARIANTS =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_product_variants");
+    static final String UPDATE_PRODUCT_VARIANTS =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product_variants");
+    static final String DELETE_PRODUCT_VARIANT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "delete_product_variant");
+    static final String DELETE_PRODUCT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "delete_product");
 
     static final String PRODUCT_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/product/%s.graphqls";
     static final String GET_PRODUCT_VARIANT =
             String.format(PRODUCT_GRAPHQL_RESOURCE_TEMPLATE, "get_product_variant");
+    static final String ADD_OPTION_GROUP_TO_PRODUCT =
+            String.format(PRODUCT_GRAPHQL_RESOURCE_TEMPLATE, "add_option_group_to_product");
+    static final String REMOVE_OPTION_GROUP_FROM_PRODUCT =
+            String.format(PRODUCT_GRAPHQL_RESOURCE_TEMPLATE, "remove_option_group_from_product");
+    static final String GET_OPTION_GROUP =
+            String.format(PRODUCT_GRAPHQL_RESOURCE_TEMPLATE, "get_option_group");
 
     @Autowired
     TestHelper testHelper;
@@ -517,5 +534,782 @@ public class ProductTest {
         assertThat(updatedProduct.getDescription()).isEqualTo(
                 "A blob of mashed potato"
         );
+    }
+
+    @Test
+    @Order(20)
+    public void slug_is_normalized_to_be_url_safe() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setName("en Mashed Potato");
+        updateProductInput.setSlug("A (very) nice potato!!");
+        updateProductInput.setDescription("A blob of mashed potato");
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+        assertThat(updatedProduct.getSlug()).isEqualTo("a-very-nice-potato");
+    }
+
+    @Test
+    @Order(21)
+    public void create_with_duplicate_slug_is_renamed_to_be_unique() throws IOException {
+        CreateProductInput createProductInput = new CreateProductInput();
+        createProductInput.setName("Another baked potato");
+        createProductInput.setSlug("a-very-nice-potato");
+        createProductInput.setDescription("Another baked potato but a bit different");
+
+        JsonNode inputNode = objectMapper.valueToTree(createProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(CREATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product createdProduct = graphQLResponse.get("$.data.createProduct", Product.class);
+        assertThat(createdProduct.getSlug()).isEqualTo("a-very-nice-potato-2");
+    }
+
+    @Test
+    @Order(22)
+    public void update_with_duplicate_slug_is_renamed_to_be_unique() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setName("Yet another baked potato");
+        updateProductInput.setSlug("a-very-nice-potato-2");
+        updateProductInput.setDescription("Possibly the final baked potato");
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+        assertThat(updatedProduct.getSlug()).isEqualTo("a-very-nice-potato-3");
+    }
+
+    @Test
+    @Order(23)
+    public void slug_duplicate_check_does_not_include_self() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setSlug("a-very-nice-potato-3");
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+        assertThat(updatedProduct.getSlug()).isEqualTo("a-very-nice-potato-3");
+    }
+
+    @Test
+    @Order(24)
+    public void updateProduct_accepts_partial_input() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setName("en Very Mashed Potato");
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+        assertThat(updatedProduct.getName()).isEqualTo("en Very Mashed Potato");
+        assertThat(updatedProduct.getDescription()).isEqualTo("Possibly the final baked potato");
+    }
+
+    @Test
+    @Order(25)
+    public void updateProduct_adds_Assets_to_a_product_and_sets_featured_asset() throws IOException {
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ASSET_LIST, null, Arrays.asList(ASSET_FRAGMENT));
+        AssetList assetList = graphQLResponse.get("$.data.assets", AssetList.class);
+        List<Long> assetIds = assetList.getItems().stream()
+                .map(Asset::getId).collect(Collectors.toList());
+        Long featuredAssetId = assetList.getItems().get(2).getId();
+
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setAssetIds(assetIds);
+        updateProductInput.setFeaturedAssetId(featuredAssetId);
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+
+        assertThat(updatedProduct.getAssets().stream().map(Asset::getId).collect(Collectors.toList()))
+                .containsExactly(assetIds.toArray(new Long[0]));
+        assertThat(updatedProduct.getFeaturedAsset().getId()).isEqualTo(featuredAssetId);
+    }
+
+    @Test
+    @Order(26)
+    public void updateProduct_sets_a_featured_asset() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", newProduct.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+
+        List<Asset> assets = product.getAssets();
+
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setFeaturedAssetId(assets.get(0).getId());
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+
+        assertThat(updatedProduct.getFeaturedAsset().getId()).isEqualTo(assets.get(0).getId());
+    }
+
+    @Test
+    @Order(27)
+    public void updateProduct_updates_assets() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.setFeaturedAssetId(1L);
+        updateProductInput.getAssetIds().addAll(Arrays.asList(1L, 2L));
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+
+        assertThat(updatedProduct.getAssets().stream().map(Asset::getId).collect(Collectors.toList()))
+                .containsExactly(1L, 2L);
+    }
+
+    @Test
+    @Order(28)
+    public void updateProduct_updates_FacetValues() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(newProduct.getId());
+        updateProductInput.getFacetValueIds().add(1L);
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_PRODUCT, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product updatedProduct = graphQLResponse.get("$.data.updateProduct", Product.class);
+
+        assertThat(updatedProduct.getFacetValues().stream().map(FacetValue::getId).collect(Collectors.toList()))
+                .containsExactly(1L);
+    }
+
+    @Test
+    @Order(29)
+    public void updateProduct_errors_with_an_invalid_productId() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(999L);
+        updateProductInput.setName("en Mashed Potato");
+        updateProductInput.setSlug("en-mashed-potato");
+        updateProductInput.setDescription("A blob of mashed potato");
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(UPDATE_PRODUCT, variables,
+                    Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo("No ProductEntity with the id '999' could be found");
+        }
+    }
+
+    @Test
+    @Order(30)
+    public void addOptionGroupToProduct_adds_an_option_group() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", newProduct.getId());
+        variables.put("optionGroupId", 2L);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+        Product product = graphQLResponse.get("$.data.addOptionGroupToProduct", Product.class);
+        assertThat(product.getOptionGroups()).hasSize(1);
+        assertThat(product.getOptionGroups().get(0).getId()).isEqualTo(2L);
+    }
+
+    @Test
+    @Order(31)
+    public void addOptionGroupToProduct_errors_with_an_invalid_productId() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", 999);
+        variables.put("optionGroupId", 1L);
+
+        try {
+            adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo("No ProductEntity with the id '999' could be found");
+        }
+    }
+
+    @Test
+    @Order(32)
+    public void addOptionGroupToProduct_errors_with_an_invalid_optionGroupId() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", newProduct.getId());
+        variables.put("optionGroupId", 999L);
+
+        try {
+            adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "No ProductOptionGroupEntity with the id '999' could be found");
+        }
+    }
+
+    @Test
+    @Order(33)
+    public void removeOptionGroupFromProduct_removes_an_option_group() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", newProductWithAssets.getId());
+        variables.put("optionGroupId", 1L);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+        Product product = graphQLResponse.get("$.data.addOptionGroupToProduct", Product.class);
+        assertThat(product.getOptionGroups()).hasSize(1);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("productId", newProductWithAssets.getId());
+        variables.put("optionGroupId", 1L);
+
+        graphQLResponse = adminClient.perform(REMOVE_OPTION_GROUP_FROM_PRODUCT, variables);
+        product = graphQLResponse.get("$.data.removeOptionGroupFromProduct", Product.class);
+        assertThat(product.getId()).isEqualTo(newProductWithAssets.getId());
+        assertThat(product.getOptionGroups()).isEmpty();
+    }
+
+    @Test
+    @Order(34)
+    public void removeOptionGroupFromProduct_errors_if_the_optionGroup_is_being_used_by_variants() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", 2L);
+        variables.put("optionGroupId", 3L);
+
+        try {
+            adminClient.perform(REMOVE_OPTION_GROUP_FROM_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Cannot remove ProductOptionGroup \"{ curvy-monitor-monitor-size }\" as it is used by" +
+                            " { 2 } ProductVariant(s)"
+            );
+        }
+    }
+
+    @Test
+    @Order(35)
+    public void removeOptionGroupFromProduct_errors_with_an_invalid_productId() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", 999L);
+        variables.put("optionGroupId", 1L);
+
+        try {
+            adminClient.perform(REMOVE_OPTION_GROUP_FROM_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo("No ProductEntity with the id '999' could be found");
+        }
+    }
+
+    @Test
+    @Order(36)
+    public void removeOptionGroupFromProduct_errors_with_an_invalid_optionGroupId() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", newProduct.getId());
+        variables.put("optionGroupId", 999L);
+
+        try {
+            adminClient.perform(REMOVE_OPTION_GROUP_FROM_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "No ProductOptionGroupEntity with the id '999' could be found");
+        }
+    }
+
+    /**
+     * variants
+     */
+    List<ProductVariant> variants;
+    ProductOptionGroup optionGroup2;
+    ProductOptionGroup optionGroup3;
+
+    private void before_test_37() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", newProduct.getId());
+        variables.put("optionGroupId", 3L);
+
+        adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_OPTION_GROUP, variables);
+        optionGroup2 = graphQLResponse.get("$.data.productOptionGroup", ProductOptionGroup.class);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 3L);
+
+        graphQLResponse = adminClient.perform(GET_OPTION_GROUP, variables);
+        optionGroup3 = graphQLResponse.get("$.data.productOptionGroup", ProductOptionGroup.class);
+    }
+
+    @Test
+    @Order(37)
+    public void createProductVariants_throws_if_optionIds_not_compatible_with_product() throws IOException {
+        before_test_37();
+
+        CreateProductVariantInput createProductVariantInput = new CreateProductVariantInput();
+        createProductVariantInput.setProductId(newProduct.getId());
+        createProductVariantInput.setSku("PV1");
+        createProductVariantInput.setName("Variant 1");
+
+        JsonNode inputNode = objectMapper.valueToTree(Arrays.asList(createProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                  "ProductVariant optionIds must include one optionId " +
+                          "from each of the groups: { curvy-monitor-monitor-size, laptop-ram }"
+            );
+        }
+    }
+
+    @Test
+    @Order(38)
+    public void createProductVariants_throws_if_optionIds_are_duplicated() throws IOException {
+        CreateProductVariantInput createProductVariantInput = new CreateProductVariantInput();
+        createProductVariantInput.setProductId(newProduct.getId());
+        createProductVariantInput.setSku("PV1");
+        createProductVariantInput.getOptionIds().addAll(
+                Arrays.asList(optionGroup2.getOptions().get(0).getId(), optionGroup2.getOptions().get(1).getId()));
+        createProductVariantInput.setName("Variant 1");
+
+        JsonNode inputNode = objectMapper.valueToTree(Arrays.asList(createProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "ProductVariant optionIds must include one optionId " +
+                            "from each of the groups: { curvy-monitor-monitor-size, laptop-ram }"
+            );
+        }
+    }
+
+    @Test
+    @Order(39)
+    public void createProductVariants_works() throws IOException {
+        CreateProductVariantInput createProductVariantInput = new CreateProductVariantInput();
+        createProductVariantInput.setProductId(newProduct.getId());
+        createProductVariantInput.setSku("PV1");
+        createProductVariantInput.getOptionIds().addAll(
+                Arrays.asList(optionGroup2.getOptions().get(0).getId(), optionGroup3.getOptions().get(0).getId()));
+        createProductVariantInput.setName("Variant 1");
+
+        JsonNode inputNode = objectMapper.valueToTree(Arrays.asList(createProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> createdProductVariants =
+                graphQLResponse.getList("$.data.createProductVariants", ProductVariant.class);
+        assertThat(createdProductVariants.get(0).getName()).isEqualTo("Variant 1");
+        assertThat(createdProductVariants.get(0).getOptions().stream().map(ProductOption::getId)
+                .collect(Collectors.toList()))
+                .containsExactly(optionGroup2.getOptions().get(0).getId(), optionGroup3.getOptions().get(0).getId());
+
+    }
+
+    @Test
+    @Order(40)
+    public void createProductVariants_adds_multiple_variants_at_once() throws IOException {
+        CreateProductVariantInput createProductVariantInput1 = new CreateProductVariantInput();
+        createProductVariantInput1.setProductId(newProduct.getId());
+        createProductVariantInput1.setSku("PV2");
+        createProductVariantInput1.getOptionIds().addAll(
+                Arrays.asList(optionGroup2.getOptions().get(1).getId(), optionGroup3.getOptions().get(0).getId()));
+        createProductVariantInput1.setName("Variant 2");
+
+        CreateProductVariantInput createProductVariantInput2 = new CreateProductVariantInput();
+        createProductVariantInput2.setProductId(newProduct.getId());
+        createProductVariantInput2.setSku("PV3");
+        createProductVariantInput2.getOptionIds().addAll(
+                Arrays.asList(optionGroup2.getOptions().get(1).getId(), optionGroup3.getOptions().get(1).getId()));
+        createProductVariantInput2.setName("Variant 3");
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(createProductVariantInput1, createProductVariantInput2));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> createdProductVariants =
+                graphQLResponse.getList("$.data.createProductVariants", ProductVariant.class);
+        ProductVariant variant2 = createdProductVariants.stream().filter(v -> Objects.equals("Variant 2", v.getName()))
+                .findFirst().get();
+        ProductVariant variant3 = createdProductVariants.stream().filter(v -> Objects.equals("Variant 3", v.getName()))
+                .findFirst().get();
+        assertThat(variant2.getOptions().stream().map(ProductOption::getId).collect(Collectors.toList()))
+                .containsExactly(optionGroup2.getOptions().get(1).getId(), optionGroup3.getOptions().get(0).getId());
+        assertThat(variant3.getOptions().stream().map(ProductOption::getId).collect(Collectors.toList()))
+                .containsExactly(optionGroup2.getOptions().get(1).getId(), optionGroup3.getOptions().get(1).getId());
+
+        variants = createdProductVariants.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    @Test
+    @Order(41)
+    public void createProductVariants_throws_if_options_combination_already_exists() throws IOException {
+        CreateProductVariantInput createProductVariantInput = new CreateProductVariantInput();
+        createProductVariantInput.setProductId(newProduct.getId());
+        createProductVariantInput.setSku("PV2");
+        createProductVariantInput.getOptionIds().addAll(
+                Arrays.asList(optionGroup2.getOptions().get(0).getId(), optionGroup3.getOptions().get(0).getId()));
+        createProductVariantInput.setName("Variant 2");
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(createProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "A ProductVariant already exists with the options: { 24-inch, 8gb }"
+            );
+        }
+    }
+
+    @Test
+    @Order(42)
+    public void updateProductVariants_updates_variants() throws IOException {
+        ProductVariant firstVariant = variants.get(0);
+
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(firstVariant.getId());
+        updateProductVariantInput.setSku("ABC");
+        updateProductVariantInput.setPrice(432);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> updatedProductVariants =
+                graphQLResponse.getList("$.data.updateProductVariants", ProductVariant.class);
+        ProductVariant updatedVariant = updatedProductVariants.get(0);
+        assertThat(updatedVariant.getSku()).isEqualTo("ABC");
+        assertThat(updatedVariant.getPrice()).isEqualTo(432);
+    }
+
+    @Test
+    @Order(43)
+    public void updateProductVariants_updates_assets() throws IOException {
+        ProductVariant firstVariant = variants.get(0);
+
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(firstVariant.getId());
+        updateProductVariantInput.getAssetIds().addAll(Arrays.asList(1L, 2L));
+        updateProductVariantInput.setFeaturedAssetId(2L);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> updatedProductVariants =
+                graphQLResponse.getList("$.data.updateProductVariants", ProductVariant.class);
+        ProductVariant updatedVariant = updatedProductVariants.get(0);
+        assertThat(updatedVariant.getAssets().stream().map(Asset::getId).collect(Collectors.toList()))
+                .containsExactly(1L, 2L);
+        assertThat(updatedVariant.getFeaturedAsset().getId()).isEqualTo(2L);
+    }
+
+    @Test
+    @Order(44)
+    public void updateProductVariants_updates_assets_again() throws IOException {
+        ProductVariant firstVariant = variants.get(0);
+
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(firstVariant.getId());
+        updateProductVariantInput.getAssetIds().addAll(Arrays.asList(4L, 3L));
+        updateProductVariantInput.setFeaturedAssetId(4L);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> updatedProductVariants =
+                graphQLResponse.getList("$.data.updateProductVariants", ProductVariant.class);
+        ProductVariant updatedVariant = updatedProductVariants.get(0);
+        assertThat(updatedVariant.getAssets().stream().map(Asset::getId).collect(Collectors.toList()))
+                .containsExactly(3L, 4L);
+        assertThat(updatedVariant.getFeaturedAsset().getId()).isEqualTo(4L);
+    }
+
+    @Test
+    @Order(45)
+    public void updateProductVariants_updates_facetValues() throws IOException {
+        ProductVariant firstVariant = variants.get(0);
+
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(firstVariant.getId());
+        updateProductVariantInput.getFacetValueIds().add(1L);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> updatedProductVariants =
+                graphQLResponse.getList("$.data.updateProductVariants", ProductVariant.class);
+        ProductVariant updatedVariant = updatedProductVariants.get(0);
+        assertThat(updatedVariant.getFacetValues()).hasSize(1);
+        assertThat(updatedVariant.getFacetValues().get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @Order(46)
+    public void updateProductVariants_throws_with_an_invalid_variant_id() throws IOException {
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(999L);
+        updateProductVariantInput.setSku("ABC");
+        updateProductVariantInput.setPrice(432);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                    Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "No ProductVariantEntity with the id '999' could be found"
+            );
+        }
+    }
+
+    ProductVariant deletedVariant;
+
+    @Test
+    @Order(47)
+    public void deleteProductVariant() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", newProduct.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product product1 = graphQLResponse.get("$.data.adminProduct", Product.class);
+        List<Long> sortedVariantIds = product1.getVariants().stream()
+                .map(ProductVariant::getId).sorted().collect(Collectors.toList());
+        assertThat(sortedVariantIds).containsExactly(35L, 36L, 37L);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", sortedVariantIds.get(0));
+        graphQLResponse = adminClient.perform(DELETE_PRODUCT_VARIANT, variables);
+        DeletionResponse deletionResponse =
+                graphQLResponse.get("$.data.deleteProductVariant", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", newProduct.getId());
+
+        graphQLResponse = adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product product2 = graphQLResponse.get("$.data.adminProduct", Product.class);
+        sortedVariantIds = product2.getVariants().stream()
+                .map(ProductVariant::getId).sorted().collect(Collectors.toList());
+        assertThat(sortedVariantIds).containsExactly(36L, 37L);
+
+        deletedVariant = product1.getVariants().stream().filter(v -> Objects.equals(v.getId(), 35L))
+                .findFirst().get();
+    }
+
+    @Test
+    @Order(48)
+    public void createProductVariants_ignores_deleted_variants_when_checking_for_existing_combinations()
+            throws IOException {
+        CreateProductVariantInput createProductVariantInput = new CreateProductVariantInput();
+        createProductVariantInput.setProductId(newProduct.getId());
+        createProductVariantInput.setSku("RE1");
+        createProductVariantInput.getOptionIds().addAll(
+                Arrays.asList(deletedVariant.getOptions().get(0).getId(), deletedVariant.getOptions().get(1).getId()));
+        createProductVariantInput.setName("Re-created Variant");
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(createProductVariantInput));
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = this.adminClient.perform(CREATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> createdProductVariants =
+                graphQLResponse.getList("$.data.createProductVariants", ProductVariant.class);
+        assertThat(createdProductVariants).hasSize(1);
+        assertThat(createdProductVariants.get(0).getOptions().stream().map(
+                o -> o.getCode()).collect(Collectors.toList())).containsExactly(deletedVariant.getOptions()
+                        .stream().map(o-> o.getCode()).collect(Collectors.toList()).toArray(new String[0]));
+    }
+
+    /**
+     * deletion
+     */
+    List<Product> allProducts;
+    Product productToDelete;
+
+    private void before_test_49() throws IOException {
+        ProductListOptions options = new ProductListOptions();
+
+        ProductSortParameter sortParameter = new ProductSortParameter();
+        sortParameter.setId(SortOrder.ASC);
+
+        options.setSort(sortParameter);
+
+        JsonNode optionsNode = objectMapper.valueToTree(options);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("options", optionsNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_LIST, variables);
+
+        ProductList productList = graphQLResponse.get("$.data.adminProducts", ProductList.class);
+        allProducts = productList.getItems();
+    }
+
+    @Test
+    @Order(49)
+    public void deletes_a_product() throws IOException {
+        before_test_49();
+
+        productToDelete = allProducts.get(0);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", productToDelete.getId());
+        GraphQLResponse graphQLResponse = adminClient.perform(DELETE_PRODUCT, variables);
+        DeletionResponse deletionResponse = graphQLResponse.get("$.data.deleteProduct", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+    }
+
+    @Test
+    @Order(50)
+    public void cannot_get_a_deleted_product() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", productToDelete.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        assertThat(product).isNull();
+    }
+
+    @Test
+    @Order(51)
+    public void deleted_product_omitted_from_lsit() throws IOException {
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_LIST, null);
+
+        ProductList productList = graphQLResponse.get("$.data.adminProducts", ProductList.class);
+
+        assertThat(productList.getItems()).hasSize(allProducts.size() - 1);
+        assertThat(productList.getItems().stream()
+                .map(c -> c.getId()).anyMatch(id -> Objects.equals(id, productToDelete.getId()))).isFalse();
+    }
+
+    @Test
+    @Order(52)
+    public void updateProduct_throws_for_deleted_product() throws IOException {
+        UpdateProductInput updateProductInput = new UpdateProductInput();
+        updateProductInput.setId(productToDelete.getId());
+        updateProductInput.getFacetValueIds().add(1L);
+
+        JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+       try {
+           adminClient.perform(UPDATE_PRODUCT, variables,
+                   Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+       } catch (ApiException apiEx) {
+           assertThat(apiEx.getErrorMessage()).isEqualTo(
+                  "No ProductEntity with the id '1' could be found"
+           );
+       }
+    }
+
+    @Test
+    @Order(53)
+    public void addOptionGroupToProduct_throws_for_deleted_product() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", productToDelete.getId());
+        variables.put("optionGroupId", 1L);
+
+        try{
+            adminClient.perform(ADD_OPTION_GROUP_TO_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                 "No ProductEntity with the id '1' could be found"
+            );
+        }
+    }
+
+    @Test
+    @Order(54)
+    public void removeOptionGroupFromProduct_throws_for_deleted_product() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productId", productToDelete.getId());
+        variables.put("optionGroupId", 1L);
+
+        try{
+            adminClient.perform(REMOVE_OPTION_GROUP_FROM_PRODUCT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "No ProductEntity with the id '1' could be found"
+            );
+        }
     }
 }

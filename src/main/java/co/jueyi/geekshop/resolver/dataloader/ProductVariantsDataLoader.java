@@ -35,7 +35,9 @@ public class ProductVariantsDataLoader implements MappedBatchLoaderWithContext<L
             Set<Long> productIds, BatchLoaderEnvironment environment) {
         return CompletableFuture.supplyAsync(() -> {
             QueryWrapper<ProductVariantEntity> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().in(ProductVariantEntity::getProductId, productIds);
+            queryWrapper.lambda().in(ProductVariantEntity::getProductId, productIds)
+                    .isNull(ProductVariantEntity::getDeletedAt) // 没有软删除的
+                    .orderByAsc(ProductVariantEntity::getId);
             List<ProductVariantEntity> variantEntities = productVariantEntityMapper.selectList(queryWrapper);
 
             if (variantEntities.size() == 0) {
