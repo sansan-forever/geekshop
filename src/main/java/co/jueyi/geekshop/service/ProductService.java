@@ -164,6 +164,7 @@ public class ProductService {
             ServiceHelper.getEntityOrThrow(assetEntityMapper, AssetEntity.class, input.getFeaturedAssetId());
         }
 
+        BeanMapper.patch(input, existingProductEntity);
         this.productEntityMapper.updateById(existingProductEntity);
 
         if (!CollectionUtils.isEmpty(input.getFacetValueIds())) {
@@ -267,7 +268,7 @@ public class ProductService {
 
     private void joinProductWithAsset(List<Long> assetIds, Long productId) {
         QueryWrapper<AssetEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().in(AssetEntity::getId, productId)
+        queryWrapper.lambda().in(AssetEntity::getId, assetIds)
                 .select(AssetEntity::getId);
         List<Long> validAssetIds = this.assetEntityMapper.selectList(queryWrapper)
                 .stream().map(AssetEntity::getId).collect(Collectors.toList());

@@ -64,7 +64,7 @@ input ProductFilterParameter {
 }
 
 input CreateProductInput {
-    featruedAssetId: ID
+    featuredAssetId: ID
     assetIds: [ID!]
     facetValueIds: [ID!]
     name: String
