@@ -75,7 +75,7 @@ public class ProductVariantService {
     public ProductVariantList getVariantsByCollectionId(Long collectionId, ProductVariantListOptions options) {
         ProductVariantList variantList = new ProductVariantList();
 
-        List<Long> variantIds = getAvailableProductVariantIds(collectionId);
+        List<Long> variantIds = getAvailableProductVariantIds(collectionId, options);
         if (CollectionUtils.isEmpty(variantIds)) {
             variantList.setTotalItems(0);
             return variantList;
@@ -131,7 +131,7 @@ public class ProductVariantService {
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
     }
 
-    private List<Long> getAvailableProductVariantIds(Long collectionId) {
+    private List<Long> getAvailableProductVariantIds(Long collectionId, ProductVariantListOptions options) {
         QueryWrapper<ProductVariantCollectionJoinEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ProductVariantCollectionJoinEntity::getCollectionId, collectionId);
         List<ProductVariantCollectionJoinEntity> joinEntities =
@@ -153,16 +153,20 @@ public class ProductVariantService {
         List<Long> productIds = variants.stream().map(ProductVariantEntity::getProductId)
                 .collect(Collectors.toList());
         QueryWrapper<ProductEntity> productEntityQueryWrapper = new QueryWrapper<>();
-        // 查找已经删除的Product
+        // 查找已经删除(或不enabled)的Product
         productEntityQueryWrapper.lambda().in(ProductEntity::getId, productIds)
                 .isNotNull(ProductEntity::getDeletedAt).select(ProductEntity::getId);
-        List<ProductEntity> deletedProducts = this.productEntityMapper.selectList(productEntityQueryWrapper);
+        if (options != null && options.getFilter() != null && options.getFilter().getEnabled() != null &&
+            options.getFilter().getEnabled().getEq()) {
+            productEntityQueryWrapper.lambda().or().eq(ProductEntity::isEnabled, false);
+        }
+        List<ProductEntity> notAvailableProducts = this.productEntityMapper.selectList(productEntityQueryWrapper);
         List<Long> availableVariantIds = null;
-        if (!CollectionUtils.isEmpty(deletedProducts)) {
-            Set<Long> deletedProductIds =
-                    deletedProducts.stream().map(ProductEntity::getId).collect(Collectors.toSet());
+        if (!CollectionUtils.isEmpty(notAvailableProducts)) {
+            Set<Long> notAvailableProductIds =
+                    notAvailableProducts.stream().map(ProductEntity::getId).collect(Collectors.toSet());
             availableVariantIds = variants.stream()
-                    .filter(variant -> !deletedProductIds.contains(variant.getProductId()))
+                    .filter(variant -> !notAvailableProductIds.contains(variant.getProductId()))
                     .map(ProductVariantEntity::getId).collect(Collectors.toList());
         } else {
             availableVariantIds = variants.stream()

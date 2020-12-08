@@ -73,6 +73,8 @@ public class ProductVariantFacetValuesDataLoader implements MappedBatchLoaderWit
                         }).collect(Collectors.toList());
             }
 
+            if (CollectionUtils.isEmpty(facetValueEntities)) return variantFacetValuesMap;
+
             Map<Long, FacetValueEntity> facetValueEntityMap = facetValueEntities.stream()
                     .collect(toMap(FacetValueEntity::getId, facetValueEntity -> facetValueEntity));
 

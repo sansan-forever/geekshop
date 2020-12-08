@@ -29,7 +29,7 @@ import java.util.Objects;
  */
 @Component
 @RequiredArgsConstructor
-public class ShopProductQuery implements GraphQLQueryResolver {
+public class ShopProductsQuery implements GraphQLQueryResolver {
     private final ProductService productService;
     private final CollectionService collectionService;
 
@@ -72,7 +72,7 @@ public class ShopProductQuery implements GraphQLQueryResolver {
         }
         CollectionFilterParameter filter = options.getFilter();
         BooleanOperators booleanOperators = new BooleanOperators();
-        booleanOperators.setEq(true);
+        booleanOperators.setEq(false);
         filter.setPrivateOnly(booleanOperators);
 
         return this.collectionService.findAll(options);
