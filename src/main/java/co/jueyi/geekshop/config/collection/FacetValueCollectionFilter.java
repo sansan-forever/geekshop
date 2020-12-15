@@ -46,7 +46,7 @@ public class FacetValueCollectionFilter extends CollectionFilter {
     }
 
     @Override
-    public Map<String, ConfigArgDefinition> getArgs() {
+    public Map<String, ConfigArgDefinition> getArgSpec() {
         Map<String, ConfigArgDefinition> args = new HashMap<>();
 
         ConfigArgDefinition configArgDefinition = new ConfigArgDefinition();

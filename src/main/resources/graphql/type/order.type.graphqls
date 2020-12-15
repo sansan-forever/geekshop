@@ -21,7 +21,7 @@ type Order implements Node {
     payments: [Payment!]
     fulfillments: [Fulfillment!]
     totalQuantity: Int!
-    "The subTotal is the total of the OrderLines, before order-level promotions and shipping has been applied."
+    "The subTotal is the total of the OrderLines, before order-level promotions and shipping_method has been applied."
     subTotal: Int!
     shipping: Int!
     shippingMethod: ShippingMethod

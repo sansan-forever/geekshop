@@ -10,6 +10,7 @@ import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.custom.security.Allow;
 import co.jueyi.geekshop.entity.AddressEntity;
 import co.jueyi.geekshop.entity.CustomerEntity;
+import co.jueyi.geekshop.entity.CustomerHistoryEntryEntity;
 import co.jueyi.geekshop.service.CustomerService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.common.*;
@@ -95,7 +96,8 @@ public class CustomerMutation implements GraphQLMutationResolver {
     @Allow(Permission.UpdateCustomer)
     public HistoryEntry updateCustomerNode(UpdateCustomerNoteInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
-        return this.customerService.updateCustomerNode(ctx, input);
+        CustomerHistoryEntryEntity customerHistoryEntryEntity = this.customerService.updateCustomerNode(ctx, input);
+        return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
     }
 
     @Allow(Permission.UpdateCustomer)

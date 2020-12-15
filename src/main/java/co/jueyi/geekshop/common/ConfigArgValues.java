@@ -33,6 +33,33 @@ public class ConfigArgValues {
         return argsMap.get(name);
     }
 
+    public Float getFloat(String name) {
+        String value = argsMap.get(name);
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException nfe) {
+            throw new UserInputException("Fail to parse float with string '" + value + "'");
+        }
+    }
+
+    public Integer getInteger(String name) {
+        String value = argsMap.get(name);
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException nfe) {
+            throw new UserInputException("Fail to parse int with string '" + value + "'");
+        }
+    }
+
+    public Long getId(String name) {
+        String value = argsMap.get(name);
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException nfe) {
+            throw new UserInputException("Fail to parse long with string '" + value + "'");
+        }
+    }
+
     public Boolean getBoolean(String name) {
         String value = argsMap.get(name);
         return BooleanUtils.toBoolean(value);

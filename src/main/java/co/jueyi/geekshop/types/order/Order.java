@@ -53,7 +53,7 @@ public class Order implements Node {
     private List<Fulfillment> fulfillments = new ArrayList<>();
     private Integer totalQuantity;
     /**
-     * The subTotal is the total of the OrderLines, before order-level promotions and shipping has been applied.
+     * The subTotal is the total of the OrderLines, before order-level promotions and shipping_method has been applied.
      */
     private Integer subTotal;
     private Integer shipping;

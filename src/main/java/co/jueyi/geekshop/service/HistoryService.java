@@ -9,13 +9,17 @@ import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.AdministratorEntity;
 import co.jueyi.geekshop.entity.CustomerHistoryEntryEntity;
+import co.jueyi.geekshop.entity.OrderHistoryEntryEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
 import co.jueyi.geekshop.mapper.CustomerHistoryEntryEntityMapper;
+import co.jueyi.geekshop.mapper.OrderHistoryEntryEntityMapper;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.args.CreateOrderHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
-import co.jueyi.geekshop.service.helper.PageInfo;
-import co.jueyi.geekshop.service.helper.QueryHelper;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.args.UpdateOrderHistoryEntryArgs;
+import co.jueyi.geekshop.service.helpers.PageInfo;
+import co.jueyi.geekshop.service.helpers.QueryHelper;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.history.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,6 +40,7 @@ import org.springframework.util.CollectionUtils;
 public class HistoryService {
     private final AdministratorService administratorService;
     private final CustomerHistoryEntryEntityMapper customerHistoryEntryEntityMapper;
+    private final OrderHistoryEntryEntityMapper orderHistoryEntryEntityMapper;
 
     public static final String KEY_STRATEGY = "strategy";
     public static final String KEY_OLD_EMAIL_ADDRESS = "oldEmailAddress";
@@ -87,11 +92,52 @@ public class HistoryService {
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
     }
 
-    public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args) {
+    public OrderHistoryEntryEntity createHistoryEntryForOrder(CreateOrderHistoryEntryArgs args) {
+        return this.createHistoryEntryForOrder(args, true);
+    }
+
+    public OrderHistoryEntryEntity createHistoryEntryForOrder(CreateOrderHistoryEntryArgs args, boolean isPublic) {
+        AdministratorEntity administratorEntity = this.getAdministratorFromContext(args.getCtx());
+        OrderHistoryEntryEntity orderHistoryEntryEntity = new OrderHistoryEntryEntity();
+        orderHistoryEntryEntity.setType(args.getType());
+        orderHistoryEntryEntity.setPublic(isPublic);
+        orderHistoryEntryEntity.setData(args.getData());
+        orderHistoryEntryEntity.setAdministratorId(administratorEntity.getId());
+        orderHistoryEntryEntity.setOrderId(args.getOrderId());
+        this.orderHistoryEntryEntityMapper.insert(orderHistoryEntryEntity);
+        return orderHistoryEntryEntity;
+    }
+
+    public OrderHistoryEntryEntity updateOrderHistoryEntry(
+            RequestContext ctx, UpdateOrderHistoryEntryArgs args) {
+        QueryWrapper<OrderHistoryEntryEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(OrderHistoryEntryEntity::getType, args.getType())
+                .eq(OrderHistoryEntryEntity::getId, args.getEntryId());
+        OrderHistoryEntryEntity entry = this.orderHistoryEntryEntityMapper.selectOne(queryWrapper);
+        if (entry == null) {
+            throw new EntityNotFoundException("OrderHistoryEntryEntity", args.getEntryId());
+        }
+        if (args.getData().size() > 0) {
+            entry.setData(args.getData());
+        }
+        entry.setPublic(args.isPublic());
+        AdministratorEntity administratorEntity = this.getAdministratorFromContext(ctx);
+        entry.setAdministratorId(administratorEntity.getId());
+        this.orderHistoryEntryEntityMapper.updateById(entry);
+        return entry;
+    }
+
+    public void deleteOrderHistoryEntry(Long id) {
+        // 确保存在
+        ServiceHelper.getEntityOrThrow(this.orderHistoryEntryEntityMapper, OrderHistoryEntryEntity.class, id);
+        this.orderHistoryEntryEntityMapper.deleteById(id);
+    }
+
+    public CustomerHistoryEntryEntity createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args) {
         return this.createHistoryEntryForCustomer(args, false);
     }
 
-    public HistoryEntry createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isVisibleToPublic) {
+    public CustomerHistoryEntryEntity createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isVisibleToPublic) {
         AdministratorEntity administratorEntity =
                 this.getAdministratorFromContext(args.getCtx());
         CustomerHistoryEntryEntity customerHistoryEntryEntity =
@@ -99,10 +145,10 @@ public class HistoryService {
         customerHistoryEntryEntity.setAdministratorId(administratorEntity == null ? null : administratorEntity.getId());
         customerHistoryEntryEntity.setVisibleToPublic(BooleanUtils.toBoolean(isVisibleToPublic));
         this.customerHistoryEntryEntityMapper.insert(customerHistoryEntryEntity);
-        return BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
+        return customerHistoryEntryEntity;
     }
 
-    public HistoryEntry updateCustomerHistoryEntry(UpdateCustomerHistoryEntryArgs args) {
+    public CustomerHistoryEntryEntity updateCustomerHistoryEntry(UpdateCustomerHistoryEntryArgs args) {
         QueryWrapper<CustomerHistoryEntryEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(CustomerHistoryEntryEntity::getId, args.getEntryId())
                 .eq(CustomerHistoryEntryEntity::getType, args.getType());
@@ -120,8 +166,7 @@ public class HistoryService {
             customerHistoryEntryEntity.setCustomerId(administratorEntity.getId());
         }
         this.customerHistoryEntryEntityMapper.updateById(customerHistoryEntryEntity);
-        HistoryEntry historyEntry = BeanMapper.map(customerHistoryEntryEntity, HistoryEntry.class);
-        return historyEntry;
+        return customerHistoryEntryEntity;
     }
 
     public void deleteCustomerHistoryEntry(Long id) {

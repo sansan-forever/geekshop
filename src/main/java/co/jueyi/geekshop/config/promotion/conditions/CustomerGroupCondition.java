@@ -1,0 +1,73 @@
+/*
+ * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * All rights reserved.
+ */
+
+package co.jueyi.geekshop.config.promotion.conditions;
+
+import co.jueyi.geekshop.common.ConfigArgValues;
+import co.jueyi.geekshop.config.promotion.PromotionCondition;
+import co.jueyi.geekshop.entity.OrderEntity;
+import co.jueyi.geekshop.service.CustomerService;
+import co.jueyi.geekshop.types.common.ConfigArgDefinition;
+import co.jueyi.geekshop.types.customer.CustomerGroup;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+/**
+ * Created on Dec, 2020 by @author bobo
+ */
+@SuppressWarnings("Duplicates")
+public class CustomerGroupCondition extends PromotionCondition {
+
+    private final Map<String, ConfigArgDefinition> argSpec;
+
+    private Cache<Long, Set<Long>> customerGroupIdsCache =
+            CacheBuilder.newBuilder().expireAfterWrite(5 * 60 * 1000, TimeUnit.MILLISECONDS).build();
+
+    @Autowired
+    private CustomerService customerService;
+
+    public CustomerGroupCondition() {
+        super(
+                "customer_group",
+                "Customer is a member of the specified group"
+        );
+
+        Map<String, ConfigArgDefinition> argDefMap = new HashMap<>();
+        ConfigArgDefinition argDef = new ConfigArgDefinition();
+        argDef.setType("ID");
+        argDef.setUi(ImmutableMap.of("component", "customer-group-form-input"));
+        argDef.setLabel("Customer group");
+        argDefMap.put("customerGroupId", argDef);
+
+        argSpec = argDefMap;
+    }
+
+    @Override
+    public boolean check(OrderEntity orderEntity, ConfigArgValues argValues) {
+        if (orderEntity.getCustomerId() == null) {
+            return false;
+        }
+        Set<Long> groupIds = customerGroupIdsCache.getIfPresent(orderEntity.getCustomerId());
+        if (groupIds == null) {
+            groupIds = customerService.getCustomerGroups(orderEntity.getCustomerId())
+                    .stream().map(CustomerGroup::getId).collect(Collectors.toSet());
+            customerGroupIdsCache.put(orderEntity.getCustomerId(), groupIds);
+        }
+        return groupIds.contains(argValues.getId("customerGroupId"));
+    }
+
+    @Override
+    public Map<String, ConfigArgDefinition> getArgSpec() {
+        return argSpec;
+    }
+}

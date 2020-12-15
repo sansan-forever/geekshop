@@ -14,8 +14,24 @@ import co.jueyi.geekshop.config.collection.CatalogConfig;
 import co.jueyi.geekshop.config.collection.CollectionFilter;
 import co.jueyi.geekshop.config.collection.FacetValueCollectionFilter;
 import co.jueyi.geekshop.config.collection.VariantNameCollectionFilter;
+import co.jueyi.geekshop.config.order.MergeOrdersStrategy;
+import co.jueyi.geekshop.config.order.OrderMergeOptions;
+import co.jueyi.geekshop.config.order.UseGuestStrategy;
+import co.jueyi.geekshop.config.payment_method.ExamplePaymentMethodHandler;
+import co.jueyi.geekshop.config.payment_method.PaymentOptions;
+import co.jueyi.geekshop.config.promotion.PromotionAction;
+import co.jueyi.geekshop.config.promotion.PromotionCondition;
+import co.jueyi.geekshop.config.promotion.PromotionOptions;
+import co.jueyi.geekshop.config.promotion.actions.FacetValuesDiscountAction;
+import co.jueyi.geekshop.config.promotion.actions.OrderPercentageDiscount;
+import co.jueyi.geekshop.config.promotion.actions.ProductDiscountAction;
+import co.jueyi.geekshop.config.promotion.conditions.ContainsProductsCondition;
+import co.jueyi.geekshop.config.promotion.conditions.CustomerGroupCondition;
+import co.jueyi.geekshop.config.promotion.conditions.HasFacetValuesCondition;
+import co.jueyi.geekshop.config.promotion.conditions.MinimumOrderAmountCondition;
 import co.jueyi.geekshop.config.session_cache.InMemorySessionCacheStrategy;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
+import co.jueyi.geekshop.config.shipping_method.*;
 import co.jueyi.geekshop.email.EmailSender;
 import co.jueyi.geekshop.email.FileEmailSender;
 import co.jueyi.geekshop.email.NoopEmailSender;
@@ -36,8 +52,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Arrays;
-import java.util.concurrent.Executor;
+import java.util.*;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -151,5 +166,129 @@ public class AppConfig {
     @Bean
     public CollectionFilter variantNameCollectionFilter() {
         return new VariantNameCollectionFilter();
+    }
+
+    /**
+     * Configures the available checkers and calculators for ShippingMethods.
+     */
+    @Bean
+    public ShippingOptions shippingOptions() {
+        return new ShippingOptions(shippingEligibilityCheckers(), shippingCalculators());
+    }
+
+    /**
+     * A List of available ShippingEligibilityCheckers for use in configuring ShippingMethods
+     * Autowired in {@link ShippingOptions}
+     */
+    @Bean
+    public List<ShippingEligibilityChecker> shippingEligibilityCheckers() {
+        return Arrays.asList(defaultShippingEligibilityChecker());
+    }
+
+    /**
+     * A List of available ShippingCalculators for use in configuring ShippingMethods
+     * Autowired in {@link ShippingOptions}
+     */
+    @Bean
+    public List<ShippingCalculator> shippingCalculators() {
+        return Arrays.asList(defaultShippingCalculator());
+    }
+
+    @Bean
+    public ShippingEligibilityChecker defaultShippingEligibilityChecker() {
+        return new DefaultShippingEligibilityChecker();
+    }
+
+    @Bean
+    public ShippingCalculator defaultShippingCalculator() {
+        return new DefaultShippingCalculator();
+    }
+
+    @Bean
+    HasFacetValuesCondition hasFacetValuesCondition() {
+        return new HasFacetValuesCondition();
+    }
+
+    @Bean
+    CustomerGroupCondition customerGroupCondition() {
+        return new CustomerGroupCondition();
+    }
+
+    @Bean
+    ContainsProductsCondition containsProductsCondition() {
+        return new ContainsProductsCondition();
+    }
+
+    @Bean
+    MinimumOrderAmountCondition minimumOrderAmountCondition() {
+        return new MinimumOrderAmountCondition();
+    }
+
+    @Bean
+    public List<PromotionCondition> defaultPromotionConditions() {
+        return Arrays.asList(
+                minimumOrderAmountCondition(),
+                hasFacetValuesCondition(),
+                containsProductsCondition(),
+                customerGroupCondition()
+        );
+    }
+
+    @Bean
+    OrderPercentageDiscount orderPercentageDiscount() {
+        return new OrderPercentageDiscount();
+    }
+
+    @Bean
+    FacetValuesDiscountAction facetValuesDiscountAction() {
+        return new FacetValuesDiscountAction();
+    }
+
+    @Bean
+    ProductDiscountAction productDiscountAction() {
+        return new ProductDiscountAction();
+    }
+
+    @Bean
+    public List<PromotionAction> defaultPromotionActions() {
+        return Arrays.asList(
+                orderPercentageDiscount(),
+                facetValuesDiscountAction(),
+                productDiscountAction()
+        );
+    }
+
+    /**
+     * Configures the Conditions and Actions available when creating Promotions.
+     */
+    @Bean
+    public PromotionOptions promotionOptions() {
+        return new PromotionOptions(
+                defaultPromotionConditions(),
+                defaultPromotionActions()
+        );
+    }
+
+    /**
+     * Configures available payment processing methods.
+     */
+    @Bean
+    public PaymentOptions paymentOptions() {
+        return new PaymentOptions(
+                Arrays.asList(examplePaymentMethodHandler())
+        );
+    }
+
+    @Bean
+    ExamplePaymentMethodHandler examplePaymentMethodHandler() {
+        return new ExamplePaymentMethodHandler();
+    }
+
+    @Bean
+    public OrderMergeOptions orderMergeOptions() {
+        return new OrderMergeOptions(
+                new MergeOrdersStrategy(),
+                new UseGuestStrategy()
+        );
     }
 }

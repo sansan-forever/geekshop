@@ -20,7 +20,7 @@ import co.jueyi.geekshop.exception.VerificationTokenException;
 import co.jueyi.geekshop.resolver.base.BaseAuthMutation;
 import co.jueyi.geekshop.service.*;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.auth.AuthenticationInput;
 import co.jueyi.geekshop.types.auth.CurrentUser;
 import co.jueyi.geekshop.types.auth.LoginResult;

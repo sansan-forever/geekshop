@@ -44,7 +44,13 @@ public enum ErrorCode {
 
     NO_ASSET_PREVIEW_STRATEGY_CONFIGURED("No asset preview strategy configured"),
 
-    USER_INPUT_ERROR("Invalid request input parameters");
+    USER_INPUT_ERROR("Invalid request input parameters"),
+
+    COUPON_CODE_INVALID("Coupon code is not valid"),
+
+    COUPON_CODE_EXPIRED("Coupon code is expired"),
+
+    COUPON_CODE_LIMIT_REACHED("Coupon code limit has been reached");
 
     public final String defaultMessage;
 

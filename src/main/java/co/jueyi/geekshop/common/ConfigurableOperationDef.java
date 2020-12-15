@@ -5,6 +5,10 @@
 
 package co.jueyi.geekshop.common;
 
+import co.jueyi.geekshop.config.promotion.PromotionAction;
+import co.jueyi.geekshop.config.promotion.PromotionCondition;
+import co.jueyi.geekshop.config.shipping_method.ShippingCalculator;
+import co.jueyi.geekshop.config.shipping_method.ShippingEligibilityChecker;
 import co.jueyi.geekshop.types.common.ConfigArgDefinition;
 import co.jueyi.geekshop.types.common.ConfigurableOperationDefinition;
 import org.apache.commons.lang3.BooleanUtils;
@@ -29,7 +33,7 @@ import java.util.Map;
  */
 public abstract class ConfigurableOperationDef {
     public abstract String getCode();
-    public abstract Map<String, ConfigArgDefinition> getArgs();
+    public abstract Map<String, ConfigArgDefinition> getArgSpec();
     public abstract String getDescription();
 
 
@@ -41,7 +45,7 @@ public abstract class ConfigurableOperationDef {
         ConfigurableOperationDefinition configurableOperationDefinition = new ConfigurableOperationDefinition();
         configurableOperationDefinition.setCode(getCode());
         configurableOperationDefinition.setDescription(getDescription());
-        getArgs().forEach((name, arg) -> {
+        getArgSpec().forEach((name, arg) -> {
             ConfigArgDefinition configArgDefinition = new ConfigArgDefinition();
             configArgDefinition.setName(name);
             configArgDefinition.setType(arg.getType());

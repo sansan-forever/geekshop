@@ -33,4 +33,9 @@ public class ConfigOptions {
      * Configuration settings for data import and export.
      */
     private ImportExportOptions importExportOptions = new ImportExportOptions();
+
+    /**
+     * Configuration settings governing how orders are handled.
+     */
+    private OrderOptions orderOptions = new OrderOptions();
 }

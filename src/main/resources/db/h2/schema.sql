@@ -489,3 +489,171 @@ create table tb_collection_asset_join (
    foreign key (collection_id) references tb_collection(id),
    foreign key (asset_id) references tb_asset(id)
 );
+
+create table tb_shipping_method (
+   id bigint not null auto_increment,
+   code varchar(50),
+   description text,
+   deleted_at datetime,
+   checker text,
+   calculator text,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id)
+);
+
+create table tb_order (
+   id bigint not null auto_increment,
+   code varchar(50),
+   state varchar(30),
+   active boolean default true,
+   order_placed_at datetime default null,
+   customer_id bigint,
+   coupon_codes text,
+   pending_adjustments text,
+   shipping_address text,
+   billing_address text,
+   sub_total integer,
+   shipping_method_id bigint,
+   shipping integer default 0,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (customer_id) references tb_customer(id),
+   foreign key (shipping_method_id) references tb_shipping_method(id)
+);
+
+create index order_code_index on tb_order(code);
+
+
+create table tb_order_line (
+    id bigint not null auto_increment,
+    product_variant_id bigint not null,
+    featured_asset_id bigint,
+    order_id bigint not null,
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    foreign key (order_id) references tb_order(id),
+    foreign key (product_variant_id) references tb_product_variant(id),
+    foreign key (featured_asset_id) references tb_asset(id),
+    primary key (id)
+);
+
+create index idx_order_line_product_variant_id on tb_order_line(product_variant_id);
+create index idx_order_line_order_id on tb_order_line(order_id);
+
+create table tb_promotion (
+   id bigint not null auto_increment,
+   name varchar(100),
+   enabled boolean,
+   deleted_at datetime default null,
+   starts_at datetime default null,
+   ends_at datetime default null,
+   coupon_code varchar(32) default null,
+   per_customer_usage_limit integer default null,
+   conditions text,
+   actions text,
+   priority_score integer,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id)
+);
+
+create table tb_order_promotion_join (
+    id bigint not null auto_increment,
+    order_id bigint not null,
+    promotion_id bigint not null,
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    primary key (id),
+    unique key (order_id, promotion_id),
+    foreign key (order_id) references tb_order(id),
+    foreign key (promotion_id) references tb_promotion(id)
+);
+
+create table tb_refund (
+    id bigint not null auto_increment,
+    items integer,
+    shipping integer,
+    adjustment integer,
+    total integer,
+    method varchar(30),
+    reason varchar(255),
+    state varchar(30),
+    transaction_id varchar(128),
+    payment_id bigint,
+    metadata text,
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    primary key (id)
+);
+
+create table tb_fulfillment (
+    id bigint not null auto_increment,
+    tracking_code varchar(128),
+    method varchar(30),
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    primary key (id)
+);
+
+create table tb_order_item (
+   id bigint not null auto_increment,
+   order_line_id bigint not null,
+   unit_price integer,
+   pending_adjustments text,
+   fulfillment_id bigint,
+   refund_id bigint,
+   cancellation_id bigint,
+   cancelled boolean default false,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (order_line_id) references tb_order_line(id)
+);
+
+create table tb_payment (
+   id bigint not null auto_increment,
+   method varchar(50),
+   amount integer,
+   state varchar(30),
+   error_message varchar(255),
+   transaction_id varchar(128),
+   metadata text,
+   order_id bigint not null,
+   created_by varchar(50),
+   created_at datetime,
+   updated_by varchar(50),
+   updated_at datetime,
+   primary key (id),
+   foreign key (order_id) references tb_order(id)
+);
+
+create table tb_payment_method (
+    id bigint not null auto_increment,
+    code varchar(50),
+    enabled boolean,
+    config_args text,
+    created_by varchar(50),
+    created_at datetime,
+    updated_by varchar(50),
+    updated_at datetime,
+    primary key (id)
+);
+

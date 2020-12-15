@@ -8,8 +8,8 @@ package co.jueyi.geekshop.config.auth;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.UserEntity;
-import co.jueyi.geekshop.service.helper.ExternalAuthenticationService;
-import co.jueyi.geekshop.service.helper.input.CreateCustomerAndUserInput;
+import co.jueyi.geekshop.service.helpers.ExternalAuthenticationService;
+import co.jueyi.geekshop.service.helpers.input.CreateCustomerAndUserInput;
 import co.jueyi.geekshop.types.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 

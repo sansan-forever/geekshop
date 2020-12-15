@@ -21,9 +21,9 @@ import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.mapper.*;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
-import co.jueyi.geekshop.service.helper.PageInfo;
-import co.jueyi.geekshop.service.helper.QueryHelper;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.helpers.PageInfo;
+import co.jueyi.geekshop.service.helpers.QueryHelper;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.customer.*;
 import co.jueyi.geekshop.types.history.HistoryEntry;
@@ -487,7 +487,7 @@ public class CustomerService {
         return customerEntity;
     }
 
-    public HistoryEntry updateCustomerNode(RequestContext ctx, UpdateCustomerNoteInput input) {
+    public CustomerHistoryEntryEntity updateCustomerNode(RequestContext ctx, UpdateCustomerNoteInput input) {
         UpdateCustomerHistoryEntryArgs args = ServiceHelper.buildUpdateCustomerHistoryEntryArgs(
                 ctx, input.getNoteId(), HistoryEntryType.CUSTOMER_NOTE,
                 ImmutableMap.of(HistoryService.KEY_NOTE, input.getNote())
@@ -533,7 +533,7 @@ public class CustomerService {
     }
 
     /**
-     * If a Customer Address is to be deleted, check if it is assigned as a default for shipping or
+     * If a Customer Address is to be deleted, check if it is assigned as a default for shipping_method or
      * billing. If so, attempt to transfer default status to one of the other addresses if there are any.
      */
     private void reassignDefaultsForDeletedAddress(AddressEntity addressToDelete) {

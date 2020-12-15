@@ -14,7 +14,7 @@ import co.jueyi.geekshop.mapper.FacetEntityMapper;
 import co.jueyi.geekshop.mapper.FacetValueEntityMapper;
 import co.jueyi.geekshop.mapper.ProductFacetValueJoinEntityMapper;
 import co.jueyi.geekshop.mapper.ProductVariantFacetValueJoinEntityMapper;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.facet.CreateFacetValueInput;

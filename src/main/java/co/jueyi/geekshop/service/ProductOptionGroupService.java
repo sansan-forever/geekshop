@@ -10,7 +10,7 @@ import co.jueyi.geekshop.entity.ProductOptionGroupEntity;
 import co.jueyi.geekshop.entity.ProductOptionGroupJoinEntity;
 import co.jueyi.geekshop.mapper.ProductOptionGroupEntityMapper;
 import co.jueyi.geekshop.mapper.ProductOptionGroupJoinEntityMapper;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.product.CreateProductOptionGroupInput;
 import co.jueyi.geekshop.types.product.CreateProductOptionInput;
 import co.jueyi.geekshop.types.product.UpdateProductOptionGroupInput;

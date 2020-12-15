@@ -6,13 +6,15 @@
 package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.utils.BeanMapper;
+import co.jueyi.geekshop.entity.OrderEntity;
+import co.jueyi.geekshop.entity.OrderLineEntity;
 import co.jueyi.geekshop.entity.ProductVariantEntity;
 import co.jueyi.geekshop.entity.StockMovementEntity;
 import co.jueyi.geekshop.exception.InternalServerError;
 import co.jueyi.geekshop.mapper.ProductVariantEntityMapper;
 import co.jueyi.geekshop.mapper.StockMovementEntityMapper;
-import co.jueyi.geekshop.service.helper.PageInfo;
-import co.jueyi.geekshop.service.helper.ServiceHelper;
+import co.jueyi.geekshop.service.helpers.PageInfo;
+import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.types.order.Order;
 import co.jueyi.geekshop.types.order.OrderItem;
 import co.jueyi.geekshop.types.order.OrderLine;
@@ -86,31 +88,30 @@ public class StockMovementService {
     }
 
     @Transactional
-    public List<StockMovement> createSalesForOrder(Order order) { // TODO OrderEntity?
-        if (BooleanUtils.isTrue(order.getActive())) {
+    public List<StockMovementEntity> createSalesForOrder(OrderEntity orderEntity) {
+        if (orderEntity.isActive()) {
             throw new InternalServerError("Cannot create a Sale for an Order which is still active");
         }
 
-        List<StockMovement> saleList = new ArrayList<>();
-        for(OrderLine line : order.getLines()) {
+        List<StockMovementEntity> saleList = new ArrayList<>();
+        for(OrderLineEntity lineEntity : orderEntity.getLines()) {
             StockMovementEntity saleEntity = new StockMovementEntity();
             saleEntity.setType(StockMovementType.SALE);
-            saleEntity.setQuantity(line.getQuantity() * -1);
-            saleEntity.setProductVariantId(line.getProductVariantId());
-            saleEntity.setOrderLineId(line.getId());
+            saleEntity.setQuantity(lineEntity.getQuantity() * -1);
+            saleEntity.setProductVariantId(lineEntity.getProductVariantId());
+            saleEntity.setOrderLineId(lineEntity.getId());
 
             this.stockMovementEntityMapper.insert(saleEntity);
 
             ProductVariantEntity productVariantEntity =
-                    this.productVariantEntityMapper.selectById(line.getProductVariantId());
+                    this.productVariantEntityMapper.selectById(lineEntity.getProductVariantId());
             if (productVariantEntity.isTrackInventory()) {
-                Integer stockOnHand = productVariantEntity.getStockOnHand() - line.getQuantity();
+                Integer stockOnHand = productVariantEntity.getStockOnHand() - lineEntity.getQuantity();
                 productVariantEntity.setStockOnHand(stockOnHand);
                 this.productVariantEntityMapper.updateById(productVariantEntity);
             }
 
-            StockMovement sale = BeanMapper.map(saleEntity, StockMovement.class);
-            saleList.add(sale);
+            saleList.add(saleEntity);
         }
 
         return saleList;
