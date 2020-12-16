@@ -8,6 +8,8 @@ package co.jueyi.geekshop.config.payment_method;
 import co.jueyi.geekshop.service.helpers.refund_state_machine.RefundState;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * Created on Dec, 2020 by @author bobo
  */
@@ -15,5 +17,5 @@ import lombok.Data;
 public class CreateRefundResult {
     private RefundState state;
     private String transactionId;
-    private Object metadata;
+    private Map<String, String> metadata;
 }

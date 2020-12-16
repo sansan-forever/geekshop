@@ -41,12 +41,4 @@ public class GraphQLConfig {
     public GraphQLScalarType json() {
         return ExtendedScalars.Json;
     }
-
-    // custom mapping
-    @Bean
-    public SchemaParserDictionary schemaParserDictionary() {
-        SchemaParserDictionary schemaParserDictionary = new SchemaParserDictionary();
-        schemaParserDictionary.add(PaymentMethod.class);
-        return schemaParserDictionary;
-    }
 }
