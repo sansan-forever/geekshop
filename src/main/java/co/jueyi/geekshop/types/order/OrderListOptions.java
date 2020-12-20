@@ -5,11 +5,16 @@
 
 package co.jueyi.geekshop.types.order;
 
+import co.jueyi.geekshop.types.common.ListOptions;
 import lombok.Data;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 @Data
-public class OrderListOptions {
+public class OrderListOptions implements ListOptions {
+    private Integer currentPage;
+    private Integer pageSize;
+    private OrderSortParameter sort;
+    private OrderFilterParameter filter;
 }

@@ -164,7 +164,7 @@ public class OrderStateMachine {
         };
     }
 
-    private Transitions<OrderState> getOrderStateTransitions() {
+    public Transitions<OrderState> getOrderStateTransitions() {
         Transitions<OrderState> transitions = new Transitions<>();
         transitions.put(OrderState.AddingItems,
                 Arrays.asList(

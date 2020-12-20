@@ -235,7 +235,7 @@ create table tb_customer_history_entry (
     id bigint not null auto_increment,
     administrator_id bigint,
     type varchar(50) not null,
-    visible_to_public boolean,
+    private_only boolean,
     data text,
     customer_id bigint,
     created_by varchar(50),
@@ -251,7 +251,7 @@ create table tb_order_history_entry (
     id bigint not null auto_increment,
     administrator_id bigint,
     type varchar(50) not null,
-    is_public boolean,
+    private_only boolean,
     data text,
     order_id bigint,
     created_by varchar(50),
@@ -613,7 +613,7 @@ create table tb_fulfillment (
 
 create table tb_order_item (
    id bigint not null auto_increment,
-   order_line_id bigint not null,
+   order_line_id bigint,
    unit_price integer,
    pending_adjustments text,
    fulfillment_id bigint,

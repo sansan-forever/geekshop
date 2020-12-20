@@ -188,7 +188,7 @@ public class ShopAuthMutation extends BaseAuthMutation implements GraphQLMutatio
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         boolean result = super.updatePassword(ctx, currentPassword, newPassword);
         if (result && ctx.getActiveUserId() != null) {
-            CustomerEntity customerEntity = this.customerService.findOneEntityByUserId(ctx.getActiveUserId());
+            CustomerEntity customerEntity = this.customerService.findOneByUserId(ctx.getActiveUserId());
             if (customerEntity != null) {
                 CreateCustomerHistoryEntryArgs args =
                         ServiceHelper.buildCreateCustomerHistoryEntryArgs(

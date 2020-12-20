@@ -24,7 +24,7 @@ import java.util.Map;
 public class OrderHistoryEntryEntity extends BaseEntity {
     private Long administratorId;
     private HistoryEntryType type;
-    private boolean isPublic;
+    private boolean privateOnly;
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String,String> data = new HashMap<>();
     private Long orderId;

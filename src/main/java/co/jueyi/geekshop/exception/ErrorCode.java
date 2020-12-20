@@ -50,7 +50,9 @@ public enum ErrorCode {
 
     COUPON_CODE_EXPIRED("Coupon code is expired"),
 
-    COUPON_CODE_LIMIT_REACHED("Coupon code limit has been reached");
+    COUPON_CODE_LIMIT_REACHED("Coupon code limit has been reached"),
+
+    ORDER_ITEMS_LIMIT_EXCEEDED("Order item limit exceeded");
 
     public final String defaultMessage;
 

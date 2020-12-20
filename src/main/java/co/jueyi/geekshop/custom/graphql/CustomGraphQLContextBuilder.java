@@ -12,14 +12,23 @@ import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.administrator.Administrator;
 import co.jueyi.geekshop.types.asset.Asset;
 import co.jueyi.geekshop.types.collection.Collection;
+import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
 import co.jueyi.geekshop.types.facet.Facet;
 import co.jueyi.geekshop.types.facet.FacetValue;
+import co.jueyi.geekshop.types.order.Fulfillment;
+import co.jueyi.geekshop.types.order.Order;
+import co.jueyi.geekshop.types.order.OrderItem;
+import co.jueyi.geekshop.types.order.OrderLine;
+import co.jueyi.geekshop.types.payment.Payment;
+import co.jueyi.geekshop.types.payment.Refund;
 import co.jueyi.geekshop.types.product.Product;
 import co.jueyi.geekshop.types.product.ProductOption;
 import co.jueyi.geekshop.types.product.ProductOptionGroup;
 import co.jueyi.geekshop.types.product.ProductVariant;
+import co.jueyi.geekshop.types.promotion.Promotion;
 import co.jueyi.geekshop.types.role.Role;
+import co.jueyi.geekshop.types.shipping.ShippingMethod;
 import co.jueyi.geekshop.types.user.AuthenticationMethod;
 import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
@@ -68,6 +77,15 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
     private final ProductVariantFacetValueJoinEntityMapper productVariantFacetValueJoinEntityMapper;
     private final CollectionAssetJoinEntityMapper collectionAssetJoinEntityMapper;
     private final CollectionEntityMapper collectionEntityMapper;
+    private final OrderEntityMapper orderEntityMapper;
+    private final FulfillmentEntityMapper fulfillmentEntityMapper;
+    private final OrderItemEntityMapper orderItemEntityMapper;
+    private final OrderPromotionJoinEntityMapper orderPromotionJoinEntityMapper;
+    private final PromotionEntityMapper promotionEntityMapper;
+    private final PaymentEntityMapper paymentEntityMapper;
+    private final ShippingMethodEntityMapper shippingMethodEntityMapper;
+    private final OrderLineEntityMapper orderLineEntityMapper;
+    private final RefundEntityMapper refundEntityMapper;
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -254,6 +272,100 @@ public class CustomGraphQLContextBuilder implements GraphQLServletContextBuilder
         );
         dataLoaderRegistry.register(
                 Constant.DATA_LOADER_NAME_COLLECTION_CHILDREN, collectionChildrenDataLoader
+        );
+
+        DataLoader<Long, ProductVariant> orderLineProductVariantDataLoader = DataLoader.newMappedDataLoader(
+                new ProductVariantDataLoader(this.productVariantEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_LINE_PRODUCT_VARIANT, orderLineProductVariantDataLoader
+        );
+
+        DataLoader<Long, Asset> orderLineFeaturedAssetDataLoader = DataLoader.newMappedDataLoader(
+                new FeaturedAssetDataLoader(this.assetEntityMapper)
+        ) ;
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_LINE_FEATURED_ASSET, orderLineFeaturedAssetDataLoader
+        );
+
+        DataLoader<Long, Order> orderLineOrderDataLoader = DataLoader.newMappedDataLoader(
+                new OrderDataLoader(this.orderEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_LINE_ORDER, orderLineOrderDataLoader
+        );
+
+        DataLoader<Long, Fulfillment> orderItemFulfillmentDataLoader = DataLoader.newMappedDataLoader(
+                new FulfillmentDataLoader(this.fulfillmentEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_ITEM_FULFILLMENT, orderItemFulfillmentDataLoader
+        );
+
+        DataLoader<Long, List<OrderItem>> fulfillmentOrderItemsDataLoader = DataLoader.newMappedDataLoader(
+                new FulfillmentOrderItemsDataLoder(this.orderItemEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_FULFILLMENT_ORDER_ITEMS, fulfillmentOrderItemsDataLoader
+        );
+
+        DataLoader<Long, Customer> orderCustomerDataLoader = DataLoader.newMappedDataLoader(
+                new CustomerDataLoader(this.customerEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_CUSTOMER, orderCustomerDataLoader
+        );
+
+        DataLoader<Long, List<Promotion>> orderPromotionsDataLoader = DataLoader.newMappedDataLoader(
+                new OrderPromotionsDataLoader(
+                        this.orderPromotionJoinEntityMapper,
+                        this.promotionEntityMapper
+                )
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_PROMOTIONS, orderPromotionsDataLoader
+        );
+
+        DataLoader<Long, List<Payment>> orderPaymentsDataLoader = DataLoader.newMappedDataLoader(
+                new OrderPaymentsDataLoader(this.paymentEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_PAYMENTS, orderPaymentsDataLoader
+        );
+
+        DataLoader<Long, ShippingMethod> orderShippingMethodDataLoader = DataLoader.newMappedDataLoader(
+                new ShippingMethodDataLoader(this.shippingMethodEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_SHIPPING_METHOD, orderShippingMethodDataLoader
+        );
+
+        DataLoader<Long, List<OrderItem>> orderLineItemsDataLoader = DataLoader.newMappedDataLoader(
+                new OrderLineItemsDataLoader(this.orderItemEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_LINE_ITEMS, orderLineItemsDataLoader
+        );
+
+        DataLoader<Long, List<OrderLine>> orderLinesDataLoader = DataLoader.newMappedDataLoader(
+                new OrderLinesDataLoader(this.orderLineEntityMapper, this.orderItemEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_ORDER_LINES, orderLinesDataLoader
+        );
+
+        DataLoader<Long, List<Refund>> paymentRefundsDataLoader = DataLoader.newMappedDataLoader(
+                new PaymentRefundsDataLoader(this.refundEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_PAYMENT_REFUNDS, paymentRefundsDataLoader
+        );
+
+        DataLoader<Long, List<OrderItem>> refundOrderItemsDataLoader = DataLoader.newMappedDataLoader(
+                new RefundOrderItemsDataLoader(this.orderItemEntityMapper)
+        );
+        dataLoaderRegistry.register(
+                Constant.DATA_LOADER_NAME_REFUND_ORDER_ITEMS, refundOrderItemsDataLoader
         );
 
         return dataLoaderRegistry;

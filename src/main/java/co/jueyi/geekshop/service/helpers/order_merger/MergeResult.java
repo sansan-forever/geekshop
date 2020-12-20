@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @Builder
 public class MergeResult {
-    private OrderEntity orderEntity;
+    private OrderEntity order;
     private List<LineItem> linesToInsert;
     private OrderEntity orderToDelete;
 }

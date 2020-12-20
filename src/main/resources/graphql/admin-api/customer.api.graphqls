@@ -42,7 +42,7 @@ input UpdateCustomerInput {
 input AddNoteToCustomerInput {
     id: ID!
     note: String!
-    visibleToPublic: Boolean!
+    privateOnly: Boolean!
 }
 
 input UpdateCustomerNoteInput {

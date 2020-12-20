@@ -117,14 +117,14 @@ public class CustomerService {
         QueryHelper.buildOneDateOperatorFilter(queryWrapper, filterParameter.getUpdatedAt(), "updated_at");
     }
 
-    public CustomerEntity findOneEntity(Long id) {
+    public CustomerEntity findOne(Long id) {
         QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(CustomerEntity::getId, id).isNull(CustomerEntity::getDeletedAt);
         CustomerEntity customerEntity = this.customerEntityMapper.selectOne(queryWrapper);
         return customerEntity;
     }
 
-    public CustomerEntity findOneEntityByUserId(Long userId) {
+    public CustomerEntity findOneByUserId(Long userId) {
         QueryWrapper<CustomerEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(CustomerEntity::getUserId, userId).isNull(CustomerEntity::getDeletedAt);
         CustomerEntity customerEntity = this.customerEntityMapper.selectOne(queryWrapper);
@@ -275,7 +275,7 @@ public class CustomerService {
         UserEntity userEntity = this.userService.verifyUserByToken(verificationToken, password);
         if (userEntity == null) return null;
 
-        CustomerEntity customerEntity = this.findOneEntityByUserId(userEntity.getId());
+        CustomerEntity customerEntity = this.findOneByUserId(userEntity.getId());
         if (customerEntity == null) {
             throw new InternalServerError("Cannot locate a Customer for the user");
         }
@@ -284,7 +284,7 @@ public class CustomerService {
                 ctx, customerEntity.getId(), HistoryEntryType.CUSTOMER_VERIFIED,
                 ImmutableMap.of(HistoryService.KEY_STRATEGY, Constant.NATIVE_AUTH_STRATEGY_NAME));
         this.historyService.createHistoryEntryForCustomer(args);
-        return this.findOneEntityByUserId(userEntity.getId());
+        return this.findOneByUserId(userEntity.getId());
     }
 
     public void requestPasswordReset(RequestContext ctx, String emailAddress) {
@@ -292,7 +292,7 @@ public class CustomerService {
         if (userEntity == null) return;
 
         this.eventBus.post(new PasswordResetEvent(ctx, userEntity));
-        CustomerEntity customerEntity = this.findOneEntityByUserId(userEntity.getId());
+        CustomerEntity customerEntity = this.findOneByUserId(userEntity.getId());
         if (customerEntity == null) {
             throw new InternalServerError("Cannot locate a Customer for the user");
         }
@@ -305,7 +305,7 @@ public class CustomerService {
     public CustomerEntity resetPassword(RequestContext ctx, String passwordResetToken, String password) {
         UserEntity userEntity = this.userService.resetPasswordByToken(passwordResetToken, password);
         if (userEntity == null) return null;
-        CustomerEntity customerEntity = this.findOneEntityByUserId(userEntity.getId());
+        CustomerEntity customerEntity = this.findOneByUserId(userEntity.getId());
         if (customerEntity == null) {
             throw new InternalServerError("Cannot locate a Customer for the user");
         }
@@ -324,7 +324,7 @@ public class CustomerService {
         }
         UserEntity userEntity = this.userService.findUserEntityById(userId);
         if (userEntity == null) return false;
-        CustomerEntity customerEntity = this.findOneEntityByUserId(userId);
+        CustomerEntity customerEntity = this.findOneByUserId(userId);
         if (customerEntity == null) return false;
         String oldEmailAddress = customerEntity.getEmailAddress();
         CreateCustomerHistoryEntryArgs args = ServiceHelper.buildCreateCustomerHistoryEntryArgs(
@@ -359,7 +359,7 @@ public class CustomerService {
         UserEntity userEntity = pair.getKey();
         String oldIdentifier = pair.getValue();
         if (userEntity == null) return false;
-        CustomerEntity customerEntity = this.findOneEntityByUserId(userEntity.getId());
+        CustomerEntity customerEntity = this.findOneByUserId(userEntity.getId());
         if (customerEntity == null) {
             return false;
         }
@@ -483,7 +483,7 @@ public class CustomerService {
         CreateCustomerHistoryEntryArgs args = ServiceHelper.buildCreateCustomerHistoryEntryArgs(
                 ctx, customerEntity.getId(), HistoryEntryType.CUSTOMER_NOTE,
                 ImmutableMap.of(HistoryService.KEY_NOTE, input.getNote()));
-        this.historyService.createHistoryEntryForCustomer(args, input.getVisibleToPublic());
+        this.historyService.createHistoryEntryForCustomer(args, input.getPrivateOnly());
         return customerEntity;
     }
 

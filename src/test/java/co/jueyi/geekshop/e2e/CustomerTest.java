@@ -579,7 +579,7 @@ public class CustomerTest {
     public void addNoteToCustomer() throws IOException {
         AddNoteToCustomerInput input = new AddNoteToCustomerInput();
         input.setId(firstCustomer.getId());
-        input.setVisibleToPublic(true);
+        input.setPrivateOnly(false);
         input.setNote("Test note");
 
         JsonNode inputNode = objectMapper.valueToTree(input);
@@ -631,7 +631,7 @@ public class CustomerTest {
 
         HistoryEntry historyEntry = graphQLResponse.get("$.data.updateCustomerNode", HistoryEntry.class);
         assertThat(historyEntry.getData()).contains(entry("note", input.getNote()));
-        assertThat(historyEntry.getVisibleToPublic()).isTrue();
+        assertThat(historyEntry.getPrivateOnly()).isFalse();
     }
 
     @Test

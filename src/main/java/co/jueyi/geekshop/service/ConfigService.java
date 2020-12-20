@@ -11,10 +11,7 @@ import co.jueyi.geekshop.config.collection.CatalogConfig;
 import co.jueyi.geekshop.config.payment_method.PaymentOptions;
 import co.jueyi.geekshop.config.promotion.PromotionOptions;
 import co.jueyi.geekshop.config.shipping_method.ShippingOptions;
-import co.jueyi.geekshop.options.AssetOptions;
-import co.jueyi.geekshop.options.AuthOptions;
-import co.jueyi.geekshop.options.ConfigOptions;
-import co.jueyi.geekshop.options.ImportExportOptions;
+import co.jueyi.geekshop.options.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -80,4 +77,6 @@ public class ConfigService {
     public PromotionOptions getPromotionOptions() {
         return this.promotionOptions;
     }
+
+    public OrderOptions getOrderOptions() { return this.configOptions.getOrderOptions(); }
 }

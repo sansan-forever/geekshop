@@ -32,18 +32,18 @@ public class OrderMerger {
         if (!this.orderEmpty(guestOrder) && !this.orderEmpty(existingOrder)) {
             List<OrderLineEntity> mergeLines = orderMergeOptions.getMergeStrategy().merge(guestOrder, existingOrder);
             return MergeResult.builder()
-                    .orderEntity(existingOrder)
+                    .order(existingOrder)
                     .linesToInsert(this.getLinesToInsert(existingOrder, mergeLines))
                     .orderToDelete(guestOrder)
                     .build();
         } else if (!this.orderEmpty(guestOrder) && this.orderEmpty(existingOrder)) {
             return MergeResult.builder()
-                    .orderEntity(guestOrder)
+                    .order(guestOrder)
                     .orderToDelete(existingOrder)
                     .build();
         } else if (this.orderEmpty(guestOrder) && !this.orderEmpty(existingOrder)) {
             return MergeResult.builder()
-                    .orderEntity(existingOrder)
+                    .order(existingOrder)
                     .orderToDelete(guestOrder)
                     .build();
         } else {

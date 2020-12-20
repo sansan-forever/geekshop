@@ -44,7 +44,7 @@ public class OrderMergerTest {
         OrderEntity existingOrder = new OrderEntity();
 
         MergeResult result = orderMerger.merge(guestOrder, existingOrder);
-        assertThat(result.getOrderEntity()).isNull();
+        assertThat(result.getOrder()).isNull();
         assertThat(result.getLinesToInsert()).isNull();
         assertThat(result.getOrderToDelete()).isNull();
     }
@@ -61,7 +61,7 @@ public class OrderMergerTest {
                 )
         );
         MergeResult result = orderMerger.merge(null, existingOrder);
-        assertThat(result.getOrderEntity()).isEqualTo(existingOrder);
+        assertThat(result.getOrder()).isEqualTo(existingOrder);
         assertThat(result.getLinesToInsert()).isNull();
         assertThat(result.getOrderToDelete()).isNull();
     }
@@ -78,7 +78,7 @@ public class OrderMergerTest {
                 )
         );
         MergeResult result = orderMerger.merge(guestOrder, null);
-        assertThat(result.getOrderEntity()).isEqualTo(guestOrder);
+        assertThat(result.getOrder()).isEqualTo(guestOrder);
         assertThat(result.getLinesToInsert()).isNull();
         assertThat(result.getOrderToDelete()).isNull();
     }
@@ -101,7 +101,7 @@ public class OrderMergerTest {
 
         MergeResult result = orderMerger.merge(guestOrder, existingOrder);
 
-        assertThat(result.getOrderEntity()).isEqualTo(existingOrder);
+        assertThat(result.getOrder()).isEqualTo(existingOrder);
         assertThat(result.getLinesToInsert()).isNull();
         assertThat(result.getOrderToDelete()).isEqualTo(guestOrder);
     }
@@ -124,7 +124,7 @@ public class OrderMergerTest {
 
         MergeResult result = orderMerger.merge(guestOrder, existingOrder);
 
-        assertThat(result.getOrderEntity()).isEqualTo(guestOrder);
+        assertThat(result.getOrder()).isEqualTo(guestOrder);
         assertThat(result.getLinesToInsert()).isNull();
         assertThat(result.getOrderToDelete()).isEqualTo(existingOrder);
     }
@@ -154,7 +154,7 @@ public class OrderMergerTest {
 
         MergeResult result = orderMerger.merge(guestOrder, existingOrder);
 
-        assertThat(result.getOrderEntity()).isEqualTo(existingOrder);
+        assertThat(result.getOrder()).isEqualTo(existingOrder);
         assertThat(result.getLinesToInsert())
                 .containsExactly(LineItem.builder().productVariantId(200L).quantity(2).build());
         assertThat(result.getOrderToDelete()).isEqualTo(guestOrder);

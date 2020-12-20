@@ -6,6 +6,8 @@
 package co.jueyi.geekshop.config;
 
 import co.jueyi.geekshop.common.Constant;
+import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.common.utils.IdUtil;
 import co.jueyi.geekshop.config.asset.*;
 import co.jueyi.geekshop.config.auth.AuthConfig;
 import co.jueyi.geekshop.config.auth.AuthenticationStrategy;
@@ -15,6 +17,7 @@ import co.jueyi.geekshop.config.collection.CollectionFilter;
 import co.jueyi.geekshop.config.collection.FacetValueCollectionFilter;
 import co.jueyi.geekshop.config.collection.VariantNameCollectionFilter;
 import co.jueyi.geekshop.config.order.MergeOrdersStrategy;
+import co.jueyi.geekshop.config.order.OrderCodeGenerator;
 import co.jueyi.geekshop.config.order.OrderMergeOptions;
 import co.jueyi.geekshop.config.order.UseGuestStrategy;
 import co.jueyi.geekshop.config.payment_method.ExamplePaymentMethodHandler;
@@ -290,5 +293,10 @@ public class AppConfig {
                 new MergeOrdersStrategy(),
                 new UseGuestStrategy()
         );
+    }
+
+    @Bean
+    public OrderCodeGenerator orderCodeGenerator() {
+        return (RequestContext ctx) -> IdUtil.generatePublicId();
     }
 }

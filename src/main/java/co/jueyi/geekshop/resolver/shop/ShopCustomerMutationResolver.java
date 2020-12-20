@@ -84,7 +84,7 @@ public class ShopCustomerMutationResolver implements GraphQLMutationResolver {
         if (userId == null) {
             throw new ForbiddenException();
         }
-        CustomerEntity customerEntity = this.customerService.findOneEntityByUserId(userId);
+        CustomerEntity customerEntity = this.customerService.findOneByUserId(userId);
         if (customerEntity == null) {
             throw new InternalServerError("No customer found for current user");
         }

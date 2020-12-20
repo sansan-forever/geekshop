@@ -14,5 +14,5 @@ import lombok.Data;
 public class AddNoteToOrderInput {
     private Long id;
     private String note;
-    private Boolean isPublic;
+    private Boolean privateOnly;
 }

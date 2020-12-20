@@ -33,7 +33,7 @@ public class CustomerQuery implements GraphQLQueryResolver {
 
     @Allow(Permission.ReadCustomer)
     public Customer customer(Long id, DataFetchingEnvironment dfe) {
-        CustomerEntity customerEntity =  this.customerService.findOneEntity(id);
+        CustomerEntity customerEntity =  this.customerService.findOne(id);
         if (customerEntity == null) return null;
         return BeanMapper.map(customerEntity, Customer.class);
     }

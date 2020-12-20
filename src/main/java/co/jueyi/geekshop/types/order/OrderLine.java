@@ -26,10 +26,12 @@ public class OrderLine implements Node {
     private ProductVariant productVariant;
     private Long productVariantId; // 内部使用，GraphQL不可见
     private Asset featuredAsset;
+    private Long featuredAssetId; // 内部使用，GraphQL不可见
     private Integer unitPrice;
     private Integer quantity;
     private List<OrderItem> items = new ArrayList<>();
     private Integer totalPrice;
     private List<Adjustment> adjustments = new ArrayList<>();
     private Order order;
+    private Long orderId; // 内部使用，GraphQL不可见
 }

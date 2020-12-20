@@ -14,5 +14,5 @@ import lombok.Data;
 public class AddNoteToCustomerInput {
     private Long id;
     private String note;
-    private Boolean visibleToPublic;
+    private Boolean privateOnly;
 }

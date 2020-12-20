@@ -21,5 +21,5 @@ public class UpdateOrderHistoryEntryArgs  {
     private RequestContext ctx;
     private HistoryEntryType type;
     private Map<String, String> data = new HashMap<>();
-    private boolean isPublic;
+    private boolean privateOnly;
 }

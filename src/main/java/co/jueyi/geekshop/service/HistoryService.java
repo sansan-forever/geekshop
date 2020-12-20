@@ -49,6 +49,40 @@ public class HistoryService {
     public static final String KEY_NOTE = "note";
 
     @SuppressWarnings("Duplicates")
+    public HistoryEntryList getHistoryForOrder(
+            Long orderId,
+            boolean publicOnly,
+            HistoryEntryListOptions options) {
+        PageInfo pageInfo = ServiceHelper.getListOptions(options);
+        IPage<OrderHistoryEntryEntity> page = new Page<>(pageInfo.current, pageInfo.size);
+        QueryWrapper<OrderHistoryEntryEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(OrderHistoryEntryEntity::getOrderId, orderId);
+        if (publicOnly) {
+            queryWrapper.lambda().eq(OrderHistoryEntryEntity::isPrivateOnly, false);
+        }
+        if (options != null) {
+            buildFilter(queryWrapper, options.getFilter());
+            buildSortOrder(queryWrapper, options.getSort());
+        }
+        IPage<OrderHistoryEntryEntity> orderHistoryEntryEntityPage =
+                this.orderHistoryEntryEntityMapper.selectPage(page, queryWrapper);
+
+        HistoryEntryList historyEntryList = new HistoryEntryList();
+        historyEntryList.setTotalItems((int) orderHistoryEntryEntityPage.getTotal());
+
+        if (CollectionUtils.isEmpty(orderHistoryEntryEntityPage.getRecords()))
+            return historyEntryList; // 返回空
+
+        // 将持久化实体类型转换成GraphQL传输类型
+        orderHistoryEntryEntityPage.getRecords().forEach(orderHistoryEntryEntity -> {
+            HistoryEntry historyEntry = BeanMapper.map(orderHistoryEntryEntity, HistoryEntry.class);
+            historyEntryList.getItems().add(historyEntry);
+        });
+
+        return historyEntryList;
+    }
+
+    @SuppressWarnings("Duplicates")
     public HistoryEntryList getHistoryForCustomer(
             Long customerId, HistoryEntryListOptions options) {
         PageInfo pageInfo = ServiceHelper.getListOptions(options);
@@ -93,14 +127,14 @@ public class HistoryService {
     }
 
     public OrderHistoryEntryEntity createHistoryEntryForOrder(CreateOrderHistoryEntryArgs args) {
-        return this.createHistoryEntryForOrder(args, true);
+        return this.createHistoryEntryForOrder(args, false);
     }
 
-    public OrderHistoryEntryEntity createHistoryEntryForOrder(CreateOrderHistoryEntryArgs args, boolean isPublic) {
+    public OrderHistoryEntryEntity createHistoryEntryForOrder(CreateOrderHistoryEntryArgs args, boolean privateOnly) {
         AdministratorEntity administratorEntity = this.getAdministratorFromContext(args.getCtx());
         OrderHistoryEntryEntity orderHistoryEntryEntity = new OrderHistoryEntryEntity();
         orderHistoryEntryEntity.setType(args.getType());
-        orderHistoryEntryEntity.setPublic(isPublic);
+        orderHistoryEntryEntity.setPrivateOnly(privateOnly);
         orderHistoryEntryEntity.setData(args.getData());
         orderHistoryEntryEntity.setAdministratorId(administratorEntity.getId());
         orderHistoryEntryEntity.setOrderId(args.getOrderId());
@@ -120,7 +154,7 @@ public class HistoryService {
         if (args.getData().size() > 0) {
             entry.setData(args.getData());
         }
-        entry.setPublic(args.isPublic());
+        entry.setPrivateOnly(args.isPrivateOnly());
         AdministratorEntity administratorEntity = this.getAdministratorFromContext(ctx);
         entry.setAdministratorId(administratorEntity.getId());
         this.orderHistoryEntryEntityMapper.updateById(entry);
@@ -137,13 +171,14 @@ public class HistoryService {
         return this.createHistoryEntryForCustomer(args, false);
     }
 
-    public CustomerHistoryEntryEntity createHistoryEntryForCustomer(CreateCustomerHistoryEntryArgs args, Boolean isVisibleToPublic) {
+    public CustomerHistoryEntryEntity createHistoryEntryForCustomer(
+            CreateCustomerHistoryEntryArgs args, Boolean privateOnly) {
         AdministratorEntity administratorEntity =
                 this.getAdministratorFromContext(args.getCtx());
         CustomerHistoryEntryEntity customerHistoryEntryEntity =
                 BeanMapper.map(args, CustomerHistoryEntryEntity.class);
         customerHistoryEntryEntity.setAdministratorId(administratorEntity == null ? null : administratorEntity.getId());
-        customerHistoryEntryEntity.setVisibleToPublic(BooleanUtils.toBoolean(isVisibleToPublic));
+        customerHistoryEntryEntity.setPrivateOnly(BooleanUtils.toBoolean(privateOnly));
         this.customerHistoryEntryEntityMapper.insert(customerHistoryEntryEntity);
         return customerHistoryEntryEntity;
     }

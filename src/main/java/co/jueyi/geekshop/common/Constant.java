@@ -74,4 +74,17 @@ public abstract class Constant {
     public static final String DATA_LOADER_NAME_COLLECTION_ASSETS = "collectionAssetsDataLoader";
     public static final String DATA_LOADER_NAME_COLLECTION_PARENT = "collectionParentDataLoader";
     public static final String DATA_LOADER_NAME_COLLECTION_CHILDREN = "collectionChildrenDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_LINE_PRODUCT_VARIANT = "orderLineProductVariantDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_LINE_FEATURED_ASSET = "orderLineFeaturedAssetDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_LINE_ORDER = "orderLineOrderDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_ITEM_FULFILLMENT = "orderItemFulfillmentDataLoader";
+    public static final String DATA_LOADER_NAME_FULFILLMENT_ORDER_ITEMS = "fulfillmentOrderItemsDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_CUSTOMER = "orderCustomerDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_PROMOTIONS = "orderPromotionsDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_PAYMENTS = "orderPaymentsDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_SHIPPING_METHOD = "orderShippingMethodDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_LINE_ITEMS = "orderLineItemsDataLoader";
+    public static final String DATA_LOADER_NAME_ORDER_LINES = "orderLinesDataLoader";
+    public static final String DATA_LOADER_NAME_PAYMENT_REFUNDS = "paymentRefundsDataLoader";
+    public static final String DATA_LOADER_NAME_REFUND_ORDER_ITEMS = "refundOrderItemsDataLoader";
 }

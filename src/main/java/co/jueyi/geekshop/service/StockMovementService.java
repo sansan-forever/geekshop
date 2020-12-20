@@ -6,11 +6,9 @@
 package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.utils.BeanMapper;
-import co.jueyi.geekshop.entity.OrderEntity;
-import co.jueyi.geekshop.entity.OrderLineEntity;
-import co.jueyi.geekshop.entity.ProductVariantEntity;
-import co.jueyi.geekshop.entity.StockMovementEntity;
+import co.jueyi.geekshop.entity.*;
 import co.jueyi.geekshop.exception.InternalServerError;
+import co.jueyi.geekshop.mapper.OrderLineEntityMapper;
 import co.jueyi.geekshop.mapper.ProductVariantEntityMapper;
 import co.jueyi.geekshop.mapper.StockMovementEntityMapper;
 import co.jueyi.geekshop.service.helpers.PageInfo;
@@ -30,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -41,6 +41,7 @@ import java.util.List;
 public class StockMovementService {
     private final StockMovementEntityMapper stockMovementEntityMapper;
     private final ProductVariantEntityMapper productVariantEntityMapper;
+    private final OrderLineEntityMapper orderLineEntityMapper;
 
     public StockMovementList getStockMovementsByProductVariantId(
             Long productVariantId, StockMovementListOptions options) {
@@ -117,7 +118,34 @@ public class StockMovementService {
         return saleList;
     }
 
-    public List<StockMovement> createCancellationsForOrderItems(List<OrderItem> items) { // TODO OrderItemEntity?
-        return null; // TODO
+    public List<StockMovement> createCancellationsForOrderItems(List<OrderItemEntity> items) {
+        List<StockMovement> stockMovements = new ArrayList<>();
+        Map<Long, ProductVariantEntity> variantsMap = new HashMap<>();
+        for(OrderItemEntity item : items) {
+            ProductVariantEntity productVariant = null;
+            OrderLineEntity line = orderLineEntityMapper.selectById(item.getOrderLineId());
+            Long productVariantId = line.getProductVariantId();
+            if (variantsMap.containsKey(productVariantId)) {
+                productVariant = variantsMap.get(productVariantId);
+            } else {
+                productVariant = this.productVariantEntityMapper.selectById(productVariantId);
+                variantsMap.put(productVariantId, productVariant);
+            }
+            StockMovementEntity cancellation = new StockMovementEntity();
+            cancellation.setProductVariantId(productVariantId);
+            cancellation.setQuantity(1);
+            cancellation.setOrderItemId(item.getId());
+            cancellation.setOrderLineId(item.getOrderLineId());
+            cancellation.setType(StockMovementType.CANCELLATION);
+            this.stockMovementEntityMapper.insert(cancellation);
+            stockMovements.add(BeanMapper.map(cancellation, StockMovement.class));
+            item.setCancellationId(cancellation.getId()); // 预填充cancellationId
+
+            if (productVariant.isTrackInventory()) {
+                productVariant.setStockOnHand(productVariant.getStockOnHand() + 1);
+                this.productVariantEntityMapper.updateById(productVariant);
+            }
+        }
+        return stockMovements;
     }
 }

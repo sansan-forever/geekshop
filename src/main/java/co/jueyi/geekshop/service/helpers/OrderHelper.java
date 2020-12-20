@@ -7,6 +7,7 @@ package co.jueyi.geekshop.service.helpers;
 
 import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.entity.OrderItemEntity;
+import co.jueyi.geekshop.entity.OrderLineEntity;
 import co.jueyi.geekshop.entity.PaymentEntity;
 import co.jueyi.geekshop.mapper.PaymentEntityMapper;
 import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentState;
@@ -57,6 +58,18 @@ public class OrderHelper {
                 .filter(orderItemEntity -> !orderItemEntity.isCancelled()).collect(Collectors.toList());
         return nonCancelledItems.stream().anyMatch(this::isFulfilled) &&
                 !nonCancelledItems.stream().allMatch(this::isFulfilled);
+    }
+
+    public List<Long> getOrderItemIds(OrderEntity order) {
+        return getOrderItems(order).stream().map(OrderItemEntity::getId).collect(Collectors.toList());
+    }
+
+    public List<Long> getOrderItemIds(OrderLineEntity line) {
+        return line.getItems().stream().map(OrderItemEntity::getId).collect(Collectors.toList());
+    }
+
+    public List<Long> getOrderLineIds(OrderEntity order) {
+        return order.getLines().stream().map(OrderLineEntity::getId).collect(Collectors.toList());
     }
 
     /**

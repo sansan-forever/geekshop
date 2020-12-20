@@ -10,7 +10,8 @@ type Mutation {
     fulfillOrder(input: FulfillOrderInput!): Fulfillment!
     cancelOrder(input: CancelOrderInput!): Order!
     refundOrder(input: RefundOrderInput!): Refund!
-    addNoteToOrder(input: SettleRefundInput!): Order!
+    settleRefund(input: SettleRefundInput!): Refund!
+    addNoteToOrder(input: AddNoteToOrderInput!): Order!
     updateOrderNote(input: UpdateOrderNoteInput!): HistoryEntry!
     deleteOrderNote(id: ID!): DeletionResponse!
     transitionOrderToState(id: ID!, state: String!): Order
@@ -21,7 +22,34 @@ extend type Order {
     nextStates: [String!]!
 }
 
-input OrderListOptions
+input OrderListOptions {
+    currentPage: Int
+    pageSize: Int
+    sort: OrderSortParameter
+    filter: OrderFilterParameter
+}
+
+input OrderFilterParameter {
+    createdAt: DateOperators
+    updatedAt: DateOperators
+    code: StringOperators
+    state: StringOperators
+    active: BooleanOperators
+    subTotal: NumberOperators
+    shipping: NumberOperators
+    total: NumberOperators
+}
+
+input OrderSortParameter {
+    id: SortOrder
+    createdAt: SortOrder
+    updatedAt: SortOrder
+    code: SortOrder
+    state: SortOrder
+    subTotal: SortOrder
+    shipping: SortOrder
+    total: SortOrder
+}
 
 input FulfillOrderInput {
     lines: [OrderLineInput!]!
@@ -58,11 +86,11 @@ input SettleRefundInput {
 input AddNoteToOrderInput {
     id: ID!
     note: String!
-    isPublic: Boolean!
+    privateOnly: Boolean!
 }
 
 input UpdateOrderNoteInput {
-    nodeId: ID!
+    noteId: ID!
     note: String
-    isPublic: Boolean
+    privateOnly: Boolean
 }

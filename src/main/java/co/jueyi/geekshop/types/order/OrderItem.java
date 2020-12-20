@@ -25,5 +25,6 @@ public class OrderItem implements Node {
     private Integer unitPrice;
     private List<Adjustment> adjustments = new ArrayList<>();
     private Fulfillment fulfillment;
+    private Long fulfillmentId; // // 内部使用，GraphQL不可见
     private Long refundId;
 }

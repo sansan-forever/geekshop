@@ -4,7 +4,7 @@ type HistoryEntry implements Node {
     id: ID!
     createdAt: DateTime!
     updatedAt: DateTime!
-    visibleToPublic: Boolean!
+    privateOnly: Boolean!
     type: HistoryEntryType!
     administrator: Administrator
     data: JSON!

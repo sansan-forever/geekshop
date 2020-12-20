@@ -27,7 +27,7 @@ public class ShopCustomerQueryResolver implements GraphQLQueryResolver {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         Long userId = ctx.getActiveUserId();
         if (userId != null) {
-            CustomerEntity customerEntity = this.customerService.findOneEntityByUserId(userId);
+            CustomerEntity customerEntity = this.customerService.findOneByUserId(userId);
             if (customerEntity == null) return null;
             return BeanMapper.map(customerEntity, Customer.class);
         }

@@ -7,13 +7,19 @@ package co.jueyi.geekshop.service.helpers;
 
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.entity.AddressEntity;
+import co.jueyi.geekshop.entity.OrderEntity;
+import co.jueyi.geekshop.entity.OrderItemEntity;
 import co.jueyi.geekshop.exception.EntityNotFoundException;
 import co.jueyi.geekshop.service.args.CreateCustomerHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.CreateOrderHistoryEntryArgs;
 import co.jueyi.geekshop.service.args.UpdateCustomerHistoryEntryArgs;
+import co.jueyi.geekshop.service.args.UpdateOrderHistoryEntryArgs;
 import co.jueyi.geekshop.types.common.ListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
+import co.jueyi.geekshop.types.order.Order;
+import co.jueyi.geekshop.types.order.OrderItem;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.util.StringUtils;
@@ -91,6 +97,17 @@ public abstract class ServiceHelper {
         return args;
     }
 
+    public static UpdateOrderHistoryEntryArgs buildUpdateOrderHistoryEntryArgs(
+            RequestContext ctx, HistoryEntryType type, String note, boolean isPrivateOnly, Long entryId) {
+        UpdateOrderHistoryEntryArgs args = new UpdateOrderHistoryEntryArgs();
+        args.setType(type);
+        args.getData().put("note", note);
+        args.setPrivateOnly(isPrivateOnly);
+        args.setCtx(ctx);
+        args.setEntryId(entryId);
+        return args;
+    }
+
     public static UpdateCustomerHistoryEntryArgs buildUpdateCustomerHistoryEntryArgs(
             RequestContext ctx, Long entryId, HistoryEntryType type) {
         return buildUpdateCustomerHistoryEntryArgs(
@@ -119,5 +136,22 @@ public abstract class ServiceHelper {
             result += ", " + addressEntity.getPostalCode();
         }
         return result;
+    }
+
+    public static Order mapOrderEntityToOrder(OrderEntity orderEntity) {
+        Order order = BeanMapper.map(orderEntity, Order.class);
+        if (orderEntity.getState() != null) {
+            order.setState(orderEntity.getState().name());
+        }
+        order.setAdjustments(orderEntity.getAdjustments());
+        order.setTotal(orderEntity.getTotal());
+        order.setTotalQuantity(orderEntity.getTotalQuantity());
+        return order;
+    }
+
+    public static OrderItem mapOrderItemEntityToOrderItem(OrderItemEntity orderItemEntity) {
+        OrderItem orderItem = BeanMapper.map(orderItemEntity, OrderItem.class);
+        orderItem.setAdjustments(orderItemEntity.getAdjustments());
+        return orderItem;
     }
 }

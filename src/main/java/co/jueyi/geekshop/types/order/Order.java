@@ -37,6 +37,7 @@ public class Order implements Node {
      */
     private Boolean active;
     private Customer customer;
+    private Long customerId; // 内部使用，GraphQL不可见
     private OrderAddress shippingAddress;
     private OrderAddress billingAddress;
     private List<OrderLine> lines = new ArrayList<>();
@@ -58,12 +59,9 @@ public class Order implements Node {
     private Integer subTotal;
     private Integer shipping;
     private ShippingMethod shippingMethod;
+    private Long shippingMethodId; // 内部使用，GraphQL不可见
     private Integer total;
     private HistoryEntryList history;
-
-    public HistoryEntryList getHistory(HistoryEntryListOptions options) {
-        return null; // TODO
-    }
 
     private List<String> nextStates = new ArrayList<>(); // 该字段仅Admin可见
 }
