@@ -49,7 +49,7 @@ public class ShippingMethodQuery implements GraphQLQueryResolver {
 
     @Allow(Permission.ReadSettings)
     public List<ConfigurableOperationDefinition> shippingCalculators(DataFetchingEnvironment dfe) {
-        return this.shippingMethodService.getShippingEligibilityCheckers();
+        return this.shippingMethodService.getShippingCalculators();
     }
 
     @Allow(Permission.ReadSettings)

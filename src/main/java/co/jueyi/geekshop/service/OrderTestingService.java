@@ -69,6 +69,7 @@ public class OrderTestingService {
      * Tests all available ShippingMethods against a mock Order and return those which are eligible. This
      * is intended to simulate a call to the `eligibleShippingMethods` query of the Shop API.
      */
+    @SuppressWarnings("Duplicates")
     public List<ShippingMethodQuote> testEligibleShippingMethods(TestEligibleShippingMethodsInput input) {
         OrderEntity mockOrder = this.buildMockOrder(input.getShippingAddress(), input.getLines());
         List<EligibleShippingMethod>  eligibleMethods = this.shippingCalculator.getEligibleShippingMethods(mockOrder);

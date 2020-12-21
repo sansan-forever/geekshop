@@ -7,18 +7,24 @@ package co.jueyi.geekshop.data_import.populator;
 
 import co.jueyi.geekshop.common.ApiType;
 import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.common.utils.NormalizeUtil;
+import co.jueyi.geekshop.config.shipping_method.ShippingCalculator;
+import co.jueyi.geekshop.config.shipping_method.ShippingEligibilityChecker;
 import co.jueyi.geekshop.data_import.CollectionDefinition;
 import co.jueyi.geekshop.data_import.FacetValueCollectionFilterDefinition;
 import co.jueyi.geekshop.data_import.InitialData;
+import co.jueyi.geekshop.data_import.ShippingMethodData;
 import co.jueyi.geekshop.data_import.asset_importer.AssetImporter;
 import co.jueyi.geekshop.entity.AssetEntity;
 import co.jueyi.geekshop.entity.CollectionEntity;
 import co.jueyi.geekshop.entity.FacetValueEntity;
 import co.jueyi.geekshop.service.CollectionService;
 import co.jueyi.geekshop.service.FacetValueService;
+import co.jueyi.geekshop.service.ShippingMethodService;
 import co.jueyi.geekshop.types.collection.CreateCollectionInput;
 import co.jueyi.geekshop.types.common.ConfigArgInput;
 import co.jueyi.geekshop.types.common.ConfigurableOperationInput;
+import co.jueyi.geekshop.types.shipping.CreateShippingMethodInput;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -42,14 +48,42 @@ public class Populator {
     private final FacetValueService facetValueService;
     private final AssetImporter assetImporter;
     private final ObjectMapper objectMapper;
-    // TODO shippingMethodService
+    private final ShippingMethodService shippingMethodService;
+    private final ShippingEligibilityChecker defaultShippingEligibilityChecker;
+    private final ShippingCalculator defaultShippingCalculator;
     // TODO searchService
 
     /**
      * Should be run *before* populating the products.
      */
     public void populateInitialData(InitialData data) {
-        // TODO populateShippingMethods
+        this.populateShippingMethods(data.getShippingMethods());
+    }
+
+    private void populateShippingMethods(List<ShippingMethodData> shippingMethods) {
+        for(ShippingMethodData method: shippingMethods) {
+            CreateShippingMethodInput input = new CreateShippingMethodInput();
+            ConfigurableOperationInput checker = new ConfigurableOperationInput();
+            checker.setCode(defaultShippingEligibilityChecker.getCode());
+            ConfigArgInput configArgInput = new ConfigArgInput();
+            configArgInput.setName("orderMinimum");
+            configArgInput.setValue("0");
+            checker.getArguments().add(configArgInput);
+            input.setChecker(checker);
+
+            ConfigurableOperationInput calculator = new ConfigurableOperationInput();
+            calculator.setCode(defaultShippingCalculator.getCode());
+            configArgInput = new ConfigArgInput();
+            configArgInput.setName("rate");
+            configArgInput.setValue(method.getPrice().toString());
+            calculator.getArguments().add(configArgInput);
+            input.setCalculator(calculator);
+
+            input.setDescription(method.getName());
+            input.setCode(NormalizeUtil.normalizeString(method.getName(), "-"));
+
+            this.shippingMethodService.create(input);
+        }
     }
 
     /**

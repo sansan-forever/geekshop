@@ -8,6 +8,7 @@ package co.jueyi.geekshop.config;
 import co.jueyi.geekshop.ApiClient;
 import co.jueyi.geekshop.MockDataService;
 import co.jueyi.geekshop.TestHelper;
+import co.jueyi.geekshop.common.ConfigArgValues;
 import co.jueyi.geekshop.config.asset.AssetConfig;
 import co.jueyi.geekshop.config.asset.AssetPreviewStrategy;
 import co.jueyi.geekshop.config.asset.AssetStorageStrategy;
@@ -19,7 +20,11 @@ import co.jueyi.geekshop.config.auth.TestAuthenticationStrategy;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.config.session_cache.TestingSessionCacheStrategy;
+import co.jueyi.geekshop.config.shipping_method.*;
+import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.service.ConfigService;
+import co.jueyi.geekshop.types.common.ConfigArgDefinition;
+import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -115,5 +120,38 @@ public class TestConfig {
     @Primary
     public AssetPreviewStrategy testAssetPreviewStrategy() {
         return new TestAssetPreviewStrategy();
+    }
+
+    @Bean
+    @Primary
+    public ShippingOptions testShippingOptions() {
+        return new ShippingOptions(
+                Arrays.asList(new DefaultShippingEligibilityChecker()),
+                Arrays.asList(
+                        new DefaultShippingCalculator(),
+                        calculatorWithMetadata()
+                )
+        );
+    }
+
+    Map<String, String> TEST_METADATA = ImmutableMap.of("foo", "bar", "baz", "1,2,3");
+
+    ShippingCalculator calculatorWithMetadata() {
+        return new ShippingCalculator(
+                "calculator-with-metadata",
+                "Has metadata") {
+            @Override
+            public ShippingCalculationResult calculate(OrderEntity orderEntity, ConfigArgValues argValues) {
+                ShippingCalculationResult result = new ShippingCalculationResult();
+                result.setPrice(100);
+                result.setMetadata(TEST_METADATA);
+                return result;
+            }
+
+            @Override
+            public Map<String, ConfigArgDefinition> getArgSpec() {
+                return ImmutableMap.of();
+            }
+        };
     }
 }
