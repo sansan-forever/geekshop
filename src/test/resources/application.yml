@@ -13,6 +13,8 @@ spring:
   output:
     ansi:
       enabled: always
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss
 
 # Logging
 #logging:

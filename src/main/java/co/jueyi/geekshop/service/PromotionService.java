@@ -8,6 +8,7 @@ package co.jueyi.geekshop.service;
 import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.config.promotion.PromotionAction;
 import co.jueyi.geekshop.config.promotion.PromotionCondition;
+import co.jueyi.geekshop.config.promotion.PromotionOptions;
 import co.jueyi.geekshop.entity.*;
 import co.jueyi.geekshop.exception.CouponCodeExpiredException;
 import co.jueyi.geekshop.exception.CouponCodeInvalidException;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,11 +43,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @SuppressWarnings("Duplicates")
 public class PromotionService {
-    private final List<PromotionCondition> availableConditions;
-    private final List<PromotionAction> availableActions;
+    private final PromotionOptions promotionOptions;
     private final PromotionEntityMapper promotionEntityMapper;
     private final OrderPromotionJoinEntityMapper orderPromotionJoinEntityMapper;
     private final OrderEntityMapper orderEntityMapper;
+    private List<PromotionCondition> availableConditions;
+    private List<PromotionAction> availableActions;
 
     /**
      * All active AdjustmentSources are checked in memory because they are needed
@@ -53,6 +56,12 @@ public class PromotionService {
      * a DB call is not required newly each time.
      */
     private List<PromotionEntity> activePromotions = new ArrayList<>();
+
+    @PostConstruct
+    void init() {
+        this.availableConditions = promotionOptions.getPromotionConditions();
+        this.availableActions = promotionOptions.getPromotionActions();
+    }
 
 
     public PromotionList findAll(PromotionListOptions options) {

@@ -6,24 +6,30 @@
 package co.jueyi.geekshop.e2e;
 
 import co.jueyi.geekshop.*;
+import co.jueyi.geekshop.common.ConfigArgValues;
 import co.jueyi.geekshop.config.TestConfig;
-import co.jueyi.geekshop.config.shipping_method.ShippingCalculator;
-import co.jueyi.geekshop.config.shipping_method.ShippingEligibilityChecker;
-import co.jueyi.geekshop.config.shipping_method.ShippingOptions;
+import co.jueyi.geekshop.config.shipping_method.*;
+import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.shipping.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
@@ -77,6 +83,42 @@ public class ShippingMethodTest {
 
     ShippingEligibilityChecker defaultShippingEligibilityChecker;
     ShippingCalculator calculatorWithMetadata;
+
+    @TestConfiguration
+    static class ContextConfiguration {
+        @Bean
+        @Primary
+        public ShippingOptions testShippingOptions() {
+            return new ShippingOptions(
+                    Arrays.asList(new DefaultShippingEligibilityChecker()),
+                    Arrays.asList(
+                            new DefaultShippingCalculator(),
+                            calculatorWithMetadata()
+                    )
+            );
+        }
+
+        Map<String, String> TEST_METADATA = ImmutableMap.of("foo", "bar", "baz", "1,2,3");
+
+        ShippingCalculator calculatorWithMetadata() {
+            return new ShippingCalculator(
+                    "calculator-with-metadata",
+                    "Has metadata") {
+                @Override
+                public ShippingCalculationResult calculate(OrderEntity orderEntity, ConfigArgValues argValues) {
+                    ShippingCalculationResult result = new ShippingCalculationResult();
+                    result.setPrice(100);
+                    result.setMetadata(TEST_METADATA);
+                    return result;
+                }
+
+                @Override
+                public Map<String, ConfigArgDefinition> getArgSpec() {
+                    return ImmutableMap.of();
+                }
+            };
+        }
+    }
 
     @BeforeAll
     void beforeAll() throws IOException {
