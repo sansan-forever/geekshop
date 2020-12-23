@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class ShopCustomerQueryResolver implements GraphQLQueryResolver {
+public class ShopCustomerQuery implements GraphQLQueryResolver {
     private final CustomerService customerService;
 
     public Customer activeCustomer(DataFetchingEnvironment dfe) {

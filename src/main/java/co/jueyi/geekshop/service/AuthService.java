@@ -79,7 +79,7 @@ public class AuthService {
         }
 
         if (ctx.getSession() != null && ctx.getSession().getActiveOrderId() != null) {
-            // TODO deleteSessionByActiveOrderId
+            this.sessionService.deleteSessionsByActiveOrderId(ctx.getSession().getActiveOrderId());
         }
         user.setLastLogin(new Date());
         CachedSession session = sessionService.createNewAuthenticatedSession(

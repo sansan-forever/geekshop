@@ -94,4 +94,6 @@ public class ShopProductsQuery implements GraphQLQueryResolver {
         if (collectionEntity.isPrivateOnly()) return null;
         return BeanMapper.map(collectionEntity, Collection.class);
     }
+
+    // TODO search
 }

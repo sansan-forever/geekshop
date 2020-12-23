@@ -1,7 +1,7 @@
 # Copyright (c) 2020 掘艺网络(jueyi.co).
 # All rights reserved.
 type Query {
-    order(id: ID!): Order
+    orderByAdmin(id: ID!): Order
     orders(options: OrderListOptions): OrderList!
 }
 
@@ -14,7 +14,7 @@ type Mutation {
     addNoteToOrder(input: AddNoteToOrderInput!): Order!
     updateOrderNote(input: UpdateOrderNoteInput!): HistoryEntry!
     deleteOrderNote(id: ID!): DeletionResponse!
-    transitionOrderToState(id: ID!, state: String!): Order
+    transitionOrderToStateByAdmin(id: ID!, state: String!): Order
 }
 
 

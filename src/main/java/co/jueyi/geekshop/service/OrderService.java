@@ -103,14 +103,21 @@ public class OrderService {
                 }).collect(Collectors.toList());
     }
 
-    public OrderList findAll(OrderListOptions options) {
+    public OrderList findAllWithItems(OrderListOptions options) {
         return this.findOrderList(null, options);
+    }
+
+    /**
+     * 该方法不会填充line items
+     */
+    public OrderEntity findOne(Long orderId) {
+        return this.orderEntityMapper.selectById(orderId);
     }
 
     /**
      * 该方法获取的OrderEntity会填充OrderLineEntity(s)和OrderItemEntity(s)
      */
-    public OrderEntity findOne(Long orderId) {
+    public OrderEntity findOneWithItems(Long orderId) {
         OrderEntity order = this.orderEntityMapper.selectById(orderId);
         if (order == null) return null;
 
@@ -132,15 +139,15 @@ public class OrderService {
         return order;
     }
 
-    public OrderEntity findOneByCode(String orderCode) {
+    public OrderEntity findOneWithItemsByCode(String orderCode) {
         QueryWrapper<OrderEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(OrderEntity::getCode, orderCode);
         OrderEntity order = this.orderEntityMapper.selectOne(queryWrapper);
         if (order == null) return null;
-        return this.findOne(order.getId());
+        return this.findOneWithItems(order.getId());
     }
 
-    public OrderList findByCustomerId(Long customerId, OrderListOptions options) {
+    public OrderList findAllWithItemsByCustomerId(Long customerId, OrderListOptions options) {
         return this.findOrderList(customerId, options);
     }
 
@@ -155,6 +162,7 @@ public class OrderService {
             buildFilter(queryWrapper, options.getFilter());
             buildSortOrder(queryWrapper, options.getSort());
         }
+        queryWrapper.lambda().select(OrderEntity::getId); // 先只获取id，后面再次获取Order并填充Items
         IPage<OrderEntity> orderEntityPage =
                 this.orderEntityMapper.selectPage(page, queryWrapper);
 
@@ -166,7 +174,8 @@ public class OrderService {
 
         // 将持久化实体类型转换成GraphQL传输类型
         orderEntityPage.getRecords().forEach(orderEntity -> {
-            Order order = ServiceHelper.mapOrderEntityToOrder(orderEntity);
+            OrderEntity orderWithItems = this.findOneWithItems(orderEntity.getId()); // 再次获取Order并填充Items
+            Order order = ServiceHelper.mapOrderEntityToOrder(orderWithItems);
             orderList.getItems().add(order);
         });
 
@@ -249,7 +258,7 @@ public class OrderService {
             Long productVariantId,
             Integer quantity) {
         this.assertQuantityIsPositive(quantity);
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         this.assertAddingItemsState(order);
         this.assertNotOverOrderItemsLimit(order, quantity);
         ProductVariantEntity productVariant = this.getProductVariantOrThrow(productVariantId);
@@ -278,7 +287,7 @@ public class OrderService {
         assert orderId != null || orderInput != null;
         OrderEntity order = orderInput;
         if (order == null) {
-            order = this.getOrderOrThrow(orderId);
+            order = this.getOrderWithItemsOrThrow(orderId);
         }
         OrderLineEntity orderLine = this.getOrderLineOrThrow(order, orderLineId);
         this.assertAddingItemsState(order);
@@ -311,7 +320,7 @@ public class OrderService {
 
     @Transactional
     public OrderEntity removeItemFromOrder(Long orderId, Long orderLineId) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         this.assertAddingItemsState(order);
         OrderLineEntity orderLine = this.getOrderLineOrThrow(order, orderLineId);
         order.getLines().remove(orderLine);
@@ -324,7 +333,7 @@ public class OrderService {
 
     @Transactional
     public OrderEntity removeAllItemsFromOrder(Long orderId) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         this.assertAddingItemsState(order);
         // 先删除关联的items
         this.orderItemEntityMapper.deleteBatchIds(orderHelper.getOrderItemIds(order));
@@ -337,7 +346,7 @@ public class OrderService {
 
     @Transactional
     public OrderEntity applyCouponCode(RequestContext ctx, Long orderId, String couponCode) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         if (order.getCouponCodes().contains(couponCode)) {
             return order;
         }
@@ -354,7 +363,7 @@ public class OrderService {
     }
 
     public OrderEntity removeCouponCode(RequestContext ctx, Long orderId, String couponCode) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         if (order.getCouponCodes().contains(couponCode)) {
             order.getCouponCodes().remove(couponCode);
             CreateOrderHistoryEntryArgs args = ServiceHelper.buildCreateOrderHistoryEntryArgs(
@@ -385,7 +394,7 @@ public class OrderService {
     }
 
     public OrderEntity setShippingAddress(Long orderId, CreateAddressInput input) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         OrderAddress shippingAddress = BeanMapper.map(input, OrderAddress.class);
         order.setShippingAddress(shippingAddress);
         this.orderEntityMapper.updateById(order);
@@ -393,7 +402,7 @@ public class OrderService {
     }
 
     public OrderEntity setBillingAddress(Long orderId, CreateAddressInput input) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         OrderAddress billingAddress = BeanMapper.map(input, OrderAddress.class);
         order.setBillingAddress(billingAddress);
         this.orderEntityMapper.updateById(order);
@@ -402,7 +411,7 @@ public class OrderService {
 
     @SuppressWarnings("Duplicates")
     public List<ShippingMethodQuote> getEligibleShippingMethods(RequestContext ctx, Long orderId) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         List<EligibleShippingMethod> eligibleMethods = this.shippingCalculator.getEligibleShippingMethods(order);
         return eligibleMethods.stream()
                 .map(eligible -> {
@@ -416,8 +425,26 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderEntity setShippingMethod(Long orderId, Long shippingMethodId) {
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
+        this.assertAddingItemsState(order);
+        List<EligibleShippingMethod> eligibleShippingMethods =
+                this.shippingCalculator.getEligibleShippingMethods(order);
+        EligibleShippingMethod selectedMethod = eligibleShippingMethods.stream()
+                .filter(m -> Objects.equals(m.getMethod().getId(), shippingMethodId)).findFirst().orElse(null);
+        if (selectedMethod == null) {
+            throw new UserInputException("Shipping method with id { " + shippingMethodId + " } is unavailable");
+        }
+        order.setShippingMethodId(selectedMethod.getMethod().getId());
+        this.orderEntityMapper.updateById(order);
+        this.applyPriceAdjustments(order);
+        this.orderEntityMapper.updateById(order);
+        return order;
+    }
+
+    @Transactional
     public OrderEntity transitionToState(RequestContext ctx, Long orderId, OrderState state) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         OrderState fromState = order.getState();
         this.orderStateMachine.transition(ctx, order, state);
         this.orderEntityMapper.updateById(order);
@@ -432,7 +459,7 @@ public class OrderService {
     }
 
     public OrderEntity addPaymentToOrder(RequestContext ctx, Long orderId, PaymentInput input) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         if (order.getState() != OrderState.ArrangingPayment) {
             throw new IllegalOperationException(
                     "A Payment may only be added when Order is in \"ArrangingPayment\" state");
@@ -461,7 +488,7 @@ public class OrderService {
     public PaymentEntity settlePayment(RequestContext ctx, Long paymentId) {
         PaymentEntity payment =
                 ServiceHelper.getEntityOrThrow(this.paymentEntityMapper, PaymentEntity.class, paymentId);
-        OrderEntity order = this.getOrderOrThrow(payment.getOrderId());
+        OrderEntity order = this.getOrderWithItemsOrThrow(payment.getOrderId());
         SettlePaymentResult settlePaymentResult = this.paymentMethodService.settlePayment(payment, order);
         if (settlePaymentResult.isSuccess()) {
             PaymentState fromState = payment.getState();
@@ -523,7 +550,7 @@ public class OrderService {
                             HistoryEntryType.ORDER_FULFILLMENT,
                             ImmutableMap.of("fulfillmentId", fulfillment.getId().toString()));
             this.historyService.createHistoryEntryForOrder(args);
-            OrderEntity orderWithItems = this.getOrderOrThrow(order.getId());
+            OrderEntity orderWithItems = this.getOrderWithItemsOrThrow(order.getId());
             if (orderHelper.orderItemsAreFulfilled(orderWithItems)) {
                 this.transitionToState(ctx, order.getId(), OrderState.Fulfilled);
             } else {
@@ -540,7 +567,7 @@ public class OrderService {
                 order.getLines().get(0).getItems().get(0).getFulfillmentId() != null) {
             lines = order.getLines();
         } else {
-            OrderEntity orderWithItems = this.findOne(order.getId());
+            OrderEntity orderWithItems = this.findOneWithItems(order.getId());
             lines = orderWithItems.getLines();
         }
         List<OrderItemEntity> allItems = new ArrayList<>();
@@ -573,11 +600,11 @@ public class OrderService {
         if (allOrderItemsCancelled) {
             this.transitionToState(ctx, input.getOrderId(), OrderState.Cancelled);
         }
-        return this.findOne(input.getOrderId());
+        return this.findOneWithItems(input.getOrderId());
     }
 
     private boolean cancelOrderById(RequestContext ctx, CancelOrderInput input) {
-        OrderEntity order = this.getOrderOrThrow(input.getOrderId());
+        OrderEntity order = this.getOrderWithItemsOrThrow(input.getOrderId());
         if (order.getState() == OrderState.AddingItems || order.getState() == OrderState.ArrangingPayment) {
             return true;
         } else {
@@ -625,7 +652,7 @@ public class OrderService {
             this.orderItemEntityMapper.updateById(item);
         });
 
-        OrderEntity orderWithItems = this.getOrderOrThrow(order.getId());
+        OrderEntity orderWithItems = this.getOrderWithItemsOrThrow(order.getId());
         CreateOrderHistoryEntryArgs args = ServiceHelper.buildCreateOrderHistoryEntryArgs(
                 ctx,
                 order.getId(),
@@ -659,7 +686,7 @@ public class OrderService {
         if (!CollectionUtils.isEmpty(orders) && !Objects.equals(payment.getOrderId(), orders.get(0).getId())) {
             throw new IllegalOperationException("Refund order payment lines mismatch");
         }
-        OrderEntity order = this.findOne(payment.getOrderId());
+        OrderEntity order = this.findOneWithItems(payment.getOrderId());
         if (order.getState() == OrderState.AddingItems || order.getState() == OrderState.ArrangingPayment ||
             order.getState() == OrderState.PaymentAuthorized) {
             throw new IllegalOperationException(
@@ -695,7 +722,7 @@ public class OrderService {
 
     @Transactional
     public OrderEntity addCustomerToOrder(Long orderId, Long customerId) {
-        OrderEntity order = this.getOrderOrThrow(orderId);
+        OrderEntity order = this.getOrderWithItemsOrThrow(orderId);
         order.setCustomerId(customerId);
         this.orderEntityMapper.updateById(order);
         /**
@@ -720,7 +747,7 @@ public class OrderService {
     }
 
     public OrderEntity addNoteToOrder(RequestContext ctx, AddNoteToOrderInput input) {
-        OrderEntity order = this.getOrderOrThrow(input.getId());
+        OrderEntity order = this.getOrderWithItemsOrThrow(input.getId());
         CreateOrderHistoryEntryArgs args = ServiceHelper.buildCreateOrderHistoryEntryArgs(
                 ctx,
                 order.getId(),
@@ -760,10 +787,10 @@ public class OrderService {
      * we need to reconcile the contents of the two orders.
      */
     @Transactional
-    public OrderEntity mergeOrders(UserEntity user, OrderEntity guestOrder, OrderEntity existingOrder) {
+    public OrderEntity mergeOrders(Long userId, OrderEntity guestOrder, OrderEntity existingOrder) {
         if (guestOrder != null && guestOrder.getCustomerId() != null) {
             /**
-             * In thie case the "guest order" is actually an order of an existing Customer,
+             * In this case the "guest order" is actually an order of an existing Customer,
              * so we do not want to merge at all.
              */
             return existingOrder;
@@ -780,7 +807,7 @@ public class OrderService {
                 this.addItemToOrder(order.getId(), line.getProductVariantId(), line.getQuantity());
             }
         }
-        CustomerEntity customer = this.customerService.findOneByUserId(user.getId());
+        CustomerEntity customer = this.customerService.findOneByUserId(userId);
         if (order != null && customer != null) {
             order.setCustomerId(customer.getId());
             this.orderEntityMapper.updateById(order);
@@ -792,8 +819,8 @@ public class OrderService {
     /**
      * 该方法获取的OrderEntity会填充OrderLineEntity(s)和OrderItemEntity(s)
      */
-    private OrderEntity getOrderOrThrow(Long orderId) {
-        OrderEntity order = this.findOne(orderId);
+    private OrderEntity getOrderWithItemsOrThrow(Long orderId) {
+        OrderEntity order = this.findOneWithItems(orderId);
         if (order == null) {
             throw new EntityNotFoundException("Order", orderId);
         }

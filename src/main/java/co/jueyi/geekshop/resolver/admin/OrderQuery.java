@@ -31,14 +31,14 @@ public class OrderQuery implements GraphQLQueryResolver {
      * Query
      */
     @Allow(Permission.ReadOrder)
-    public Order order(Long id, DataFetchingEnvironment dfe) {
-        OrderEntity orderEntity = this.orderService.findOne(id);
+    public Order orderByAdmin(Long id, DataFetchingEnvironment dfe) {
+        OrderEntity orderEntity = this.orderService.findOneWithItems(id);
         if (orderEntity == null) return null;
         return ServiceHelper.mapOrderEntityToOrder(orderEntity);
     }
 
     @Allow(Permission.ReadOrder)
     public OrderList orders(OrderListOptions options, DataFetchingEnvironment dfe) {
-        return this.orderService.findAll(options);
+        return this.orderService.findAllWithItems(options);
     }
 }

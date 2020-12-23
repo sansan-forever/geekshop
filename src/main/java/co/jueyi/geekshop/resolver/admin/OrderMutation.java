@@ -90,7 +90,7 @@ public class OrderMutation implements GraphQLMutationResolver {
     }
 
     @Allow(Permission.UpdateOrder)
-    public Order transitionOrderToState(Long id, String state, DataFetchingEnvironment dfe) {
+    public Order transitionOrderToStateByAdmin(Long id, String state, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         OrderEntity orderEntity = orderService.transitionToState(ctx, id, OrderState.valueOf(state));
         return ServiceHelper.mapOrderEntityToOrder(orderEntity);

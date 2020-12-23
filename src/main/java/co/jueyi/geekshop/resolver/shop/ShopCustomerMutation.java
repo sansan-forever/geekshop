@@ -31,7 +31,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class ShopCustomerMutationResolver implements GraphQLMutationResolver {
+public class ShopCustomerMutation implements GraphQLMutationResolver {
     private final CustomerService customerService;
 
     @Allow(Permission.Owner)

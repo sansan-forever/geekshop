@@ -7,15 +7,16 @@ package co.jueyi.geekshop.service;
 
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
+import co.jueyi.geekshop.common.utils.BeanMapper;
 import co.jueyi.geekshop.common.utils.TimeSpanUtil;
 import co.jueyi.geekshop.common.utils.TokenUtil;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.CachedSessionUser;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
+import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.entity.SessionEntity;
 import co.jueyi.geekshop.mapper.SessionEntityMapper;
-import co.jueyi.geekshop.types.common.Permission;
-import co.jueyi.geekshop.types.role.Role;
+import co.jueyi.geekshop.types.order.Order;
 import co.jueyi.geekshop.types.user.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +31,12 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("Duplicates")
 public class SessionService {
     private final ConfigService configService;
     private final SessionEntityMapper sessionEntityMapper;
     private final UserService userService;
+    private final OrderService orderService;
 
     private long getSessionDurationInMs() {
         return TimeSpanUtil.toMs(this.configService.getAuthOptions().getSessionDuration());
@@ -55,7 +58,12 @@ public class SessionService {
     public CachedSession createNewAuthenticatedSession(
             RequestContext ctx, User user, String authenticationStrategyName) {
         String token = this.generateSessionToken();
-        // TODO order handling
+        OrderEntity guestOrder = ctx.getSession() != null && ctx.getSession().getActiveOrderId() != null
+                ? this.orderService.findOneWithItems(ctx.getSession().getActiveOrderId())
+                : null;
+        OrderEntity existingOrder = this.orderService.getActiveOrderForUser(user.getId());
+        OrderEntity activeOrder = this.orderService.mergeOrders(user.getId(), guestOrder, existingOrder);
+
         SessionEntity sessionEntity = new SessionEntity();
         sessionEntity.setToken(token);
         sessionEntity.setUserId(user.getId());
@@ -63,6 +71,7 @@ public class SessionService {
         sessionEntity.setExpires(this.getExpiryDate(this.getSessionDurationInMs()));
         sessionEntity.setInvalidated(false);
         sessionEntity.setAnonymous(false);
+        sessionEntity.setActiveOrderId(activeOrder.getId());
 
         this.sessionEntityMapper.insert(sessionEntity);
 
@@ -119,6 +128,51 @@ public class SessionService {
         List<SessionEntity> sessionEntityList = this.sessionEntityMapper.selectList(queryWrapper);
         sessionEntityList.forEach(sessionEntity -> this.getSessionCacheStrategy().delete(sessionEntity.getToken()));
         this.sessionEntityMapper.delete(queryWrapper);
+    }
+
+    /**
+     * Deletes all existing sessions with the given activeOrder
+     */
+    public void deleteSessionsByActiveOrderId(Long activeOrderId) {
+        QueryWrapper<SessionEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(SessionEntity::getActiveOrderId, activeOrderId);
+        List<SessionEntity> sessions = this.sessionEntityMapper.selectList(queryWrapper);
+        sessions.forEach(session -> this.getSessionCacheStrategy().delete(session.getToken()));
+        this.sessionEntityMapper.delete(queryWrapper);
+    }
+
+    public CachedSession setActiveOrder(CachedSession serializedSession, Long orderId) {
+        SessionEntity session = this.sessionEntityMapper.selectById(serializedSession.getId());
+        if (session != null) {
+            session.setActiveOrderId(orderId);
+            this.sessionEntityMapper.updateById(session);
+            User user = null;
+            if (serializedSession.getUser() != null) {
+                user = BeanMapper.map(serializedSession.getUser(), User.class);
+            }
+            CachedSession updatedSerializedSession = this.serializeSession(session, user);
+            this.getSessionCacheStrategy().set(updatedSerializedSession);
+            return updatedSerializedSession;
+        }
+        return serializedSession;
+    }
+
+    public CachedSession unsetActiveOrder(CachedSession serializedSession) {
+        if (serializedSession.getActiveOrderId() != null) {
+            SessionEntity session = this.sessionEntityMapper.selectById(serializedSession.getId());
+            if (session != null) {
+                session.setActiveOrderId(null);
+                this.sessionEntityMapper.updateById(session);
+                User user = null;
+                if (serializedSession.getUser() != null) {
+                    user = BeanMapper.map(serializedSession.getUser(), User.class);
+                }
+                CachedSession updatedSerializedSession = this.serializeSession(session, user);
+                this.getSessionCacheStrategy().set(updatedSerializedSession);
+                return updatedSerializedSession;
+            }
+        }
+        return serializedSession;
     }
 
     /**

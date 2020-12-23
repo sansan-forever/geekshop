@@ -15,6 +15,7 @@ import java.util.Map;
  */
 @Data
 public class CreateRefundResult {
+    private Integer amount;
     private RefundState state;
     private String transactionId;
     private Map<String, String> metadata;
