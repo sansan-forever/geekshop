@@ -18,6 +18,7 @@ import co.jueyi.geekshop.types.promotion.CreatePromotionInput;
 import co.jueyi.geekshop.types.promotion.Promotion;
 import co.jueyi.geekshop.types.promotion.PromotionList;
 import co.jueyi.geekshop.types.promotion.UpdatePromotionInput;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

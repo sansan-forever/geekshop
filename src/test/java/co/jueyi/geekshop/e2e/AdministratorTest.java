@@ -13,6 +13,7 @@ import co.jueyi.geekshop.types.administrator.CreateAdministratorInput;
 import co.jueyi.geekshop.types.administrator.UpdateAdministratorInput;
 import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

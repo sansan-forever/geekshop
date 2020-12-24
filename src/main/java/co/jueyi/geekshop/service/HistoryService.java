@@ -136,7 +136,7 @@ public class HistoryService {
         orderHistoryEntryEntity.setType(args.getType());
         orderHistoryEntryEntity.setPrivateOnly(privateOnly);
         orderHistoryEntryEntity.setData(args.getData());
-        orderHistoryEntryEntity.setAdministratorId(administratorEntity.getId());
+        orderHistoryEntryEntity.setAdministratorId(administratorEntity != null ? administratorEntity.getId() : null);
         orderHistoryEntryEntity.setOrderId(args.getOrderId());
         this.orderHistoryEntryEntityMapper.insert(orderHistoryEntryEntity);
         return orderHistoryEntryEntity;

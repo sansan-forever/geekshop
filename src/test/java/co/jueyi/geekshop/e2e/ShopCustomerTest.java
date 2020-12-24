@@ -17,6 +17,7 @@ import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.customer.UpdateCustomerInput;
 import co.jueyi.geekshop.types.history.*;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

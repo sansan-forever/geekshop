@@ -40,7 +40,11 @@ public class OrderMutation implements GraphQLMutationResolver {
     public Payment settlePayment(Long id, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         PaymentEntity paymentEntity = orderService.settlePayment(ctx, id);
-        return BeanMapper.map(paymentEntity, Payment.class);
+        Payment payment = BeanMapper.map(paymentEntity, Payment.class);
+        if (paymentEntity.getState() != null) {
+            payment.setState(paymentEntity.getState().name());
+        }
+        return payment;
     }
 
     @Allow(Permission.UpdateOrder)

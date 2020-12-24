@@ -71,7 +71,7 @@ public class SessionService {
         sessionEntity.setExpires(this.getExpiryDate(this.getSessionDurationInMs()));
         sessionEntity.setInvalidated(false);
         sessionEntity.setAnonymous(false);
-        sessionEntity.setActiveOrderId(activeOrder.getId());
+        sessionEntity.setActiveOrderId(activeOrder != null ? activeOrder.getId() : null);
 
         this.sessionEntityMapper.insert(sessionEntity);
 

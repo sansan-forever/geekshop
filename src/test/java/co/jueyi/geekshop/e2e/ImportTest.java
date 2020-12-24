@@ -13,6 +13,7 @@ import co.jueyi.geekshop.types.facet.FacetValue;
 import co.jueyi.geekshop.types.product.*;
 import co.jueyi.geekshop.types.stock.StockMovement;
 import co.jueyi.geekshop.types.stock.StockMovementType;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphql.spring.boot.test.GraphQLResponse;
 import static org.assertj.core.api.Assertions.*;

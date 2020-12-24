@@ -12,6 +12,7 @@ import co.jueyi.geekshop.config.shipping_method.*;
 import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.types.common.*;
 import co.jueyi.geekshop.types.shipping.*;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -22,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 

@@ -12,6 +12,7 @@ import co.jueyi.geekshop.types.common.DeletionResponse;
 import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.common.SortOrder;
 import co.jueyi.geekshop.types.product.Product;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

@@ -8,6 +8,7 @@ package co.jueyi.geekshop.e2e;
 import co.jueyi.geekshop.*;
 import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.types.product.*;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

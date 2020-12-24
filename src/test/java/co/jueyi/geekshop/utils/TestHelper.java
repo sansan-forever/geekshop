@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package co.jueyi.geekshop;
+package co.jueyi.geekshop.utils;
 
 import co.jueyi.geekshop.data_import.CollectionDefinition;
 import co.jueyi.geekshop.data_import.FacetValueCollectionFilterDefinition;

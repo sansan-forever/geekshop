@@ -16,6 +16,7 @@ import co.jueyi.geekshop.types.common.SortOrder;
 import co.jueyi.geekshop.types.common.StringOperators;
 import co.jueyi.geekshop.types.facet.FacetValue;
 import co.jueyi.geekshop.types.product.*;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

@@ -18,6 +18,7 @@ import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentTransition
 import co.jueyi.geekshop.types.common.ConfigArgDefinition;
 import co.jueyi.geekshop.types.order.RefundOrderInput;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
 
@@ -38,6 +39,9 @@ public class TwoStagePaymentMethod extends PaymentMethodHandler {
         result.setAmount(orderEntity.getTotal());
         result.setState(PaymentState.Authorized);
         result.setTransactionId("12345");
+        if (!CollectionUtils.isEmpty(metadata)) {
+            result.setMetadata(metadata);
+        }
         return result;
     }
 
@@ -47,7 +51,7 @@ public class TwoStagePaymentMethod extends PaymentMethodHandler {
         SettlePaymentResult result = new SettlePaymentResult();
         result.setSuccess(true);
         result.getMetadata().put("moreData", "42");
-        return null;
+        return result;
     }
 
     @Override

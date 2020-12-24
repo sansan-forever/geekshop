@@ -11,6 +11,7 @@ import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.config.session_cache.CachedSession;
 import co.jueyi.geekshop.config.session_cache.SessionCacheStrategy;
 import co.jueyi.geekshop.options.ConfigOptions;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphql.spring.boot.test.GraphQLResponse;

@@ -44,7 +44,13 @@ public class OrderPaymentsDataLoader implements MappedBatchLoader<Long, List<Pay
 
             Map<Long, List<Payment>> groupByOrderId = paymentEntities.stream()
                     .collect(Collectors.groupingBy(PaymentEntity::getOrderId,
-                            Collectors.mapping(paymentEntity -> BeanMapper.map(paymentEntity, Payment.class),
+                            Collectors.mapping(paymentEntity -> {
+                                Payment payment = BeanMapper.map(paymentEntity, Payment.class);
+                                if (paymentEntity.getState() != null) {
+                                    payment.setState(paymentEntity.getState().name());
+                                }
+                                return payment;
+                                },
                                     Collectors.toList()
                             )));
 

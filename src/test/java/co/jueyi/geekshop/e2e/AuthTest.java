@@ -15,6 +15,7 @@ import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.role.CreateRoleInput;
 import co.jueyi.geekshop.types.role.Role;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

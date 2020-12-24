@@ -20,6 +20,7 @@ import co.jueyi.geekshop.types.customer.RegisterCustomerInput;
 import co.jueyi.geekshop.types.history.HistoryEntry;
 import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
+import co.jueyi.geekshop.utils.TestHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
