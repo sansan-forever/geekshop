@@ -559,6 +559,7 @@ public class OrderService {
         List<Long> fulfillmentIds =
                 allItems.stream().filter(i -> i.getFulfillmentId() != null).map(OrderItemEntity::getFulfillmentId)
                         .distinct().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(fulfillmentIds)) return Arrays.asList();
         return this.fulfillmentEntityMapper.selectBatchIds(fulfillmentIds);
     }
 

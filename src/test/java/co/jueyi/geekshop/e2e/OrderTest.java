@@ -22,6 +22,11 @@ import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
 import co.jueyi.geekshop.types.order.*;
 import co.jueyi.geekshop.types.payment.Payment;
+import co.jueyi.geekshop.types.product.Product;
+import co.jueyi.geekshop.types.product.ProductVariant;
+import co.jueyi.geekshop.types.product.UpdateProductVariantInput;
+import co.jueyi.geekshop.types.stock.StockMovement;
+import co.jueyi.geekshop.types.stock.StockMovementType;
 import co.jueyi.geekshop.utils.TestHelper;
 import co.jueyi.geekshop.utils.TestOrderUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,6 +82,20 @@ public class OrderTest {
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "shipping_address_fragment");
     static final String ORDER_ITEM_FRAGMENT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "order_item_fragment");
+    static final String GET_PRODUCT_WITH_VARIANTS =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_product_with_variants");
+    static final String ASSET_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "asset_fragment");
+    static final String PRODUCT_VARIANT_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_variant_fragment");
+    static final String PRODUCT_WITH_VARIANTS_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_with_variants_fragment");
+    static final String UPDATE_PRODUCT_VARIANTS =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product_variants");
+    static final String GET_STOCK_MOVEMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_stock_movement");
+    static final String VARIANT_WITH_STOCK_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "variant_with_stock_fragment");
 
     static final String SHOP_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shop/%s.graphqls";
     static final String ADD_ITEM_TO_ORDER  =
@@ -91,6 +110,15 @@ public class OrderTest {
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "settle_payment");
     static final String CREATE_FULFILLMENT =
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "create_fulfillment");
+    static final String GET_ORDER_FULFILLMENTS =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "get_order_fulfillments");
+    static final String GET_ORDER_LIST_FULFILLMENTS =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "get_order_list_fulfillments");
+    static final String GET_ORDER_FULFILLMENT_ITEMS =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "get_order_fulfillment_items");
+    static final String CANCEL_ORDER =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "cancel_order");
+
 
     @Autowired
     TestHelper testHelper;
@@ -670,5 +698,167 @@ public class OrderTest {
         assertThat(historyEntry1.getData())
                 .containsExactlyInAnyOrderEntriesOf(
                         ImmutableMap.of("from", "PartiallyFulfilled", "to", "Fulfilled"));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(14)
+    public void order_fulfillments_resolver_for_single_order() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_FULFILLMENTS, variables);
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getFulfillments()).hasSize(3);
+
+        Fulfillment fulfillment1 = order.getFulfillments().get(0);
+        assertThat(fulfillment1.getId()).isEqualTo(1L);
+        assertThat(fulfillment1.getMethod()).isEqualTo("Test1");
+
+        Fulfillment fulfillment2 = order.getFulfillments().get(1);
+        assertThat(fulfillment2.getId()).isEqualTo(2L);
+        assertThat(fulfillment2.getMethod()).isEqualTo("Test2");
+
+        Fulfillment fulfillment3 = order.getFulfillments().get(2);
+        assertThat(fulfillment3.getId()).isEqualTo(3L);
+        assertThat(fulfillment3.getMethod()).isEqualTo("Test3");
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(15)
+    public void order_fulfillments_resolver_for_order_list() throws IOException {
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_LIST_FULFILLMENTS, null);
+        OrderList orderList = graphQLResponse.get("$.data.orders", OrderList.class);
+
+        assertThat(orderList.getItems().get(0).getFulfillments()).isEmpty();
+        assertThat(orderList.getItems().get(1).getFulfillments()).hasSize(3);
+        Fulfillment fulfillment1 = orderList.getItems().get(1).getFulfillments().get(0);
+        assertThat(fulfillment1.getId()).isEqualTo(1L);
+        assertThat(fulfillment1.getMethod()).isEqualTo("Test1");
+
+        Fulfillment fulfillment2 = orderList.getItems().get(1).getFulfillments().get(1);
+        assertThat(fulfillment2.getId()).isEqualTo(2L);
+        assertThat(fulfillment2.getMethod()).isEqualTo("Test2");
+
+        Fulfillment fulfillment3 = orderList.getItems().get(1).getFulfillments().get(2);
+        assertThat(fulfillment3.getId()).isEqualTo(3L);
+        assertThat(fulfillment3.getMethod()).isEqualTo("Test3");
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(16)
+    public void order_fulfillments_orderItems_resolver() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_FULFILLMENT_ITEMS, variables);
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getFulfillments().get(0).getOrderItems()).hasSize(2);
+        assertThat(order.getFulfillments().get(0).getOrderItems().stream()
+                .map(OrderItem::getId).collect(Collectors.toList())).containsExactly(3L, 4L);
+        assertThat(order.getFulfillments().get(1).getOrderItems()).hasSize(1);
+        assertThat(order.getFulfillments().get(1).getOrderItems().stream()
+                .map(OrderItem::getId).collect(Collectors.toList())).containsExactly(5L);
+    }
+
+    /**
+     * cancellation by orderId
+     */
+
+    @Test
+    @org.junit.jupiter.api.Order(17)
+    public void cancel_from_AddingItems_state() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
+        Product testProduct = (Product) testOrderInfoList.get(0);
+        Long testProductVariantId = (Long) testOrderInfoList.get(1);
+        Long testOrderId = (Long) testOrderInfoList.get(2);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", testOrderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        assertThat(order.getState()).isEqualTo(OrderState.AddingItems.name());
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(testOrderId);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        adminClient.perform(CANCEL_ORDER, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", testOrderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        assertThat(order.getState()).isEqualTo(OrderState.Cancelled.name());
+        assertThat(order.getActive()).isFalse();
+        assertNoStockMovementsCreated(testProduct.getId());
+    }
+
+    private void assertNoStockMovementsCreated(Long productId) throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", productId);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        ProductVariant productVariant = product.getVariants().get(0);
+        assertThat(productVariant.getStockOnHand()).isEqualTo(100);
+        assertThat(productVariant.getStockMovements().getItems()).hasSize(1);
+        StockMovement stockMovement = productVariant.getStockMovements().getItems().get(0);
+        assertThat(stockMovement.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement.getQuantity()).isEqualTo(100);
+    }
+
+    private List<Object> createTestOrder(
+            ApiClient adminClient, ApiClient shopClient, String emailAddress, String password) throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 3L);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(GET_PRODUCT_WITH_VARIANTS, variables,
+                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        Long productVariantId = product.getVariants().get(0).getId();
+
+        // Set the ProductVariant to trackInventory
+        UpdateProductVariantInput updateProductVariantInput = new UpdateProductVariantInput();
+        updateProductVariantInput.setId(productVariantId);
+        updateProductVariantInput.setTrackInventory(true);
+
+        JsonNode inputNode = objectMapper.valueToTree(
+                Arrays.asList(updateProductVariantInput));
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = this.adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables,
+                Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+        List<ProductVariant> updatedProductVariants =
+                graphQLResponse.getList("$.data.updateProductVariants", ProductVariant.class);
+
+        // Add the ProductVariant to the Order
+        shopClient.asUserWithCredentials(emailAddress, password);
+
+        shopClient.asUserWithCredentials(emailAddress, password);
+        variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", productVariantId);
+        variables.put("quantity", 2);
+        graphQLResponse = shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+        Order order = graphQLResponse.get("$.data.addItemToOrder", Order.class);
+        Long orderId = order.getId();
+
+        return Arrays.asList(product, productVariantId, orderId);
     }
 }
