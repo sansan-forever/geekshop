@@ -118,25 +118,7 @@ public class OrderService {
      * 该方法获取的OrderEntity会填充OrderLineEntity(s)和OrderItemEntity(s)
      */
     public OrderEntity findOneWithItems(Long orderId) {
-        OrderEntity order = this.orderEntityMapper.selectById(orderId);
-        if (order == null) return null;
-
-        // 预填充OrderLines
-        QueryWrapper<OrderLineEntity> orderLineEntityQueryWrapper = new QueryWrapper<>();
-        orderLineEntityQueryWrapper.lambda().eq(OrderLineEntity::getOrderId, order.getId())
-                .orderByAsc(OrderLineEntity::getCreatedAt);
-        List<OrderLineEntity> orderLines = this.orderLineEntityMapper.selectList(orderLineEntityQueryWrapper);
-        order.setLines(orderLines);
-
-        // 预填充OrderItems
-        for(OrderLineEntity orderLine : orderLines) {
-            QueryWrapper<OrderItemEntity> orderItemEntityQueryWrapper = new QueryWrapper<>();
-            orderItemEntityQueryWrapper.lambda().eq(OrderItemEntity::getOrderLineId, orderLine.getId())
-                    .orderByAsc(OrderItemEntity::getCreatedAt);
-            List<OrderItemEntity> orderItems = this.orderItemEntityMapper.selectList(orderItemEntityQueryWrapper);
-            orderLine.setItems(orderItems);
-        }
-        return order;
+        return orderHelper.findOrderWithItems(orderId);
     }
 
     public OrderEntity findOneWithItemsByCode(String orderCode) {

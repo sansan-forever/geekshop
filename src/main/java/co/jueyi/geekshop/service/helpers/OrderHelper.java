@@ -9,6 +9,9 @@ import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.entity.OrderItemEntity;
 import co.jueyi.geekshop.entity.OrderLineEntity;
 import co.jueyi.geekshop.entity.PaymentEntity;
+import co.jueyi.geekshop.mapper.OrderEntityMapper;
+import co.jueyi.geekshop.mapper.OrderItemEntityMapper;
+import co.jueyi.geekshop.mapper.OrderLineEntityMapper;
 import co.jueyi.geekshop.mapper.PaymentEntityMapper;
 import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentState;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -27,6 +30,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderHelper {
     private final PaymentEntityMapper paymentEntityMapper;
+    private final OrderEntityMapper orderEntityMapper;
+    private final OrderItemEntityMapper orderItemEntityMapper;
+    private final OrderLineEntityMapper orderLineEntityMapper;
 
     /**
      * Returns true if the Order total is covered by Payments in the specified state.
@@ -89,5 +95,40 @@ public class OrderHelper {
 
     private boolean isFulfilled(OrderItemEntity orderItemEntity) {
         return orderItemEntity.getFulfillmentId() != null;
+    }
+
+    public OrderEntity findOrderWithItems(Long orderId) {
+        OrderEntity order = this.orderEntityMapper.selectById(orderId);
+        if (order == null) return null;
+
+        populateOrderWithItems(order);
+
+        return order;
+    }
+
+    public OrderEntity getOrderWithItems(Long orderId) {
+        OrderEntity order = ServiceHelper.getEntityOrThrow(
+                this.orderEntityMapper, OrderEntity.class, orderId);
+
+        populateOrderWithItems(order);
+
+        return order;
+    }
+
+    private void populateOrderWithItems(OrderEntity order) {
+        QueryWrapper<OrderLineEntity> orderLineEntityQueryWrapper = new QueryWrapper<>();
+        orderLineEntityQueryWrapper.lambda().eq(OrderLineEntity::getOrderId, order.getId())
+                .orderByAsc(OrderLineEntity::getCreatedAt);
+        List<OrderLineEntity> orderLines = this.orderLineEntityMapper.selectList(orderLineEntityQueryWrapper);
+        order.setLines(orderLines);
+
+        // 预填充OrderItems
+        for(OrderLineEntity orderLine : orderLines) {
+            QueryWrapper<OrderItemEntity> orderItemEntityQueryWrapper = new QueryWrapper<>();
+            orderItemEntityQueryWrapper.lambda().eq(OrderItemEntity::getOrderLineId, orderLine.getId())
+                    .orderByAsc(OrderItemEntity::getCreatedAt);
+            List<OrderItemEntity> orderItems = this.orderItemEntityMapper.selectList(orderItemEntityQueryWrapper);
+            orderLine.setItems(orderItems);
+        }
     }
 }

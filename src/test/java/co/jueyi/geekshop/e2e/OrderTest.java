@@ -18,11 +18,9 @@ import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.customer.CustomerListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntry;
+import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
-import co.jueyi.geekshop.types.order.FulfillOrderInput;
-import co.jueyi.geekshop.types.order.Order;
-import co.jueyi.geekshop.types.order.OrderLineInput;
-import co.jueyi.geekshop.types.order.OrderList;
+import co.jueyi.geekshop.types.order.*;
 import co.jueyi.geekshop.types.payment.Payment;
 import co.jueyi.geekshop.utils.TestHelper;
 import co.jueyi.geekshop.utils.TestOrderUtils;
@@ -48,6 +46,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
@@ -299,7 +298,7 @@ public class OrderTest {
 
     @Test
     @org.junit.jupiter.api.Order(6)
-    public void order_history_contains_expected_entries() throws IOException {
+    public void order_history_contains_expected_entries_01() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
 
@@ -433,5 +432,243 @@ public class OrderTest {
                     "Nothing to fulfill"
             );
         }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(10)
+    public void creates_a_partial_fulfillment() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentSettled.name());
+        List<OrderLine> lines = order.getLines();
+
+        FulfillOrderInput input = new FulfillOrderInput();
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+        input.setMethod("Test1");
+        input.setTrackingCode("111");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(CREATE_FULFILLMENT, variables);
+        Fulfillment fulfillment = graphQLResponse.get("$.data.fulfillOrder", Fulfillment.class);
+
+        assertThat(fulfillment.getMethod()).isEqualTo("Test1");
+        assertThat(fulfillment.getTrackingCode()).isEqualTo("111");
+        OrderItem orderItem1 = fulfillment.getOrderItems().get(0);
+        assertThat(orderItem1.getId()).isEqualTo(lines.get(0).getItems().get(0).getId());
+        OrderItem orderItem2 = fulfillment.getOrderItems().get(1);
+        assertThat(orderItem2.getId()).isEqualTo(lines.get(1).getItems().get(0).getId());
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PartiallyFulfilled.name());
+
+        assertThat(order.getLines().get(0).getItems().get(0).getFulfillment().getId()).isEqualTo(fulfillment.getId());
+        assertThat(order.getLines().get(1).getItems().stream().filter(
+                i -> i.getFulfillment() != null && Objects.equals(i.getFulfillment().getId(), fulfillment.getId())
+        ).collect(Collectors.toList())).hasSize(1);
+        assertThat(order.getLines().get(1).getItems().stream().filter(
+                i -> i.getFulfillment() == null
+        ).collect(Collectors.toList())).hasSize(2);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(10)
+    public void creates_a_second_partial_fulfillment() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PartiallyFulfilled.name());
+        List<OrderLine> lines = order.getLines();
+
+        FulfillOrderInput input = new FulfillOrderInput();
+        OrderLineInput orderLineInput = new OrderLineInput();
+        orderLineInput.setOrderLineId(lines.get(1).getId());
+        orderLineInput.setQuantity(1);
+        input.getLines().add(orderLineInput);
+        input.setMethod("Test2");
+        input.setTrackingCode("222");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(CREATE_FULFILLMENT, variables);
+        graphQLResponse.get("$.data.fulfillOrder", Fulfillment.class);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PartiallyFulfilled.name());
+        assertThat(order.getLines().get(1).getItems().stream().filter(
+                i -> i.getFulfillment() != null
+        ).collect(Collectors.toList())).hasSize(2);
+        assertThat(order.getLines().get(1).getItems().stream().filter(
+                i -> i.getFulfillment() == null
+        ).collect(Collectors.toList())).hasSize(1);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(11)
+    public void throws_if_an_OrderItem_already_part_of_a_Fulfillment() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PartiallyFulfilled.name());
+
+        FulfillOrderInput input = new FulfillOrderInput();
+        OrderLineInput orderLineInput = new OrderLineInput();
+        orderLineInput.setOrderLineId(order.getLines().get(0).getId());
+        orderLineInput.setQuantity(1);
+        input.getLines().add(orderLineInput);
+        input.setMethod("Test");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CREATE_FULFILLMENT, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "One or more OrderItems have already been fulfilled"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(12)
+    public void completes_fulfillment() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.PartiallyFulfilled.name());
+
+        OrderItem unfulfilledItem = order.getLines().get(1).getItems().stream()
+                .filter(i -> i.getFulfillment() == null).findFirst().get();
+
+        FulfillOrderInput input = new FulfillOrderInput();
+        OrderLineInput orderLineInput = new OrderLineInput();
+        orderLineInput.setOrderLineId(order.getLines().get(1).getId());
+        orderLineInput.setQuantity(1);
+        input.getLines().add(orderLineInput);
+        input.setMethod("Test3");
+        input.setTrackingCode("333");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(CREATE_FULFILLMENT, variables);
+        Fulfillment fulfillment = graphQLResponse.get("$.data.fulfillOrder", Fulfillment.class);
+        assertThat(fulfillment.getMethod()).isEqualTo("Test3");
+        assertThat(fulfillment.getTrackingCode()).isEqualTo("333");
+        assertThat(fulfillment.getOrderItems()).hasSize(1);
+        assertThat(fulfillment.getOrderItems().get(0).getId()).isEqualTo(unfulfilledItem.getId());
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.Fulfilled.name());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(13)
+    public void order_history_contains_expected_entries_02() throws IOException {
+        HistoryEntryListOptions options = new HistoryEntryListOptions();
+        options.setPageSize(5);
+        options.setCurrentPage(2);
+
+        JsonNode optionsNode = objectMapper.valueToTree(options);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        variables.set("options", optionsNode);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).hasSize(5);
+
+        HistoryEntry historyEntry1 = order.getHistory().getItems().get(0);
+        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.ORDER_FULFILLMENT);
+        assertThat(historyEntry1.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of("fulfillmentId", "1"));
+
+        HistoryEntry historyEntry2 = order.getHistory().getItems().get(1);
+        assertThat(historyEntry2.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry2.getData())
+                .containsExactlyInAnyOrderEntriesOf(
+                        ImmutableMap.of("from", "PaymentSettled", "to", "PartiallyFulfilled"));
+
+        HistoryEntry historyEntry3 = order.getHistory().getItems().get(2);
+        assertThat(historyEntry3.getType()).isEqualTo(HistoryEntryType.ORDER_FULFILLMENT);
+        assertThat(historyEntry3.getData())
+                .containsExactlyInAnyOrderEntriesOf(
+                        ImmutableMap.of("fulfillmentId", "2"));
+
+        HistoryEntry historyEntry4 = order.getHistory().getItems().get(3);
+        assertThat(historyEntry4.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry4.getData())
+                .containsExactlyInAnyOrderEntriesOf(
+                        ImmutableMap.of("from", "PartiallyFulfilled", "to", "PartiallyFulfilled"));
+
+        HistoryEntry historyEntry5 = order.getHistory().getItems().get(4);
+        assertThat(historyEntry5.getType()).isEqualTo(HistoryEntryType.ORDER_FULFILLMENT);
+        assertThat(historyEntry5.getData())
+                .containsExactlyInAnyOrderEntriesOf(
+                        ImmutableMap.of("fulfillmentId", "3"));
+
+        // 还有1个在第3页
+        options = new HistoryEntryListOptions();
+        options.setPageSize(5);
+        options.setCurrentPage(3);
+
+        optionsNode = objectMapper.valueToTree(options);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 2L);
+        variables.set("options", optionsNode);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).hasSize(1);
+
+        historyEntry1 = order.getHistory().getItems().get(0);
+        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry1.getData())
+                .containsExactlyInAnyOrderEntriesOf(
+                        ImmutableMap.of("from", "PartiallyFulfilled", "to", "Fulfilled"));
     }
 }

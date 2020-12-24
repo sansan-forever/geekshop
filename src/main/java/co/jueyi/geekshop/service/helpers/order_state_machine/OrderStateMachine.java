@@ -9,16 +9,23 @@ import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.common.fsm.FSM;
 import co.jueyi.geekshop.common.fsm.StateMachineConfig;
 import co.jueyi.geekshop.common.fsm.Transitions;
+import co.jueyi.geekshop.entity.FulfillmentEntity;
 import co.jueyi.geekshop.entity.OrderEntity;
+import co.jueyi.geekshop.entity.OrderItemEntity;
+import co.jueyi.geekshop.entity.OrderLineEntity;
 import co.jueyi.geekshop.exception.IllegalOperationException;
 import co.jueyi.geekshop.mapper.OrderEntityMapper;
+import co.jueyi.geekshop.mapper.OrderItemEntityMapper;
+import co.jueyi.geekshop.mapper.OrderLineEntityMapper;
 import co.jueyi.geekshop.service.HistoryService;
+import co.jueyi.geekshop.service.PromotionService;
 import co.jueyi.geekshop.service.StockMovementService;
 import co.jueyi.geekshop.service.args.CreateOrderHistoryEntryArgs;
 import co.jueyi.geekshop.service.helpers.OrderHelper;
 import co.jueyi.geekshop.service.helpers.ServiceHelper;
 import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentState;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,7 +46,7 @@ public class OrderStateMachine {
     private final OrderHelper orderHelper;
     private final OrderEntityMapper orderEntityMapper;
     private final StockMovementService stockMovementService;
-    // TODO private final PromotionService promotionService;
+    private final PromotionService promotionService;
     private final HistoryService historyService;
 
     private final OrderState initialState = OrderState.AddingItems;
@@ -95,17 +102,15 @@ public class OrderStateMachine {
             }
         }
         if (toState == OrderState.PartiallyFulfilled) {
-            OrderEntity orderWithFulfillments = ServiceHelper.getEntityOrThrow(
-                    this.orderEntityMapper, OrderEntity.class, data.getOrderEntity().getId());
-            if (!orderHelper.orderItemArePartiallyFulfilled(orderWithFulfillments)) {
+            OrderEntity orderWithItems = orderHelper.getOrderWithItems(data.getOrderEntity().getId());
+            if (!orderHelper.orderItemArePartiallyFulfilled(orderWithItems)) {
                 return "Cannot transition Order to the \"PartiallyFulfilled\" state unless " +
                         "some OrderItems are fulfilled";
             }
         }
         if (toState == OrderState.Fulfilled) {
-            OrderEntity orderWithFulfillments = ServiceHelper.getEntityOrThrow(
-                    this.orderEntityMapper, OrderEntity.class, data.getOrderEntity().getId());
-            if (!orderHelper.orderItemsAreFulfilled(orderWithFulfillments)) {
+            OrderEntity orderWithItems = orderHelper.getOrderWithItems(data.getOrderEntity().getId());
+            if (!orderHelper.orderItemsAreFulfilled(orderWithItems)) {
                 return "Cannot transition Order to the \"Fulfilled\" state unless all OrderItems are fulfilled";
             }
         }
@@ -120,7 +125,7 @@ public class OrderStateMachine {
             data.getOrderEntity().setActive(false);
             data.getOrderEntity().setOrderPlacedAt(new Date());
             this.stockMovementService.createSalesForOrder(data.getOrderEntity());
-            // TODO this.promotionService.addPromotionsToOrder(data.getOrderEntity());
+            this.promotionService.addPromotionsToOrder(data.getOrderEntity());
         }
         if (toState == OrderState.Cancelled) {
             data.getOrderEntity().setActive(false);
