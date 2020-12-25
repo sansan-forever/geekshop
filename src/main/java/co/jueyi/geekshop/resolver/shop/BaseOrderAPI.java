@@ -55,6 +55,7 @@ public abstract class BaseOrderAPI {
                 this.sessionService.setActiveOrder(ctx.getSession(), orderEntity.getId());
             }
         }
+        if (orderEntity == null) return null;
         return BeanMapper.map(orderEntity, Order.class);
     }
 }

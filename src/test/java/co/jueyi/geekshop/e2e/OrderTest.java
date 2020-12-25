@@ -49,6 +49,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -395,6 +396,7 @@ public class OrderTest {
 
         try {
             adminClient.perform(CREATE_FULFILLMENT, variables);
+            fail("Should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                     "One or more OrderItems belong to an Order which is in an invalid state"
@@ -422,6 +424,7 @@ public class OrderTest {
 
         try {
             adminClient.perform(CREATE_FULFILLMENT, variables);
+            fail("Should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                     "Nothing to fulfill"
@@ -455,6 +458,7 @@ public class OrderTest {
 
         try {
             adminClient.perform(CREATE_FULFILLMENT, variables);
+            fail("Should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                     "Nothing to fulfill"
@@ -516,7 +520,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(10)
+    @org.junit.jupiter.api.Order(11)
     public void creates_a_second_partial_fulfillment() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
@@ -558,7 +562,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(11)
+    @org.junit.jupiter.api.Order(12)
     public void throws_if_an_OrderItem_already_part_of_a_Fulfillment() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
@@ -581,6 +585,7 @@ public class OrderTest {
 
         try {
             adminClient.perform(CREATE_FULFILLMENT, variables);
+            fail("Should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                     "One or more OrderItems have already been fulfilled"
@@ -589,7 +594,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(12)
+    @org.junit.jupiter.api.Order(13)
     public void completes_fulfillment() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
@@ -631,7 +636,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(13)
+    @org.junit.jupiter.api.Order(14)
     public void order_history_contains_expected_entries_02() throws IOException {
         HistoryEntryListOptions options = new HistoryEntryListOptions();
         options.setPageSize(5);
@@ -701,7 +706,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(14)
+    @org.junit.jupiter.api.Order(15)
     public void order_fulfillments_resolver_for_single_order() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
@@ -725,7 +730,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(15)
+    @org.junit.jupiter.api.Order(16)
     public void order_fulfillments_resolver_for_order_list() throws IOException {
         GraphQLResponse graphQLResponse =
                 adminClient.perform(GET_ORDER_LIST_FULFILLMENTS, null);
@@ -747,7 +752,7 @@ public class OrderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(16)
+    @org.junit.jupiter.api.Order(17)
     public void order_fulfillments_orderItems_resolver() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", 2L);
@@ -768,7 +773,7 @@ public class OrderTest {
      */
 
     @Test
-    @org.junit.jupiter.api.Order(17)
+    @org.junit.jupiter.api.Order(18)
     public void cancel_from_AddingItems_state() throws IOException {
         List<Object> testOrderInfoList =
                 createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
@@ -806,6 +811,130 @@ public class OrderTest {
         assertThat(order.getState()).isEqualTo(OrderState.Cancelled.name());
         assertThat(order.getActive()).isFalse();
         assertNoStockMovementsCreated(testProduct.getId());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(19)
+    public void cancel_from_ArrangingPayment_state() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
+        Product testProduct = (Product) testOrderInfoList.get(0);
+        Long testProductVariantId = (Long) testOrderInfoList.get(1);
+        Long testOrderId = (Long) testOrderInfoList.get(2);
+
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", testOrderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.ArrangingPayment.name());
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(testOrderId);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        adminClient.perform(CANCEL_ORDER, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", testOrderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.Cancelled.name());
+        assertThat(order.getActive()).isFalse();
+
+        this.assertNoStockMovementsCreated(testProduct.getId());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(20)
+    public void cancel_from_PaymentAuthorized_state() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
+        Product testProduct = (Product) testOrderInfoList.get(0);
+        Long testProductVariantId = (Long) testOrderInfoList.get(1);
+        Long testOrderId = (Long) testOrderInfoList.get(2);
+
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+
+        Order order = testOrderUtils.addPaymentToOrder(shopClient, failsToSettlePaymentMethod);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentAuthorized.name());
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", 3L);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        ProductVariant variant1 = product.getVariants().get(0);
+        assertThat(variant1.getStockOnHand()).isEqualTo(98);
+        StockMovement stockMovement1 = variant1.getStockMovements().getItems().get(0);
+        assertThat(stockMovement1.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement1.getQuantity()).isEqualTo(100);
+        StockMovement stockMovement2 = variant1.getStockMovements().getItems().get(1);
+        assertThat(stockMovement2.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement2.getQuantity()).isEqualTo(-2);
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(testOrderId);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(CANCEL_ORDER, variables);
+        Order cancelOrder = graphQLResponse.get("$.data.cancelOrder", Order.class);
+        assertThat(cancelOrder.getLines()).hasSize(1);
+        assertThat(cancelOrder.getLines().get(0).getItems()).hasSize(2);
+
+        OrderItem orderItem1 = cancelOrder.getLines().get(0).getItems().get(0);
+        assertThat(orderItem1.getId()).isEqualTo(11L);
+        assertThat(orderItem1.getCancelled()).isTrue();
+        OrderItem orderItem2 = cancelOrder.getLines().get(0).getItems().get(1);
+        assertThat(orderItem2.getId()).isEqualTo(12L);
+        assertThat(orderItem2.getCancelled()).isTrue();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", testOrderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.Cancelled.name());
+        assertThat(order.getActive()).isFalse();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", 3L);
+
+        graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        variant1 = product.getVariants().get(0);
+        assertThat(variant1.getStockOnHand()).isEqualTo(100);
+        stockMovement1 = variant1.getStockMovements().getItems().get(0);
+        assertThat(stockMovement1.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement1.getQuantity()).isEqualTo(100);
+        stockMovement2 = variant1.getStockMovements().getItems().get(1);
+        assertThat(stockMovement2.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement2.getQuantity()).isEqualTo(-2);
+
+        StockMovement stockMovement3 = variant1.getStockMovements().getItems().get(2);
+        assertThat(stockMovement3.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement3.getQuantity()).isEqualTo(1);
+
+        StockMovement stockMovement4 = variant1.getStockMovements().getItems().get(3);
+        assertThat(stockMovement4.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement4.getQuantity()).isEqualTo(1);
     }
 
     private void assertNoStockMovementsCreated(Long productId) throws IOException {
@@ -860,5 +989,251 @@ public class OrderTest {
         Long orderId = order.getId();
 
         return Arrays.asList(product, productVariantId, orderId);
+    }
+
+    /**
+     * cancellation by OrderLine test cases
+     */
+    Long orderId;
+    Product product;
+    Long productVariantId;
+
+    private void before_test_20() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
+        product = (Product) testOrderInfoList.get(0);
+        productVariantId = (Long) testOrderInfoList.get(1);
+        orderId = (Long) testOrderInfoList.get(2);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(21)
+    public void cannot_cancel_from_AddingItems_state() throws IOException {
+        before_test_20();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.AddingItems.name());
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CANCEL_ORDER, variables);
+            fail("Should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Cannot cancel OrderLines from an Order in the \"{ AddingItems }\" state"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(22)
+    public void cannot_cancel_from_ArrangingPayment_state() throws IOException {
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.ArrangingPayment.name());
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CANCEL_ORDER, variables);
+            fail("Should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Cannot cancel OrderLines from an Order in the \"{ ArrangingPayment }\" state"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(23)
+    public void throws_if_lines_are_empty() throws IOException {
+        Order order = testOrderUtils.addPaymentToOrder(shopClient, twoStatePaymentMethod);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentAuthorized.name());
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(new ArrayList<>());
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CANCEL_ORDER, variables);
+            fail("Should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Nothing to cancel"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(24)
+    public void throws_if_all_quantities_zero() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(0);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CANCEL_ORDER, variables);
+            fail("Should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Nothing to cancel"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(25)
+    public void partial_cancellation() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", product.getId());
+
+        GraphQLResponse graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        Product product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        ProductVariant variant1 = product.getVariants().get(0);
+        assertThat(variant1.getStockOnHand()).isEqualTo(98);
+        StockMovement stockMovement1 = variant1.getStockMovements().getItems().get(0);
+        assertThat(stockMovement1.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement1.getQuantity()).isEqualTo(100);
+        StockMovement stockMovement2 = variant1.getStockMovements().getItems().get(1);
+        assertThat(stockMovement2.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement2.getQuantity()).isEqualTo(-2);
+        StockMovement stockMovement3 = variant1.getStockMovements().getItems().get(2);
+        assertThat(stockMovement3.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement3.getQuantity()).isEqualTo(1);
+        StockMovement stockMovement4 = variant1.getStockMovements().getItems().get(3);
+        assertThat(stockMovement4.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement4.getQuantity()).isEqualTo(1);
+        StockMovement stockMovement5 = variant1.getStockMovements().getItems().get(4);
+        assertThat(stockMovement5.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement5.getQuantity()).isEqualTo(-2);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+        input.setReason("cancel reason 1");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(CANCEL_ORDER, variables);
+        Order cancelOrder = graphQLResponse.get("$.data.cancelOrder", Order.class);
+
+        assertThat(cancelOrder.getLines().get(0).getQuantity()).isEqualTo(1);
+        List<OrderItem> sortedItems = cancelOrder.getLines().get(0).getItems().stream()
+                .sorted((a, b) -> a.getId() < b.getId() ? -1 : 1).collect(Collectors.toList());
+        assertThat(sortedItems.get(0).getId()).isEqualTo(13L);
+        assertThat(sortedItems.get(0).getCancelled()).isTrue();
+        assertThat(sortedItems.get(1).getId()).isEqualTo(14L);
+        assertThat(sortedItems.get(1).getCancelled()).isFalse();
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentAuthorized.name());
+        assertThat(order.getLines().get(0).getQuantity()).isEqualTo(1);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", product.getId());
+
+        graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        ProductVariant variant2 = product.getVariants().get(0);
+        assertThat(variant2.getStockOnHand()).isEqualTo(99);
+        stockMovement1 = variant2.getStockMovements().getItems().get(0);
+        assertThat(stockMovement1.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement1.getQuantity()).isEqualTo(100);
+        stockMovement2 = variant2.getStockMovements().getItems().get(1);
+        assertThat(stockMovement2.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement2.getQuantity()).isEqualTo(-2);
+        stockMovement3 = variant2.getStockMovements().getItems().get(2);
+        assertThat(stockMovement3.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement3.getQuantity()).isEqualTo(1);
+        stockMovement4 = variant2.getStockMovements().getItems().get(3);
+        assertThat(stockMovement4.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement4.getQuantity()).isEqualTo(1);
+        stockMovement5 = variant2.getStockMovements().getItems().get(4);
+        assertThat(stockMovement5.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement5.getQuantity()).isEqualTo(-2);
+        StockMovement stockMovement6 = variant2.getStockMovements().getItems().get(5);
+        assertThat(stockMovement6.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement6.getQuantity()).isEqualTo(1);
     }
 }

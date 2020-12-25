@@ -572,10 +572,9 @@ public class OrderService {
         return orderItems;
     }
 
-    @Transactional
     public OrderEntity cancelOrder(RequestContext ctx, CancelOrderInput input) {
-        boolean allOrderItemsCancelled = false;
-        if (!CollectionUtils.isEmpty(input.getLines())) {
+        boolean allOrderItemsCancelled;
+        if (input.getLines() != null) {
             allOrderItemsCancelled = this.cancelOrderByOrderLines(ctx, input, input.getLines());
         } else {
             allOrderItemsCancelled = this.cancelOrderById(ctx, input);

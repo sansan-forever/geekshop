@@ -13,11 +13,13 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Created on Nov, 2020 by @author bobo
  */
 @Configuration
+@EnableTransactionManagement
 public class MybatisPlusConfig {
     @Value("${database:h2}")
     private String dbName;

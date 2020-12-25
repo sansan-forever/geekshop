@@ -22,6 +22,6 @@ public class CancelOrderInput {
     /**
      * Optionally specify which OrderLines to cancel. If not provided, all OrderLines will be cancelled.
      */
-    private List<OrderLineInput> lines = new ArrayList<>();
+    private List<OrderLineInput> lines;
     private String reason;
 }
