@@ -14,6 +14,7 @@ import co.jueyi.geekshop.config.payment_method.PaymentMethodHandler;
 import co.jueyi.geekshop.config.payment_method.PaymentOptions;
 import co.jueyi.geekshop.service.helpers.order_state_machine.OrderState;
 import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentState;
+import co.jueyi.geekshop.service.helpers.refund_state_machine.RefundState;
 import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.customer.CustomerListOptions;
@@ -22,6 +23,7 @@ import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
 import co.jueyi.geekshop.types.order.*;
 import co.jueyi.geekshop.types.payment.Payment;
+import co.jueyi.geekshop.types.payment.Refund;
 import co.jueyi.geekshop.types.product.Product;
 import co.jueyi.geekshop.types.product.ProductVariant;
 import co.jueyi.geekshop.types.product.UpdateProductVariantInput;
@@ -119,6 +121,10 @@ public class OrderTest {
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "get_order_fulfillment_items");
     static final String CANCEL_ORDER =
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "cancel_order");
+    static final String REFUND_ORDER =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "refund_order");
+    static final String SETTLE_REFUND =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "settle_refund");
 
 
     @Autowired
@@ -1236,4 +1242,409 @@ public class OrderTest {
         assertThat(stockMovement6.getType()).isEqualTo(StockMovementType.CANCELLATION);
         assertThat(stockMovement6.getQuantity()).isEqualTo(1);
     }
+
+    @Test
+    @org.junit.jupiter.api.Order(26)
+    public void complete_cancellation() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        CancelOrderInput input = new CancelOrderInput();
+        input.setOrderId(orderId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput;
+        }).collect(Collectors.toList()));
+        input.setReason("cancel reason 2");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        adminClient.perform(CANCEL_ORDER, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getState()).isEqualTo(OrderState.Cancelled.name());
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", product.getId());
+
+        graphQLResponse = adminClient.perform(
+                GET_STOCK_MOVEMENT, variables, Arrays.asList(VARIANT_WITH_STOCK_FRAGMENT));
+        product = graphQLResponse.get("$.data.adminProduct", Product.class);
+        ProductVariant variant2 = product.getVariants().get(0);
+        assertThat(variant2.getStockOnHand()).isEqualTo(100);
+        StockMovement stockMovement1 = variant2.getStockMovements().getItems().get(0);
+        assertThat(stockMovement1.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
+        assertThat(stockMovement1.getQuantity()).isEqualTo(100);
+        StockMovement stockMovement2 = variant2.getStockMovements().getItems().get(1);
+        assertThat(stockMovement2.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement2.getQuantity()).isEqualTo(-2);
+        StockMovement stockMovement3 = variant2.getStockMovements().getItems().get(2);
+        assertThat(stockMovement3.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement3.getQuantity()).isEqualTo(1);
+        StockMovement stockMovement4 = variant2.getStockMovements().getItems().get(3);
+        assertThat(stockMovement4.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement4.getQuantity()).isEqualTo(1);
+        StockMovement stockMovement5 = variant2.getStockMovements().getItems().get(4);
+        assertThat(stockMovement5.getType()).isEqualTo(StockMovementType.SALE);
+        assertThat(stockMovement5.getQuantity()).isEqualTo(-2);
+        StockMovement stockMovement6 = variant2.getStockMovements().getItems().get(5);
+        assertThat(stockMovement6.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement6.getQuantity()).isEqualTo(1);
+        StockMovement stockMovement7 = variant2.getStockMovements().getItems().get(6);
+        assertThat(stockMovement7.getType()).isEqualTo(StockMovementType.CANCELLATION);
+        assertThat(stockMovement7.getQuantity()).isEqualTo(1);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(27)
+    public void order_history_contains_expected_entries() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).isNotEmpty();
+
+        HistoryEntry historyEntry1 = order.getHistory().getItems().get(0);
+        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry1.getData())
+                .containsExactly(entry("from", "AddingItems"), entry("to", "ArrangingPayment"));
+
+        HistoryEntry historyEntry2 = order.getHistory().getItems().get(1);
+        assertThat(historyEntry2.getType()).isEqualTo(HistoryEntryType.ORDER_PAYMENT_TRANSITION);
+        assertThat(historyEntry2.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "paymentId", "4", "from", "Created", "to", "Authorized"));
+
+        HistoryEntry historyEntry3 = order.getHistory().getItems().get(2);
+        assertThat(historyEntry3.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry3.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "from", "ArrangingPayment", "to", "PaymentAuthorized"));
+
+        HistoryEntry historyEntry4 = order.getHistory().getItems().get(3);
+        assertThat(historyEntry4.getType()).isEqualTo(HistoryEntryType.ORDER_CANCELLATION);
+        assertThat(historyEntry4.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "orderItemIds", "13", "reason", "cancel reason 1"));
+
+        HistoryEntry historyEntry5 = order.getHistory().getItems().get(4);
+        assertThat(historyEntry5.getType()).isEqualTo(HistoryEntryType.ORDER_CANCELLATION);
+        assertThat(historyEntry5.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "orderItemIds", "14", "reason", "cancel reason 2"));
+
+        HistoryEntry historyEntry6 = order.getHistory().getItems().get(5);
+        assertThat(historyEntry6.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry6.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "from", "PaymentAuthorized", "to", "Cancelled"));
+    }
+
+    /**
+     * refunds
+     */
+
+    Long paymentId;
+    Long refundId;
+
+    private void before_test_28() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(0).getEmailAddress(), password);
+        product = (Product) testOrderInfoList.get(0);
+        productVariantId = (Long) testOrderInfoList.get(1);
+        orderId = (Long) testOrderInfoList.get(2);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(28)
+    public void cannot_refund_from_PaymentAuthorized_state() throws IOException {
+        before_test_28();
+
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+        Order order = testOrderUtils.addPaymentToOrder(shopClient, twoStatePaymentMethod);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentAuthorized.name());
+        paymentId = order.getPayments().get(0).getId();
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(1);
+            return orderLineInput; }).collect(Collectors.toList()));
+        input.setShipping(0);
+        input.setAdjustment(0);
+        input.setPaymentId(paymentId);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(REFUND_ORDER, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat("Cannot refund an Order in the \"PaymentAuthorized\" state");
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(29)
+    public void throws_if_no_lines_and_no_shipping() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", order.getPayments().get(0).getId());
+        graphQLResponse = adminClient.perform(SETTLE_PAYMENT, variables);
+        Payment settlePayment = graphQLResponse.get("$.data.settlePayment", Payment.class);
+
+        assertThat(settlePayment.getState()).isEqualTo(PaymentState.Settled.name());
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(0);
+            return orderLineInput; }).collect(Collectors.toList()));
+        input.setShipping(0);
+        input.setAdjustment(0);
+        input.setPaymentId(paymentId);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(REFUND_ORDER, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Nothing to refund"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(30)
+    public void throws_if_paymentId_not_valid() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setShipping(100);
+        input.setAdjustment(0);
+        input.setPaymentId(999L);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(REFUND_ORDER, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "No PaymentEntity with the id '999' could be found"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(31)
+    public void throws_if_payment_and_order_lines_do_not_belong_to_the_same_Order() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setShipping(100);
+        input.setAdjustment(0);
+        input.setPaymentId(1L);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(l.getQuantity());
+            return orderLineInput; }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(REFUND_ORDER, variables);
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "The Payment and OrderLines do not belong to the same Order"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(32)
+    public void creates_a_Refund_to_be_manually_settled() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setShipping(order.getShipping());
+        input.setAdjustment(0);
+        input.setReason("foo");
+        input.setPaymentId(paymentId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(l.getQuantity());
+            return orderLineInput; }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        graphQLResponse = adminClient.perform(REFUND_ORDER, variables);
+        Refund refund = graphQLResponse.get("$.data.refundOrder", Refund.class);
+
+        assertThat(refund.getShipping()).isEqualTo(order.getShipping());
+        assertThat(refund.getItems()).isEqualTo(order.getSubTotal());
+        assertThat(refund.getTotal()).isEqualTo(order.getTotal());
+        assertThat(refund.getTransactionId()).isNull();
+        assertThat(refund.getState()).isEqualTo(RefundState.Pending.name());
+        refundId = refund.getId();
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(33)
+    public void throws_if_attempting_to_refund_the_same_item_more_than_once() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER, variables, Arrays.asList(
+                        ORDER_WITH_LINES_FRAGMENT, ADJUSTMENT_FRAGMENT, SHIPPING_ADDRESS_FRAGMENT, ORDER_ITEM_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+
+        RefundOrderInput input = new RefundOrderInput();
+        input.setShipping(order.getShipping());
+        input.setAdjustment(0);
+        input.setPaymentId(paymentId);
+        input.setLines(order.getLines().stream().map(l -> {
+            OrderLineInput orderLineInput = new OrderLineInput();
+            orderLineInput.setOrderLineId(l.getId());
+            orderLineInput.setQuantity(l.getQuantity());
+            return orderLineInput; }).collect(Collectors.toList()));
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(REFUND_ORDER, variables);
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Cannot refund an OrderItem which has already been refunded"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(34)
+    public void manually_settle_a_Refund() throws IOException {
+        SettleRefundInput input = new SettleRefundInput();
+        input.setId(refundId);
+        input.setTransactionId("aaabbb");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(SETTLE_REFUND, variables);
+        Refund settleRefund = graphQLResponse.get("$.data.settleRefund", Refund.class);
+
+        assertThat(settleRefund.getState()).isEqualTo(RefundState.Settled.name());
+        assertThat(settleRefund.getTransactionId()).isEqualTo("aaabbb");
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(35)
+    public void order_history_contains_expected_entries_after_refund() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        Order order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).isNotEmpty();
+
+        HistoryEntry historyEntry1 = order.getHistory().getItems().get(0);
+        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry1.getData())
+                .containsExactly(entry("from", "AddingItems"), entry("to", "ArrangingPayment"));
+
+        HistoryEntry historyEntry2 = order.getHistory().getItems().get(1);
+        assertThat(historyEntry2.getType()).isEqualTo(HistoryEntryType.ORDER_PAYMENT_TRANSITION);
+        assertThat(historyEntry2.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "paymentId", "5", "from", "Created", "to", "Authorized"));
+
+        HistoryEntry historyEntry3 = order.getHistory().getItems().get(2);
+        assertThat(historyEntry3.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry3.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "from", "ArrangingPayment", "to", "PaymentAuthorized"));
+
+        HistoryEntry historyEntry4 = order.getHistory().getItems().get(3);
+        assertThat(historyEntry4.getType()).isEqualTo(HistoryEntryType.ORDER_PAYMENT_TRANSITION);
+        assertThat(historyEntry4.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "paymentId", "5", "from", "Authorized", "to", "Settled"));
+
+        HistoryEntry historyEntry5 = order.getHistory().getItems().get(4);
+        assertThat(historyEntry5.getType()).isEqualTo(HistoryEntryType.ORDER_STATE_TRANSITION);
+        assertThat(historyEntry5.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "from", "PaymentAuthorized", "to", "PaymentSettled"));
+
+        HistoryEntry historyEntry6 = order.getHistory().getItems().get(5);
+        assertThat(historyEntry6.getType()).isEqualTo(HistoryEntryType.ORDER_REFUND_TRANSITION);
+        assertThat(historyEntry6.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "refundId", "1", "reason", "foo", "from", "Pending", "to", "Settled"));
+    }
+
 }

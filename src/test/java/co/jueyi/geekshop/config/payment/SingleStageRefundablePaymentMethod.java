@@ -65,11 +65,6 @@ public class SingleStageRefundablePaymentMethod extends PaymentMethodHandler {
     }
 
     @Override
-    public Object onStateTransitionStart(PaymentState fromState, PaymentState toState, PaymentTransitionData data) {
-        return null;
-    }
-
-    @Override
     public Map<String, ConfigArgDefinition> getArgSpec() {
         return ImmutableMap.of();
     }

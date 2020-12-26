@@ -52,21 +52,6 @@ public class FailsToSettlePaymentMethod extends PaymentMethodHandler {
     }
 
     @Override
-    public CreateRefundResult createRefund(
-            RefundOrderInput input,
-            Integer total,
-            OrderEntity orderEntity,
-            PaymentEntity paymentEntity,
-            ConfigArgValues argValues) {
-        throw new IllegalOperationException("Not Supported Operation");
-    }
-
-    @Override
-    public Object onStateTransitionStart(PaymentState fromState, PaymentState toState, PaymentTransitionData data) {
-        return null;
-    }
-
-    @Override
     public Map<String, ConfigArgDefinition> getArgSpec() {
         return ImmutableMap.of();
     }

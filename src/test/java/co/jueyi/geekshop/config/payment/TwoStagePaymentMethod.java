@@ -55,21 +55,6 @@ public class TwoStagePaymentMethod extends PaymentMethodHandler {
     }
 
     @Override
-    public CreateRefundResult createRefund(
-            RefundOrderInput input,
-            Integer total,
-            OrderEntity orderEntity,
-            PaymentEntity paymentEntity,
-            ConfigArgValues argValues) {
-        throw new IllegalOperationException("Not supported operation");
-    }
-
-    @Override
-    public Object onStateTransitionStart(PaymentState fromState, PaymentState toState, PaymentTransitionData data) {
-        return null;
-    }
-
-    @Override
     public Map<String, ConfigArgDefinition> getArgSpec() {
         return ImmutableMap.of();
     }

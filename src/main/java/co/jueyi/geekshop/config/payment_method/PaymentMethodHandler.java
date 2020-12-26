@@ -52,20 +52,23 @@ public abstract class PaymentMethodHandler extends ConfigurableOperationDef {
     /**
      * To create a refund
      */
-    public abstract CreateRefundResult createRefund(
+    public CreateRefundResult createRefund(
             RefundOrderInput input,
             Integer total,
             OrderEntity orderEntity,
             PaymentEntity paymentEntity,
-            ConfigArgValues argValues
-    );
+            ConfigArgValues argValues) {
+        return null; // 默认实现返回null
+    }
 
     /**
      * This function is called before the state of a Payment is transitioned. The return value is used to determine
      * whether the transition can occur.
      */
-    public abstract  Object onStateTransitionStart(
+    public Object onStateTransitionStart(
             PaymentState fromState,
             PaymentState toState,
-            PaymentTransitionData data);
+            PaymentTransitionData data) {
+        return true; // 默认实现返回true
+    }
 }

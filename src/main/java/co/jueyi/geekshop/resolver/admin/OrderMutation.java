@@ -65,14 +65,22 @@ public class OrderMutation implements GraphQLMutationResolver {
     public Refund refundOrder(RefundOrderInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         RefundEntity refundEntity = orderService.refundOrder(ctx, input);
-        return BeanMapper.map(refundEntity, Refund.class);
+        Refund refund = BeanMapper.map(refundEntity, Refund.class);
+        if (refundEntity.getState() != null) {
+            refund.setState(refundEntity.getState().name());
+        }
+        return refund;
     }
 
     @Allow(Permission.UpdateOrder)
     public Refund settleRefund(SettleRefundInput input, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         RefundEntity refundEntity = orderService.settleRefund(ctx, input);
-        return BeanMapper.map(refundEntity, Refund.class);
+        Refund refund = BeanMapper.map(refundEntity, Refund.class);
+        if (refundEntity.getState() != null) {
+            refund.setState(refundEntity.getState().name());
+        }
+        return refund;
     }
 
     @Allow(Permission.UpdateOrder)

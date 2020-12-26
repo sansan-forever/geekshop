@@ -666,7 +666,7 @@ public class OrderService {
         PaymentEntity payment =
                 ServiceHelper.getEntityOrThrow(this.paymentEntityMapper, PaymentEntity.class, input.getPaymentId());
         if (!CollectionUtils.isEmpty(orders) && !Objects.equals(payment.getOrderId(), orders.get(0).getId())) {
-            throw new IllegalOperationException("Refund order payment lines mismatch");
+            throw new IllegalOperationException("The Payment and OrderLines do not belong to the same Order");
         }
         OrderEntity order = this.findOneWithItems(payment.getOrderId());
         if (order.getState() == OrderState.AddingItems || order.getState() == OrderState.ArrangingPayment ||
@@ -909,7 +909,9 @@ public class OrderService {
         Map<Long, OrderItemEntity> itemsMap = new HashMap<>();
 
         List<Long> orderLineIds = orderLinesInput.stream().map(l -> l.getOrderLineId()).collect(Collectors.toList());
-        List<OrderLineEntity> lines = this.orderLineEntityMapper.selectBatchIds(orderLineIds);
+        List<OrderLineEntity> lines = orderLineIds.size() > 0
+                ? this.orderLineEntityMapper.selectBatchIds(orderLineIds)
+                : Arrays.asList();
         for(OrderLineEntity line : lines) {
             OrderLineInput inputLine = orderLinesInput.stream()
                     .filter(l -> Objects.equals(l.getOrderLineId(), line.getId())).findFirst().orElse(null);

@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Created on Dec, 2020 by @author bobo
@@ -252,6 +253,7 @@ public class PromotionTest {
         try {
             adminClient.perform(
                     CREATE_PROMOTION, variables, Arrays.asList(PROMOTION_FRAGMENT, CONFIGURABLE_FRAGMENT));
+            fail("should have thrown");
         } catch (ApiException apiException) {
             assertThat(apiException.getErrorMessage()).isEqualTo(
                     "A Promotion must have either at least one condition or a coupon code set"
@@ -323,6 +325,7 @@ public class PromotionTest {
         UpdatePromotionInput input = new UpdatePromotionInput();
         input.setId(promotion.getId());
         input.setCouponCode("");
+        input.setConditions(new ArrayList<>());
 
         JsonNode inputNode = objectMapper.valueToTree(input);
         ObjectNode variables = objectMapper.createObjectNode();
@@ -331,6 +334,7 @@ public class PromotionTest {
         try {
             adminClient.perform(
                     UPDATE_PROMOTION, variables, Arrays.asList(PROMOTION_FRAGMENT, CONFIGURABLE_FRAGMENT));
+            fail("should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                   "A Promotion must have either at least one condition or a coupon code set"
@@ -462,6 +466,7 @@ public class PromotionTest {
         try {
             adminClient.perform(
                     UPDATE_PROMOTION, variables, Arrays.asList(PROMOTION_FRAGMENT, CONFIGURABLE_FRAGMENT));
+            fail("should have thrown");
         } catch (ApiException apiEx) {
             assertThat(apiEx.getErrorMessage()).isEqualTo(
                     "No PromotionEntity with the id '1' could be found"
