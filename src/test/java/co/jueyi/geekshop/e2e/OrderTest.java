@@ -15,6 +15,8 @@ import co.jueyi.geekshop.config.payment_method.PaymentOptions;
 import co.jueyi.geekshop.service.helpers.order_state_machine.OrderState;
 import co.jueyi.geekshop.service.helpers.payment_state_machine.PaymentState;
 import co.jueyi.geekshop.service.helpers.refund_state_machine.RefundState;
+import co.jueyi.geekshop.types.common.DeletionResponse;
+import co.jueyi.geekshop.types.common.DeletionResult;
 import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerList;
 import co.jueyi.geekshop.types.customer.CustomerListOptions;
@@ -103,6 +105,10 @@ public class OrderTest {
     static final String SHOP_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shop/%s.graphqls";
     static final String ADD_ITEM_TO_ORDER  =
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "add_item_to_order");
+    static final String GET_ACTIVE_ORDER  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "get_active_order");
+    static final String TEST_ORDER_FRAGMENT  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "test_order_fragment");
 
     static final String ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/order/%s.graphqls";
     static final String GET_ORDER_LIST  =
@@ -125,6 +131,12 @@ public class OrderTest {
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "refund_order");
     static final String SETTLE_REFUND =
             String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "settle_refund");
+    static final String ADD_NOTE_TO_ORDER =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "add_note_to_order");
+    static final String UPDATE_NOTE =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "update_note");
+    static final String DELETE_ORDER_NOTE =
+            String.format(ADMIN_ORDER_GRAPHQL_RESOURCE_TEMPLATE, "delete_order_note");
 
 
     @Autowired
@@ -1647,4 +1659,141 @@ public class OrderTest {
                         "refundId", "1", "reason", "foo", "from", "Pending", "to", "Settled"));
     }
 
+    /**
+     * order notes test cases
+     */
+
+    Long firstNoteId;
+
+    private void before_test_36() throws IOException {
+        List<Object> testOrderInfoList =
+                createTestOrder(adminClient, shopClient, customers.get(2).getEmailAddress(), password);
+        orderId = (Long) testOrderInfoList.get(2);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(36)
+    public void private_note() throws IOException {
+        before_test_36();
+
+        AddNoteToOrderInput input = new AddNoteToOrderInput();
+        input.setId(orderId);
+        input.setNote("A private note");
+        input.setPrivateOnly(true);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(ADD_NOTE_TO_ORDER, variables);
+        Order order = graphQLResponse.get("$.data.addNoteToOrder", Order.class);
+        assertThat(order.getId()).isEqualTo(orderId);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).hasSize(1);
+
+        HistoryEntry historyEntry1 = order.getHistory().getItems().get(0);
+        assertThat(historyEntry1.getType()).isEqualTo(HistoryEntryType.ORDER_NOTE);
+        assertThat(historyEntry1.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "note", "A private note"));
+
+        firstNoteId = order.getHistory().getItems().get(0).getId();
+
+        graphQLResponse = shopClient.perform(GET_ACTIVE_ORDER, null, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order activeOrder = graphQLResponse.get("$.data.activeOrder", Order.class);
+
+        assertThat(activeOrder.getHistory().getItems()).isEmpty();
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(37)
+    public void public_note() throws IOException {
+        AddNoteToOrderInput input = new AddNoteToOrderInput();
+        input.setId(orderId);
+        input.setNote("A public note");
+        input.setPrivateOnly(false);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(ADD_NOTE_TO_ORDER, variables);
+        Order order = graphQLResponse.get("$.data.addNoteToOrder", Order.class);
+        assertThat(order.getId()).isEqualTo(orderId);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        order = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(order.getHistory().getItems()).hasSize(2);
+
+        HistoryEntry historyEntry = order.getHistory().getItems().get(1);
+        assertThat(historyEntry.getType()).isEqualTo(HistoryEntryType.ORDER_NOTE);
+        assertThat(historyEntry.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "note", "A public note"));
+
+        graphQLResponse = shopClient.perform(GET_ACTIVE_ORDER, null, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order activeOrder = graphQLResponse.get("$.data.activeOrder", Order.class);
+
+        assertThat(activeOrder.getHistory().getItems()).hasSize(1);
+
+        historyEntry = activeOrder.getHistory().getItems().get(0);
+        assertThat(historyEntry.getType()).isEqualTo(HistoryEntryType.ORDER_NOTE);
+        assertThat(historyEntry.getData())
+                .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                        "note", "A public note"));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(38)
+    public void update_note() throws IOException {
+        UpdateOrderNoteInput input = new UpdateOrderNoteInput();
+        input.setNoteId(firstNoteId);
+        input.setNote("An updated note");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse = adminClient.perform(UPDATE_NOTE, variables);
+        HistoryEntry historyEntry = graphQLResponse.get("$.data.updateOrderNote", HistoryEntry.class);
+        assertThat(historyEntry.getData()).containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+                "note",  "An updated note"));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(39)
+    public void delete_note() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        Order beforeOrder = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(beforeOrder.getHistory().getItems()).hasSize(2);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", firstNoteId);
+
+        graphQLResponse = adminClient.perform(DELETE_ORDER_NOTE, variables);
+        DeletionResponse deletionResponse = graphQLResponse.get("$.data.deleteOrderNote", DeletionResponse.class);
+        assertThat(deletionResponse.getResult()).isEqualTo(DeletionResult.DELETED);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", orderId);
+
+        graphQLResponse =
+                adminClient.perform(GET_ORDER_HISTORY, variables);
+        Order afterOrder = graphQLResponse.get("$.data.orderByAdmin", Order.class);
+        assertThat(afterOrder.getHistory().getItems()).hasSize(1);
+    }
 }
