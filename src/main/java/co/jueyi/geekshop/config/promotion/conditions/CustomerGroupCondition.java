@@ -66,6 +66,13 @@ public class CustomerGroupCondition extends PromotionCondition {
         return groupIds.contains(argValues.getId("customerGroupId"));
     }
 
+    /**
+     * 仅用于测试的方法
+     */
+    public void clearCache() {
+        customerGroupIdsCache.invalidateAll();
+    }
+
     @Override
     public Map<String, ConfigArgDefinition> getArgSpec() {
         return argSpec;
