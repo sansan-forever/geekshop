@@ -8,14 +8,20 @@ package co.jueyi.geekshop.e2e;
 import co.jueyi.geekshop.*;
 import co.jueyi.geekshop.config.TestConfig;
 import co.jueyi.geekshop.config.payment.TestSuccessfulPaymentMethod;
+import co.jueyi.geekshop.config.payment_method.PaymentMethodHandler;
 import co.jueyi.geekshop.config.payment_method.PaymentOptions;
+import co.jueyi.geekshop.config.promotion.actions.FacetValuesDiscountAction;
 import co.jueyi.geekshop.config.promotion.actions.OrderPercentageDiscount;
+import co.jueyi.geekshop.config.promotion.actions.ProductDiscountAction;
 import co.jueyi.geekshop.config.promotion.conditions.ContainsProductsCondition;
 import co.jueyi.geekshop.config.promotion.conditions.CustomerGroupCondition;
 import co.jueyi.geekshop.config.promotion.conditions.HasFacetValuesCondition;
 import co.jueyi.geekshop.config.promotion.conditions.MinimumOrderAmountCondition;
+import co.jueyi.geekshop.service.helpers.order_state_machine.OrderState;
+import co.jueyi.geekshop.types.common.AdjustmentType;
 import co.jueyi.geekshop.types.common.ConfigArgInput;
 import co.jueyi.geekshop.types.common.ConfigurableOperationInput;
+import co.jueyi.geekshop.types.common.CreateCustomerInput;
 import co.jueyi.geekshop.types.customer.CreateCustomerGroupInput;
 import co.jueyi.geekshop.types.customer.Customer;
 import co.jueyi.geekshop.types.customer.CustomerGroup;
@@ -25,6 +31,7 @@ import co.jueyi.geekshop.types.facet.FacetValue;
 import co.jueyi.geekshop.types.history.HistoryEntry;
 import co.jueyi.geekshop.types.history.HistoryEntryType;
 import co.jueyi.geekshop.types.order.Order;
+import co.jueyi.geekshop.types.order.OrderLine;
 import co.jueyi.geekshop.types.product.Product;
 import co.jueyi.geekshop.types.product.ProductList;
 import co.jueyi.geekshop.types.product.ProductListOptions;
@@ -108,6 +115,10 @@ public class OrderPromotionTest {
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "remove_coupon_code");
     static final String ADJUST_ITEM_QUANTITY  =
             String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "adjust_item_quantity");
+    static final String SET_CUSTOMER  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "set_customer");
+    static final String GET_ORDER_PROMOTIONS_BY_CODE  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "get_order_promotions_by_code");
 
     @Autowired
     TestHelper testHelper;
@@ -142,6 +153,12 @@ public class OrderPromotionTest {
     ContainsProductsCondition containsProductsCondition;
     @Autowired
     CustomerGroupCondition customerGroupCondition;
+    @Autowired
+    FacetValuesDiscountAction facetValuesDiscountAction;
+    @Autowired
+    ProductDiscountAction productDiscountAction;
+
+    PaymentMethodHandler testSuccessfulPaymentMethod;
 
     List<Product> products;
     List<Customer> customers;
@@ -175,6 +192,8 @@ public class OrderPromotionTest {
                 GET_CUSTOMER_LIST, null);
         CustomerList customerList = graphQLResponse.get("$.data.customers", CustomerList.class);
         customers = customerList.getItems();
+
+        testSuccessfulPaymentMethod = paymentOptions.getPaymentMethodHandlers().get(0);
 
         getProducts();
         createGlobalPromotions();
@@ -357,6 +376,10 @@ public class OrderPromotionTest {
         assertThat(historyEntry2.getData()).containsExactlyInAnyOrderEntriesOf(
                 ImmutableMap.of("couponCode", TEST_COUPON_CODE)
         );
+
+        // end coupon codes test cases
+        deletePromotion(promoFreeWithCoupon.getId());
+        deletePromotion(promoFreeWithExpiredCoupon.getId());
     }
 
     /**
@@ -625,6 +648,446 @@ public class OrderPromotionTest {
         deletePromotion(promotion.getId());
     }
 
+    @Test
+    @org.junit.jupiter.api.Order(14)
+    public void discountOnItemWithFacets() throws IOException {
+        shopClient.asAnonymousUser();
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(
+                        GET_FACET_LIST, null, Arrays.asList(FACET_VALUE_FRAGMENT, FACET_WITH_VALUES_FRAGMENT));
+        FacetList facetList = graphQLResponse.get("$.data.facets", FacetList.class);
+
+        FacetValue saleFacetValue = facetList.getItems().get(0).getValues().get(0);
+
+        String couponCode = "50%_off_sale_items";
+
+        CreatePromotionInput createPromotionInput = new CreatePromotionInput();
+        createPromotionInput.setEnabled(true);
+        createPromotionInput.setName("50% off sale items");
+        createPromotionInput.setCouponCode(couponCode);
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValuesDiscountAction.getCode());
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("discount");
+        configArgInput.setValue("50");
+        configurableOperationInput.getArguments().add(configArgInput);
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("facets");
+        configArgInput.setValue("[\"" + saleFacetValue.getId() + "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+        createPromotionInput.getActions().add(configurableOperationInput);
+
+        Promotion promotion = createPromotion(createPromotionInput);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", getVariantBySlug("item-12").getId());
+        variables.put("quantity", 1);
+        shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", getVariantBySlug("item-sale-12").getId());
+        variables.put("quantity", 1);
+        shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", getVariantBySlug("item-sale-1").getId());
+        variables.put("quantity", 2);
+        graphQLResponse = shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+
+        Order order = graphQLResponse.get("$.data.addItemToOrder", Order.class);
+        assertThat(order.getAdjustments()).isEmpty();
+        assertThat(getItemSale1Line(order.getLines()).getAdjustments()).isEmpty();
+        assertThat(order.getTotal()).isEqualTo(2200);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", couponCode);
+
+        graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getTotal()).isEqualTo(1600);
+        assertThat(getItemSale1Line(order.getLines()).getAdjustments()).hasSize(2);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", couponCode);
+
+        graphQLResponse =
+                shopClient.perform(REMOVE_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        order = graphQLResponse.get("$.data.removeCouponCode", Order.class);
+
+        assertThat(getItemSale1Line(order.getLines()).getAdjustments()).isEmpty();
+        assertThat(order.getTotal()).isEqualTo(2200);
+
+        graphQLResponse =
+                shopClient.perform(GET_ACTIVE_ORDER, null, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order activeOrder = graphQLResponse.get("$.data.activeOrder", Order.class);
+
+        assertThat(getItemSale1Line(activeOrder.getLines()).getAdjustments()).isEmpty();
+        assertThat(activeOrder.getTotal()).isEqualTo(2200);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(15)
+    public void productsPercentageDiscount() throws IOException {
+        shopClient.asAnonymousUser();
+
+        ProductVariant item60 = getVariantBySlug("item-60");
+        String couponCode = "50%_off_product";
+
+        CreatePromotionInput createPromotionInput = new CreatePromotionInput();
+        createPromotionInput.setEnabled(true);
+        createPromotionInput.setName("50% off product");
+        createPromotionInput.setCouponCode(couponCode);
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(productDiscountAction.getCode());
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("discount");
+        configArgInput.setValue("50");
+        configurableOperationInput.getArguments().add(configArgInput);
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("productVariantIds");
+        configArgInput.setValue("[\"" + item60.getId() + "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+        createPromotionInput.getActions().add(configurableOperationInput);
+
+        Promotion promotion = createPromotion(createPromotionInput);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", item60.getId());
+        variables.put("quantity", 1);
+        GraphQLResponse graphQLResponse = shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+        Order order = graphQLResponse.get("$.data.addItemToOrder", Order.class);
+
+        assertThat(order.getAdjustments()).isEmpty();
+        assertThat(order.getLines().get(0).getAdjustments()).isEmpty();
+        assertThat(order.getTotal()).isEqualTo(5000);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", couponCode);
+
+        graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getTotal()).isEqualTo(2500);
+        assertThat(order.getLines().get(0).getAdjustments()).hasSize(1);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", couponCode);
+
+        graphQLResponse =
+                shopClient.perform(REMOVE_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        order = graphQLResponse.get("$.data.removeCouponCode", Order.class);
+
+        assertThat(order.getLines().get(0).getAdjustments()).isEmpty();
+        assertThat(order.getTotal()).isEqualTo(5000);
+
+        deletePromotion(promotion.getId());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(15)
+    public void multiple_promotions_simultaneously() throws IOException {
+        shopClient.asAnonymousUser();
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(
+                        GET_FACET_LIST, null, Arrays.asList(FACET_VALUE_FRAGMENT, FACET_WITH_VALUES_FRAGMENT));
+        FacetList facetList = graphQLResponse.get("$.data.facets", FacetList.class);
+
+        FacetValue saleFacetValue = facetList.getItems().get(0).getValues().get(0);
+
+        CreatePromotionInput createPromotionInput = new CreatePromotionInput();
+        createPromotionInput.setEnabled(true);
+        createPromotionInput.setName("item promo");
+        createPromotionInput.setCouponCode("CODE1");
+
+        ConfigurableOperationInput configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(facetValuesDiscountAction.getCode());
+        ConfigArgInput configArgInput = new ConfigArgInput();
+        configArgInput.setName("discount");
+        configArgInput.setValue("50");
+        configurableOperationInput.getArguments().add(configArgInput);
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("facets");
+        configArgInput.setValue("[\"" + saleFacetValue.getId() + "\"]");
+        configurableOperationInput.getArguments().add(configArgInput);
+        createPromotionInput.getActions().add(configurableOperationInput);
+
+        Promotion promotion1 = createPromotion(createPromotionInput);
+
+        createPromotionInput = new CreatePromotionInput();
+        createPromotionInput.setEnabled(true);
+        createPromotionInput.setName("order promo");
+        createPromotionInput.setCouponCode("CODE2");
+
+        configurableOperationInput = new ConfigurableOperationInput();
+        configurableOperationInput.setCode(orderPercentageDiscount.getCode());
+        configArgInput = new ConfigArgInput();
+        configArgInput.setName("discount");
+        configArgInput.setValue("50");
+        configurableOperationInput.getArguments().add(configArgInput);
+        createPromotionInput.getActions().add(configurableOperationInput);
+
+        Promotion promotion2 = createPromotion(createPromotionInput);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", getVariantBySlug("item-sale-12").getId());
+        variables.put("quantity", 1);
+        shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+
+        // Apply the OrderItem-level promo
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", "CODE1");
+
+        graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getLines().get(0).getAdjustments()).hasSize(1);
+        assertThat(order.getLines().get(0).getAdjustments().stream()
+                .filter(a ->  Objects.equals(a.getType(), AdjustmentType.PROMOTION))
+                .findFirst()
+                .get()
+                .getDescription()
+        ).isEqualTo("item promo");
+        assertThat(order.getAdjustments()).isEmpty();
+
+        // Apply the Order-level promo
+        variables = objectMapper.createObjectNode();
+        variables.put("couponCode", "CODE2");
+
+        graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getLines().get(0).getAdjustments()).hasSize(1);
+        assertThat(order.getLines().get(0).getAdjustments().stream()
+                .filter(a ->  Objects.equals(a.getType(), AdjustmentType.PROMOTION))
+                .findFirst()
+                .get()
+                .getDescription()
+        ).isEqualTo("item promo");
+        assertThat(order.getAdjustments()).hasSize(1);
+        assertThat(order.getAdjustments().get(0).getDescription()).isEqualTo("order promo");
+    }
+
+    private OrderLine getItemSale1Line(List<OrderLine> lines) {
+        return lines.stream()
+                .filter(l -> Objects.equals(l.getProductVariant().getId(), getVariantBySlug("item-sale-1").getId()))
+                .findFirst().get();
+    }
+
+    /**
+     * per-customer usage limit
+     */
+    Promotion promoWithUsageLimit;
+
+    private void before_test_16() throws IOException {
+        CreatePromotionInput input = new CreatePromotionInput();
+        input.setEnabled(true);
+        input.setName("Free with test coupon");
+        input.setCouponCode(TEST_COUPON_CODE);
+        input.setPerCustomerUsageLimit(1);
+        input.getActions().add(getFreeOrderAction());
+
+        Promotion promoWithUsageLimit = createPromotion(input);
+    }
+
+    private Order createNewActiveOrder() throws IOException {
+        ProductVariant item60 = getVariantBySlug("item-60");
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", item60.getId());
+        variables.put("quantity", 1);
+        GraphQLResponse graphQLResponse = shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+        Order order = graphQLResponse.get("$.data.addItemToOrder", Order.class);
+
+        return order;
+    }
+
+    /**
+     * guest customer
+     */
+    String GUEST_EMAIL_ADDRESS = "guest@test.com";
+    String orderCode;
+
+    private void addGuestCustomerToOrder() throws IOException {
+        CreateCustomerInput input = new CreateCustomerInput();
+        input.setEmailAddress(GUEST_EMAIL_ADDRESS);
+        input.setFirstName("Guest");
+        input.setLastName("Customer");
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        shopClient.perform(SET_CUSTOMER, variables);
+    }
+
+
+    @Test
+    @org.junit.jupiter.api.Order(16)
+    public void allows_initial_usage() throws IOException {
+        before_test_16();
+        shopClient.asAnonymousUser();
+        createNewActiveOrder();
+        addGuestCustomerToOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        GraphQLResponse graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getTotal()).isEqualTo(0);
+        assertThat(order.getCouponCodes()).containsExactly(TEST_COUPON_CODE);
+
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+        order = testOrderUtils.addPaymentToOrder(shopClient, testSuccessfulPaymentMethod);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentSettled.name());
+        assertThat(order.getActive()).isFalse();
+        orderCode = order.getCode();
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(17)
+    public void adds_Promotions_to_Order_once_payment_arranged() throws IOException {
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("code", orderCode);
+
+        GraphQLResponse graphQLResponse =
+                shopClient.perform(GET_ORDER_PROMOTIONS_BY_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.orderByCode", Order.class);
+
+        assertThat(order.getPromotions()).hasSize(1);
+        assertThat(order.getPromotions().get(0).getName()).isEqualTo("Free with test coupon");
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(18)
+    public void throws_when_usage_exceeds_limit() throws IOException {
+        shopClient.asAnonymousUser();
+        createNewActiveOrder();
+        addGuestCustomerToOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        try {
+            shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Coupon code cannot be used more than 1 time(s) per customer"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(19)
+    public void removes_couponCode_from_order_when_adding_customer_after_code_applied() throws IOException {
+        shopClient.asAnonymousUser();
+        createNewActiveOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        GraphQLResponse graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getTotal()).isEqualTo(0);
+        assertThat(order.getCouponCodes()).containsExactly(TEST_COUPON_CODE);
+
+        addGuestCustomerToOrder();
+
+        graphQLResponse =
+                shopClient.perform(GET_ACTIVE_ORDER, null, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order activeOrder = graphQLResponse.get("$.data.activeOrder", Order.class);
+        assertThat(activeOrder.getCouponCodes()).isEmpty();
+        assertThat(activeOrder.getTotal()).isEqualTo(5000);
+    }
+
+    /**
+     * signed-in customer
+     */
+
+    private void loginAsRegisteredCustomer() throws IOException {
+        shopClient.asUserWithCredentials(customers.get(0).getEmailAddress(), password);
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(20)
+    public void allows_initial_usage_02() throws IOException {
+        loginAsRegisteredCustomer();
+        createNewActiveOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        GraphQLResponse graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getTotal()).isEqualTo(0);
+        assertThat(order.getCouponCodes()).containsExactly(TEST_COUPON_CODE);
+
+        testOrderUtils.proceedToArrangingPayment(shopClient);
+        order = testOrderUtils.addPaymentToOrder(shopClient, testSuccessfulPaymentMethod);
+        assertThat(order.getState()).isEqualTo(OrderState.PaymentSettled.name());
+        assertThat(order.getActive()).isFalse();
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(21)
+    public void throws_when_usage_exceeds_limit_02() throws IOException {
+        loginAsRegisteredCustomer();
+        createNewActiveOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        try {
+            shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorMessage()).isEqualTo(
+                    "Coupon code cannot be used more than 1 time(s) per customer"
+            );
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(22)
+    public void removes_couponCode_from_order_when_logging_in_after_code_applied() throws IOException {
+        shopClient.asAnonymousUser();
+        createNewActiveOrder();
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("couponCode", TEST_COUPON_CODE);
+
+        GraphQLResponse graphQLResponse =
+                shopClient.perform(APPLY_COUPON_CODE, variables, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order order = graphQLResponse.get("$.data.applyCouponCode", Order.class);
+
+        assertThat(order.getCouponCodes()).containsExactly(TEST_COUPON_CODE);
+        assertThat(order.getTotal()).isEqualTo(0);
+
+        loginAsRegisteredCustomer();
+
+        graphQLResponse =
+                shopClient.perform(GET_ACTIVE_ORDER, null, Arrays.asList(TEST_ORDER_FRAGMENT));
+        Order activeOrder = graphQLResponse.get("$.data.activeOrder", Order.class);
+
+        assertThat(activeOrder.getTotal()).isEqualTo(5000);
+        assertThat(activeOrder.getCouponCodes()).isEmpty();
+    }
 
     private void getProducts() throws IOException {
         ProductListOptions options = new ProductListOptions();
