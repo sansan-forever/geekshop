@@ -12,6 +12,7 @@ import co.jueyi.geekshop.entity.AddressEntity;
 import co.jueyi.geekshop.entity.CustomerEntity;
 import co.jueyi.geekshop.entity.OrderEntity;
 import co.jueyi.geekshop.exception.IllegalOperationException;
+import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.service.CustomerService;
 import co.jueyi.geekshop.service.OrderService;
 import co.jueyi.geekshop.service.SessionService;
@@ -23,6 +24,7 @@ import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.order.Order;
 import co.jueyi.geekshop.types.order.OrderAddress;
 import co.jueyi.geekshop.types.payment.PaymentInput;
+import com.baomidou.mybatisplus.extension.exceptions.ApiException;
 import graphql.kickstart.tools.GraphQLMutationResolver;
 import graphql.schema.DataFetchingEnvironment;
 import org.springframework.stereotype.Component;
@@ -85,7 +87,12 @@ public class ShopOrderMutation extends BaseOrderAPI implements GraphQLMutationRe
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         if (ctx.isAuthorizedAsOwnerOnly()) {
             Order sessionOrder = this.getOrderFromContext(ctx, true);
-            OrderState targetState = OrderState.valueOf(state);
+            OrderState targetState = null;
+            try {
+                targetState = OrderState.valueOf(state);
+            } catch (IllegalArgumentException ex) {
+                throw new UserInputException(ex.getMessage());
+            }
             OrderEntity orderEntity = this.orderService.transitionToState(ctx, sessionOrder.getId(), targetState);
             return ServiceHelper.mapOrderEntityToOrder(orderEntity);
         }
@@ -103,6 +110,9 @@ public class ShopOrderMutation extends BaseOrderAPI implements GraphQLMutationRe
     @Allow(value = {Permission.UpdateOrder, Permission.Owner})
     public Order adjustOrderLine(Long orderLineId, Integer quantity, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        if (quantity == 0) {
+            return this.removeOrderLine(orderLineId, dfe);
+        }
         Order sessionOrder = this.getOrderFromContext(ctx, true);
         OrderEntity orderEntity =
                 this.orderService.adjustOrderLine(sessionOrder.getId(), null, orderLineId, quantity);

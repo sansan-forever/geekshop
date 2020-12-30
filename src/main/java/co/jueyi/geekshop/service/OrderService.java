@@ -288,10 +288,11 @@ public class OrderService {
                     orderLine.getItems().add(orderItem);
                 }
             } else if (quantity < currentQuantity) {
+                List<OrderItemEntity> oldItems = orderLine.getItems();
                 orderLine.setItems(orderLine.getItems().subList(0, quantity));
                 List<Long> toRemoveItemIds = new ArrayList<>();
                 for(int i = quantity; i < currentQuantity; i++) {
-                    OrderItemEntity orderItem = orderLine.getItems().get(i);
+                    OrderItemEntity orderItem = oldItems.get(i);
                     toRemoveItemIds.add(orderItem.getId());
                 }
                 this.orderItemEntityMapper.deleteBatchIds(toRemoveItemIds);
