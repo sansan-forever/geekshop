@@ -61,7 +61,7 @@ public class SessionService {
         OrderEntity guestOrder = ctx.getSession() != null && ctx.getSession().getActiveOrderId() != null
                 ? this.orderService.findOneWithItems(ctx.getSession().getActiveOrderId())
                 : null;
-        OrderEntity existingOrder = this.orderService.getActiveOrderForUser(user.getId());
+        OrderEntity existingOrder = this.orderService.getActiveOrderForUser(user.getId(), true);
         OrderEntity activeOrder = this.orderService.mergeOrders(user.getId(), guestOrder, existingOrder);
 
         SessionEntity sessionEntity = new SessionEntity();

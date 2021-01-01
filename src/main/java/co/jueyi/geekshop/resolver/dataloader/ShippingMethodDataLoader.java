@@ -34,7 +34,7 @@ public class ShippingMethodDataLoader implements MappedBatchLoader<Long, Shippin
             List<ShippingMethodEntity> shippingMethodEntities =
                     this.shippingMethodEntityMapper.selectBatchIds(shippingMethodIds);
             List<ShippingMethod> shippingMethods = shippingMethodEntities.stream()
-                    .map(shippingMethodEntity -> BeanMapper.map(shippingMethodEntities, ShippingMethod.class))
+                    .map(shippingMethodEntity -> BeanMapper.map(shippingMethodEntity, ShippingMethod.class))
                     .collect(Collectors.toList());
             Map<Long, ShippingMethod> shippingMethodMap = shippingMethods.stream()
                     .collect(Collectors.toMap(ShippingMethod::getId, m -> m));

@@ -83,12 +83,22 @@ public class CustomerTest {
     static final String DELETE_CUSTOMER_NOTE =
             String.format(ADMIN_CUSTOMER_GRAPHQL_RESOURCE_TEMPLATE, "delete_customer_note");
 
+    static final String SHOP_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shop/%s.graphqls";
+    static final String ADD_ITEM_TO_ORDER  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "add_item_to_order");
+    static final String GET_CUSTOMER_ORDERS  =
+            String.format(SHOP_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_orders");
+
     @Autowired
     TestHelper testHelper;
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)
     ApiClient adminClient;
+
+    @Autowired
+    @Qualifier(TestConfig.SHOP_CLIENT_BEAN)
+    ApiClient shopClient;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -325,7 +335,6 @@ public class CustomerTest {
         assertThat(customer.getAddresses().get(1).getDefaultBillingAddress()).isFalse();
     }
 
-
     @Test
     @Order(6)
     public void createCustomerAddress_with_true_defaults_unsets_existing_defaults() throws IOException {
@@ -398,14 +407,35 @@ public class CustomerTest {
         assertThat(otherAddresses).hasSize(1);
     }
 
-    // TODO orders
+    @Test
+    @Order(8)
+    public void list_that_user_s_orders() throws IOException {
+        // log in as first customer
+        shopClient.asUserWithCredentials(firstCustomer.getEmailAddress(), MockDataService.TEST_PASSWORD);
+        // add an item to the order to create an order
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("productVariantId", 1L);
+        variables.put("quantity", 1);
+        GraphQLResponse graphQLResponse = shopClient.perform(ADD_ITEM_TO_ORDER, variables);
+        co.jueyi.geekshop.types.order.Order order =
+                graphQLResponse.get("$.data.addItemToOrder", co.jueyi.geekshop.types.order.Order.class);
+
+        variables = objectMapper.createObjectNode();
+        variables.put("id", firstCustomer.getId());
+        graphQLResponse = adminClient.perform(GET_CUSTOMER_ORDERS, variables);
+        Customer customer = graphQLResponse.get("$.data.customer", Customer.class);
+
+        assertThat(customer.getOrders().getTotalItems()).isEqualTo(1);
+        assertThat(customer.getOrders().getItems().get(0).getId()).isEqualTo(order.getId());
+    }
+
 
     /**
      * creation test suite
      */
 
     @Test
-    @Order(8)
+    @Order(9)
     public void triggers_verification_event_if_no_password_supplied() throws Exception {
         CreateCustomerInput input = new CreateCustomerInput();
         input.setEmailAddress("test1@test.com");
@@ -429,7 +459,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     public void creates_a_verified_Customer() throws Exception {
         CreateCustomerInput input = new CreateCustomerInput();
         input.setEmailAddress("test2@test.com");
@@ -449,7 +479,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     public void throws_when_using_an_existing_non_deleted_emailAddress() throws IOException {
         CreateCustomerInput input = new CreateCustomerInput();
         input.setEmailAddress("test2@test.com");
@@ -475,7 +505,7 @@ public class CustomerTest {
      */
 
     @Test
-    @Order(11)
+    @Order(12)
     public void deletes_a_customer() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", thirdCustomer.getId());
@@ -487,7 +517,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     public void cannot_get_a_deleted_customer() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables.put("id", thirdCustomer.getId());
@@ -499,7 +529,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     public void deleted_customer_omitted_from_list() throws IOException {
         GraphQLResponse graphQLResponse = this.adminClient.perform(GET_CUSTOMER_LIST, null);
         assertThat(graphQLResponse.isOk());
@@ -508,7 +538,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     public void updateCustomer_throws_for_deleted_customer() throws IOException {
         UpdateCustomerInput input = new UpdateCustomerInput();
         input.setId(thirdCustomer.getId());
@@ -527,7 +557,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(15)
+    @Order(16)
     public void createCustomerAddress_throws_for_deleted_customer() throws IOException {
         CreateAddressInput createAddressInput = new CreateAddressInput();
         createAddressInput.setStreetLine1("test_street_line");
@@ -547,7 +577,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     public void new_Customer_cannot_be_created_with_same_emailAddress_as_a_deleted_Customer() throws IOException {
         CreateCustomerInput input = new CreateCustomerInput();
         input.setEmailAddress(thirdCustomer.getEmailAddress());
@@ -576,7 +606,7 @@ public class CustomerTest {
     Long noteId;
 
     @Test
-    @Order(17)
+    @Order(18)
     public void addNoteToCustomer() throws IOException {
         AddNoteToCustomerInput input = new AddNoteToCustomerInput();
         input.setId(firstCustomer.getId());
@@ -616,7 +646,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(18)
+    @Order(19)
     public void update_note() throws IOException {
         UpdateCustomerNoteInput input = new UpdateCustomerNoteInput();
         input.setNoteId(noteId);
@@ -636,7 +666,7 @@ public class CustomerTest {
     }
 
     @Test
-    @Order(19)
+    @Order(20)
     public void delete_note() throws IOException {
         ObjectNode variables = objectMapper.createObjectNode();
         variables = objectMapper.createObjectNode();

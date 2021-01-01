@@ -44,7 +44,7 @@ public abstract class BaseOrderAPI {
         }
         if (orderEntity == null) {
             if (ctx.getActiveUserId() != null) {
-                orderEntity = this.orderService.getActiveOrderForUser(ctx.getActiveUserId());
+                orderEntity = this.orderService.getActiveOrderForUser(ctx.getActiveUserId(), false);
             }
 
             if (orderEntity == null && createIfNotExists) {

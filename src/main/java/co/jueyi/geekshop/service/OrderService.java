@@ -206,7 +206,7 @@ public class OrderService {
         return this.refundEntityMapper.selectList(queryWrapper);
     }
 
-    public OrderEntity getActiveOrderForUser(Long userId) {
+    public OrderEntity getActiveOrderForUser(Long userId, boolean withItems) {
         CustomerEntity customer = this.customerService.findOneByUserId(userId);
         if (customer != null) {
             QueryWrapper<OrderEntity> queryWrapper = new QueryWrapper<>();
@@ -215,7 +215,11 @@ public class OrderService {
                     .orderByDesc(OrderEntity::getCreatedAt);
             List<OrderEntity> activeOrders = this.orderEntityMapper.selectList(queryWrapper);
             if (!CollectionUtils.isEmpty(activeOrders)) {
-                return this.findOne(activeOrders.get(0).getId());
+                if (withItems) {
+                    return this.findOneWithItems(activeOrders.get(0).getId());
+                } else {
+                    return activeOrders.get(0);
+                }
             }
         }
         return null;
@@ -783,6 +787,10 @@ public class OrderService {
         List<LineItem> linesToInsert = mergeResult.getLinesToInsert();
         OrderEntity order = mergeResult.getOrder();
         if (orderToDelete != null) {
+            orderToDelete.getLines().forEach(line -> {
+                line.getItems().forEach(item -> this.orderItemEntityMapper.deleteById(item.getId()));
+                this.orderLineEntityMapper.deleteById(line.getId());
+            });
             this.orderEntityMapper.deleteById(orderToDelete.getId());
         }
         if (order != null && !CollectionUtils.isEmpty(linesToInsert)) {

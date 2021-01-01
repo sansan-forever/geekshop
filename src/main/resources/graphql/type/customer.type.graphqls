@@ -10,7 +10,7 @@ type Customer implements Node {
     phoneNumber: String
     emailAddress: String!
     addresses: [Address!]
-    # orders(options: OrderListOptions): OrderList!
+    orders(options: OrderListOptions): OrderList!
     user: User
     groups: [CustomerGroup!]!
     # 该字段对shop api只可见public公开的历史记录

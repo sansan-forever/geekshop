@@ -9,6 +9,7 @@ import co.jueyi.geekshop.common.ApiType;
 import co.jueyi.geekshop.common.Constant;
 import co.jueyi.geekshop.common.RequestContext;
 import co.jueyi.geekshop.service.HistoryService;
+import co.jueyi.geekshop.service.OrderService;
 import co.jueyi.geekshop.types.address.Address;
 import co.jueyi.geekshop.types.common.BooleanOperators;
 import co.jueyi.geekshop.types.common.SortOrder;
@@ -18,6 +19,8 @@ import co.jueyi.geekshop.types.history.HistoryEntryFilterParameter;
 import co.jueyi.geekshop.types.history.HistoryEntryList;
 import co.jueyi.geekshop.types.history.HistoryEntryListOptions;
 import co.jueyi.geekshop.types.history.HistoryEntrySortParameter;
+import co.jueyi.geekshop.types.order.OrderList;
+import co.jueyi.geekshop.types.order.OrderListOptions;
 import co.jueyi.geekshop.types.user.User;
 import graphql.kickstart.execution.context.GraphQLContext;
 import graphql.kickstart.tools.GraphQLResolver;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -38,6 +42,7 @@ import java.util.concurrent.CompletableFuture;
 public class CustomerResolver implements GraphQLResolver<Customer> {
 
     private final HistoryService historyService;
+    private final OrderService orderService;
 
     public CompletableFuture<User> getUser(Customer customer, DataFetchingEnvironment dfe) {
         final DataLoader<Long, User> dataLoader = ((GraphQLContext) dfe.getContext())
@@ -46,7 +51,6 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
 
         return dataLoader.load(customer.getId());
     }
-
 
     public CompletableFuture<List<Address>> getAddresses(Customer customer, DataFetchingEnvironment dfe) {
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
@@ -82,7 +86,6 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
 
     public HistoryEntryList getHistory(Customer customer, HistoryEntryListOptions options,
                                                           DataFetchingEnvironment dfe) {
-
         RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
         if (options == null) {
             options = new HistoryEntryListOptions();
@@ -104,5 +107,16 @@ public class CustomerResolver implements GraphQLResolver<Customer> {
         }
 
         return historyService.getHistoryForCustomer(customer.getId(), options);
+    }
+
+    public OrderList getOrders(Customer customer, OrderListOptions options, DataFetchingEnvironment dfe) {
+        RequestContext ctx = RequestContext.fromDataFetchingEnvironment(dfe);
+        if (Objects.equals(ApiType.SHOP, ctx.getApiType()) && ctx.getActiveUserId() == null) {
+            // Guest customers should not be able to see this data
+            OrderList orderList = new OrderList();
+            orderList.setTotalItems(0);
+            return orderList;
+        }
+        return this.orderService.findAllWithItemsByCustomerId(customer.getId(), options);
     }
 }
