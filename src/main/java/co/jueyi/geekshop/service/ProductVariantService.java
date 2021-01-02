@@ -175,10 +175,6 @@ public class ProductVariantService {
         return availableVariantIds;
     }
 
-    public ProductVariantEntity getVariantByOrderLindId(Long orderLineId) {
-        return null; // TODO
-    }
-
     public List<ProductOptionEntity> getOptionsForVariant(Long variantId) {
         QueryWrapper<ProductVariantProductOptionJoinEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ProductVariantProductOptionJoinEntity::getProductVariantId, variantId);

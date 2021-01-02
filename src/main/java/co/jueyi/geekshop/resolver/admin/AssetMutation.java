@@ -41,7 +41,7 @@ public class AssetMutation implements GraphQLMutationResolver {
     public List<Asset> createAssets(List<Part> parts, DataFetchingEnvironment dfe) {
         /**
          *  TODO:
-         *  Currently we validate _all_ mime types up-front due to limimations
+         *  Currently we validate _all_ mime types up-front due to limitations
          *  with the  existing error handling mechanisms.
          */
         this.assetService.validateInputMimeTypes(parts);

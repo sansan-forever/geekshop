@@ -33,10 +33,6 @@ public class Customer implements Node {
     private String emailAddress;
     private List<Address> addresses = new ArrayList<>();
     private OrderList orders;
-    public OrderList getOrders(OrderListOptions options) {
-        return null;
-        // TODO
-    }
     private User user;
     private Long userId; // 该字段仅内部使用，GraphQL对外不可见
     private List<CustomerGroup> groups = new ArrayList<>(); // 该字段只有Admin可见

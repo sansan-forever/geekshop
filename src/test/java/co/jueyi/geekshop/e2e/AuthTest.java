@@ -13,6 +13,8 @@ import co.jueyi.geekshop.types.auth.CurrentUser;
 import co.jueyi.geekshop.types.common.CreateCustomerInput;
 import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.customer.CustomerList;
+import co.jueyi.geekshop.types.product.CreateProductInput;
+import co.jueyi.geekshop.types.product.UpdateProductInput;
 import co.jueyi.geekshop.types.role.CreateRoleInput;
 import co.jueyi.geekshop.types.role.Role;
 import co.jueyi.geekshop.utils.TestHelper;
@@ -31,8 +33,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -43,28 +44,41 @@ import static org.assertj.core.api.Assertions.fail;
 @DirtiesContext
 public class AuthTest {
 
-    public static final String SHARED_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shared/%s.graphqls";
-    public static final String ADMIN_ME =
+    static final String SHARED_GRAPHQL_RESOURCE_TEMPLATE = "graphql/shared/%s.graphqls";
+    static final String ADMIN_ME =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "admin_me");
-    public static final String CURRENT_USER_FRAGMENT =
+    static final String CURRENT_USER_FRAGMENT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "current_user_fragment");
-    public static final String ATTEMPT_LOGIN =
+    static final String ATTEMPT_LOGIN =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "admin_attempt_login");
-    public static final String GET_CUSTOMER_LIST =
+    static final String GET_CUSTOMER_LIST =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_list");
-    public static final String CREATE_ROLE =
+    static final String CREATE_ROLE =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_role");
-    public static final String ROLE_FRAGMENT =
+    static final String ROLE_FRAGMENT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "role_fragment");
-    public static final String CREATE_ADMINISTRATOR =
+    static final String CREATE_ADMINISTRATOR =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_administrator");
-    public static final String ADMINISTRATOR_FRAGMENT =
+    static final String ADMINISTRATOR_FRAGMENT =
             String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "administrator_fragment");
+    static final String GET_PRODUCT_LIST =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "get_product_list");
+    static final String UPDATE_PRODUCT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "update_product");
 
-    public static final String ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/auth/%s.graphqls";
-    public static final String CREATE_CUSTOMER =
+    static final String ASSET_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "asset_fragment");
+    static final String PRODUCT_VARIANT_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_variant_fragment");
+    static final String PRODUCT_WITH_VARIANTS_FRAGMENT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "product_with_variants_fragment");
+    static final String CREATE_PRODUCT =
+            String.format(SHARED_GRAPHQL_RESOURCE_TEMPLATE, "create_product");
+
+    static final String ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE = "graphql/admin/auth/%s.graphqls";
+    static final String CREATE_CUSTOMER =
             String.format(ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE, "create_customer");
-    public static final String GET_CUSTOMER_COUNT =
+    static final String GET_CUSTOMER_COUNT =
             String.format(ADMIN_AUTH_GRAPHQL_RESOURCE_TEMPLATE, "get_customer_count");
 
     @Autowired
@@ -161,13 +175,54 @@ public class AuthTest {
         );
     }
 
-    // TODO add read/update/create product test
+    @Test
+    @Order(5)
+    public void can_read() throws IOException {
+        adminClient.perform(GET_PRODUCT_LIST, null);
+    }
+
+    @Test
+    @Order(6)
+    public void cannot_update() throws IOException {
+        UpdateProductInput input = new UpdateProductInput();
+        input.setId(1L);
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(UPDATE_PRODUCT, variables,
+                    Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorCode()).isEqualTo("FORBIDDEN");
+        }
+    }
+
+    @Test
+    @Order(7)
+    public void cannot_create() throws IOException {
+        CreateProductInput input = new CreateProductInput();
+
+        JsonNode inputNode = objectMapper.valueToTree(input);
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        try {
+            adminClient.perform(CREATE_PRODUCT, variables,
+                    Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+            fail("should have thrown");
+        } catch (ApiException apiEx) {
+            assertThat(apiEx.getErrorCode()).isEqualTo("FORBIDDEN");
+        }
+    }
 
     /**
      * CRUD on Customers permissions test suite
      */
     @Test
-    @Order(5)
+    @Order(9)
     public void me_returns_correct_permissions_after_adding_crud_on_customers_permission() throws IOException {
         this.adminClient.asSuperAdmin();
         Pair<String, String> pair = this.createAdministratorWithPermissions("CRUDCustomer",
@@ -193,7 +248,7 @@ public class AuthTest {
     }
 
     @Test
-    @Order(6)
+    @Order(10)
     public void can_create_customer() throws IOException {
         CreateCustomerInput createCustomerInput = new CreateCustomerInput();
         createCustomerInput.setEmailAddress("");
@@ -209,7 +264,7 @@ public class AuthTest {
     }
 
     @Test
-    @Order(7)
+    @Order(11)
     public void can_read_customer() throws IOException {
         GraphQLResponse graphQLResponse = this.adminClient.perform(GET_CUSTOMER_COUNT, null);
         assertThat(graphQLResponse.isOk());
