@@ -27,10 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created on Nov, 2020 by @author bobo
@@ -72,7 +69,7 @@ public class StockMovementService {
 
     public StockMovement adjustProductVariantStock(
             Long productVariantId, Integer oldStockLevel, Integer newStockLevel) {
-        if (oldStockLevel.equals(newStockLevel)) {
+        if (Objects.equals(oldStockLevel, newStockLevel)) {
             return null;
         }
 

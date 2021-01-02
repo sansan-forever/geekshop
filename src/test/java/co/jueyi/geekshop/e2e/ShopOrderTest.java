@@ -26,7 +26,6 @@ import co.jueyi.geekshop.types.payment.Payment;
 import co.jueyi.geekshop.types.payment.PaymentInput;
 import co.jueyi.geekshop.types.shipping.ShippingMethodQuote;
 import co.jueyi.geekshop.utils.TestHelper;
-import co.jueyi.geekshop.utils.TestOrderUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -112,9 +111,6 @@ public class ShopOrderTest {
 
     @Autowired
     TestHelper testHelper;
-
-    @Autowired
-    TestOrderUtils testOrderUtils;
 
     @Autowired
     @Qualifier(TestConfig.ADMIN_CLIENT_BEAN)

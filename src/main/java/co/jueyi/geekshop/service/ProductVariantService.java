@@ -258,6 +258,7 @@ public class ProductVariantService {
     public ProductVariantEntity updateSingle(UpdateProductVariantInput input) {
         ProductVariantEntity existingVariant = ServiceHelper.getEntityOrThrow(
                 this.productVariantEntityMapper, ProductVariantEntity.class, input.getId());
+        Integer oldStockLevel = existingVariant.getStockOnHand();
         if (input.getStockOnHand() != null && input.getStockOnHand() < 0) {
             throw new UserInputException("stockOnHand cannot be a negative value");
         }
@@ -289,7 +290,7 @@ public class ProductVariantService {
         if (input.getStockOnHand() != null) {
             this.stockMovementService.adjustProductVariantStock(
                     existingVariant.getId(),
-                    existingVariant.getStockOnHand(),
+                    oldStockLevel,
                     input.getStockOnHand()
             );
         }
