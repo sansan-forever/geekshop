@@ -17,12 +17,13 @@ spring:
     date-format: yyyy-MM-dd'T'HH:mm:ss
 
 # Logging
-#logging:
-#  level:
-#    graphql: error
-#    notprivacysafe.graphql: error
-#    org.springframework: info
-#    io.geekshop: info
+logging:
+  level:
+    graphql: error
+    notprivacysafe.graphql: error
+    org.springframework: info
+    co.jueyi: info
+    org.apache.catalina.loader.WebappClassLoaderBase: warn # ignore Illegal Access caused by DirtyContext
 
 geekshop:
   company-name: ${COMPANY_NAME:GEEKSHOP}

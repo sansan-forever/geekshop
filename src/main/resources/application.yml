@@ -29,7 +29,7 @@ management:
 logging:
   level:
     org.springframework: info
-    io.geekshop: warn
+    co.jueyi: warn
     graphql: warn
     # https://github.com/graphql-java-kickstart/graphql-spring-boot/issues/432
     notprivacysafe.graphql: warn
