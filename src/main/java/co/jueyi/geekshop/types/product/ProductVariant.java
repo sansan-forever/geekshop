@@ -34,8 +34,8 @@ public class ProductVariant implements Node {
     private Integer price;
     private List<ProductOption> options = new ArrayList<>();
     private List<FacetValue> facetValues = new ArrayList<>();
-    private Boolean enabled; // admin only
+    private boolean enabled; // admin only
     private Integer stockOnHand; // admin only
-    private Boolean trackInventory; // admin only
+    private boolean trackInventory; // admin only
     private StockMovementList stockMovements; // admin only
 }

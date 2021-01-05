@@ -40,6 +40,9 @@ import co.jueyi.geekshop.email.FileEmailSender;
 import co.jueyi.geekshop.email.NoopEmailSender;
 import co.jueyi.geekshop.email.SmtpEmailSender;
 import co.jueyi.geekshop.options.ConfigOptions;
+import co.jueyi.geekshop.service.helpers.search_strategy.DbSearchStrategy;
+import co.jueyi.geekshop.service.helpers.search_strategy.SearchStrategy;
+import co.jueyi.geekshop.service.helpers.search_strategy.SearchStrategyUtils;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import com.mitchellbosecke.pebble.PebbleEngine;
@@ -298,5 +301,10 @@ public class AppConfig {
     @Bean
     public OrderCodeGenerator orderCodeGenerator() {
         return (RequestContext ctx) -> IdUtil.generatePublicId();
+    }
+
+    @Bean
+    public SearchStrategy searchStrategy() {
+        return new DbSearchStrategy();
     }
 }

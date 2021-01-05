@@ -20,6 +20,6 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ProductEvent extends BaseEvent {
     private final RequestContext ctx;
-    private final ProductEntity productEntity;
+    private final ProductEntity product;
     private final String type; // 'created' | 'updated' | 'deleted'
 }

@@ -46,9 +46,8 @@ extend type Query {
     "Get list of Products"
     products(options: ProductListOptions): ProductList!
 
-    # TODO add search
-    # "Search Products based on the criteria set by the `SearchInput`"
-    # search(input: SearchInput!): SearchResponse!
+    "Search Products based on the criteria set by the `SearchInput`"
+    search(input: SearchInput!): SearchResponse!
 }
 
 extend type Mutation {

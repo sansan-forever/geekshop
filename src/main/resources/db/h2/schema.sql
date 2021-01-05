@@ -350,7 +350,7 @@ create table tb_product_facet_value_join (
 
 create table tb_product_variant (
    id bigint not null auto_increment,
-   name varchar(100) not null,
+   name varchar(255) not null,
    sku varchar(100) not null,
    price integer not null,
    featured_asset_id bigint,
@@ -657,3 +657,28 @@ create table tb_payment_method (
     primary key (id)
 );
 
+create table tb_search_index_item (
+    product_variant_id bigint not null,
+    product_id bigint,
+    enabled boolean,
+    product_name varchar(255),
+    product_variant_name varchar(255),
+    description text,
+    slug varchar(255),
+    sku varchar(100),
+    price integer,
+    facet_ids text,
+    facet_value_ids text,
+    collection_ids text,
+    collection_slugs text,
+    product_preview varchar(255),
+    product_preview_focal_point tinytext,
+    product_variant_preview varchar(255),
+    product_variant_preview_focal_point tinytext,
+    product_asset_id bigint,
+    product_variant_asset_id bigint,
+    primary key (product_variant_id)
+);
+
+create index idx_product_asset_id on tb_search_index_item(product_asset_id);
+create index idx_product_variant_asset_id on tb_search_index_item(product_variant_asset_id);

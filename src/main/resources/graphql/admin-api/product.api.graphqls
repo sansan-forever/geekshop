@@ -83,11 +83,11 @@ input UpdateProductInput {
     description: String
 }
 
-input CreateProductVariantOptionInput {
-    optionGroupId: ID!
-    code: String!
-    name: String!
-}
+#input CreateProductVariantOptionInput {
+#    optionGroupId: ID!
+#    code: String!
+#    name: String!
+#}
 
 input CreateProductVariantInput {
     productId: ID!

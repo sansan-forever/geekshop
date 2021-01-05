@@ -175,7 +175,7 @@ public class ImportTest {
         assertThat(variant1.getSku()).isEqualTo("10112");
         assertThat(variant1.getStockMovements().getItems()).isEmpty();
         assertThat(variant1.getStockOnHand()).isEqualTo(0);
-        assertThat(variant1.getTrackInventory()).isFalse();
+        assertThat(variant1.isTrackInventory()).isFalse();
 
         ProductVariant variant2 = product.getVariants().get(1);
         assertThat(variant2.getAssets()).isEmpty();
@@ -186,7 +186,7 @@ public class ImportTest {
         assertThat(variant2.getSku()).isEqualTo("10113");
         assertThat(variant2.getStockMovements().getItems()).isEmpty();
         assertThat(variant2.getStockOnHand()).isEqualTo(0);
-        assertThat(variant2.getTrackInventory()).isFalse();
+        assertThat(variant2.isTrackInventory()).isFalse();
 
         ProductVariant variant3 = product.getVariants().get(2);
         assertThat(variant3.getAssets()).isEmpty();
@@ -197,7 +197,7 @@ public class ImportTest {
         assertThat(variant3.getSku()).isEqualTo("10114");
         assertThat(variant3.getStockMovements().getItems()).isEmpty();
         assertThat(variant3.getStockOnHand()).isEqualTo(0);
-        assertThat(variant3.getTrackInventory()).isFalse();
+        assertThat(variant3.isTrackInventory()).isFalse();
 
         ProductVariant variant4 = product.getVariants().get(3);
         assertThat(variant4.getAssets()).isEmpty();
@@ -208,7 +208,7 @@ public class ImportTest {
         assertThat(variant4.getSku()).isEqualTo("10115");
         assertThat(variant4.getStockMovements().getItems()).isEmpty();
         assertThat(variant4.getStockOnHand()).isEqualTo(0);
-        assertThat(variant4.getTrackInventory()).isFalse();
+        assertThat(variant4.isTrackInventory()).isFalse();
     }
 
     private void verifyPencils(Product product) {
@@ -244,7 +244,7 @@ public class ImportTest {
         assertThat(variant1.getSku()).isEqualTo("225400");
         assertThat(variant1.getStockMovements().getItems()).isEmpty();
         assertThat(variant1.getStockOnHand()).isEqualTo(0);
-        assertThat(variant1.getTrackInventory()).isFalse();
+        assertThat(variant1.isTrackInventory()).isFalse();
 
         ProductVariant variant2 = product.getVariants().get(1);
         assertThat(variant2.getAssets()).hasSize(1);
@@ -265,7 +265,7 @@ public class ImportTest {
         assertThat(variant2.getSku()).isEqualTo("225600");
         assertThat(variant2.getStockMovements().getItems()).isEmpty();
         assertThat(variant2.getStockOnHand()).isEqualTo(0);
-        assertThat(variant2.getTrackInventory()).isFalse();
+        assertThat(variant2.isTrackInventory()).isFalse();
     }
 
     private void verifyEasel(Product product) {
@@ -291,7 +291,7 @@ public class ImportTest {
         assertThat(stockMovement.getQuantity()).isEqualTo(100);
         assertThat(stockMovement.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
         assertThat(variant.getStockOnHand()).isEqualTo(100);
-        assertThat(variant.getTrackInventory()).isEqualTo(false);
+        assertThat(variant.isTrackInventory()).isEqualTo(false);
     }
 
     private void verifyPaperStretcher(Product product) {
@@ -337,7 +337,7 @@ public class ImportTest {
         assertThat(variant1.getStockMovements()).isNotNull();
         assertThat(variant1.getStockMovements().getItems()).isEmpty();
         assertThat(variant1.getStockOnHand()).isEqualTo(0);
-        assertThat(variant1.getTrackInventory()).isEqualTo(false);
+        assertThat(variant1.isTrackInventory()).isEqualTo(false);
 
         ProductVariant variant2 = product.getVariants().get(1);
         assertThat(variant2.getAssets()).isEmpty();
@@ -349,7 +349,7 @@ public class ImportTest {
         assertThat(variant2.getStockMovements()).isNotNull();
         assertThat(variant2.getStockMovements().getItems()).isEmpty();
         assertThat(variant2.getStockOnHand()).isEqualTo(0);
-        assertThat(variant2.getTrackInventory()).isEqualTo(false);
+        assertThat(variant2.isTrackInventory()).isEqualTo(false);
 
         ProductVariant variant3 = product.getVariants().get(2);
         assertThat(variant3.getAssets()).isEmpty();
@@ -365,7 +365,7 @@ public class ImportTest {
         assertThat(stockMovement.getQuantity()).isEqualTo(-10);
         assertThat(stockMovement.getType()).isEqualTo(StockMovementType.ADJUSTMENT);
         assertThat(variant3.getStockOnHand()).isEqualTo(-10);
-        assertThat(variant3.getTrackInventory()).isEqualTo(false);
+        assertThat(variant3.isTrackInventory()).isEqualTo(false);
     }
 
 }

@@ -5,6 +5,7 @@
 
 package co.jueyi.geekshop.types.search;
 
+import co.jueyi.geekshop.types.common.SearchInput;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -18,4 +19,5 @@ public class SearchResponse {
     private List<SearchResult> items = new ArrayList<>();
     private Integer totalItems;
     private List<FacetValueResult> facetValues = new ArrayList<>();
+    private SearchInput searchInput; // 内部使用，GraphQL对外不可见
 }

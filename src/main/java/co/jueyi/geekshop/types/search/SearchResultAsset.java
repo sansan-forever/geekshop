@@ -14,6 +14,6 @@ import lombok.Data;
 @Data
 public class SearchResultAsset {
     private Long id;
-    private String review;
+    private String preview;
     private Coordinate focalPoint;
 }

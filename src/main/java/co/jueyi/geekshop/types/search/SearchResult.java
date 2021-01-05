@@ -17,6 +17,7 @@ import java.util.List;
 public class SearchResult {
     private String sku;
     private String slug;
+    private Boolean enabled;
     private Long productId;
     private String productName;
     private SearchResultAsset productAsset;
@@ -36,7 +37,7 @@ public class SearchResult {
      */
     private List<Long> collectionIds = new ArrayList<>();
     /**
-     * A relevence score for the result. Differs between database implementations
+     * A relevance score for the result. Differs between database implementations
      */
     private Float score;
 }

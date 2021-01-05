@@ -23,4 +23,5 @@ public class SearchInput {
     private Boolean groupByProduct;
     private Integer currentPage;
     private Integer pageSize;
+    private SearchResultSortParameter sort;
 }

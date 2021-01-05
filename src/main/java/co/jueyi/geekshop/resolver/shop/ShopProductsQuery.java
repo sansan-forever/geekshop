@@ -6,17 +6,22 @@
 package co.jueyi.geekshop.resolver.shop;
 
 import co.jueyi.geekshop.common.utils.BeanMapper;
+import co.jueyi.geekshop.custom.security.Allow;
 import co.jueyi.geekshop.entity.CollectionEntity;
 import co.jueyi.geekshop.entity.ProductEntity;
 import co.jueyi.geekshop.exception.UserInputException;
 import co.jueyi.geekshop.service.CollectionService;
 import co.jueyi.geekshop.service.ProductService;
+import co.jueyi.geekshop.service.SearchService;
 import co.jueyi.geekshop.types.collection.Collection;
 import co.jueyi.geekshop.types.collection.CollectionFilterParameter;
 import co.jueyi.geekshop.types.collection.CollectionList;
 import co.jueyi.geekshop.types.collection.CollectionListOptions;
 import co.jueyi.geekshop.types.common.BooleanOperators;
+import co.jueyi.geekshop.types.common.Permission;
+import co.jueyi.geekshop.types.common.SearchInput;
 import co.jueyi.geekshop.types.product.*;
+import co.jueyi.geekshop.types.search.SearchResponse;
 import graphql.kickstart.tools.GraphQLQueryResolver;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +37,7 @@ import java.util.Objects;
 public class ShopProductsQuery implements GraphQLQueryResolver {
     private final ProductService productService;
     private final CollectionService collectionService;
+    private final SearchService searchService;
 
     public ProductList products(ProductListOptions options, DataFetchingEnvironment dfe) {
 
@@ -95,5 +101,11 @@ public class ShopProductsQuery implements GraphQLQueryResolver {
         return BeanMapper.map(collectionEntity, Collection.class);
     }
 
-    // TODO search
+    @Allow(Permission.Public)
+    public SearchResponse search(SearchInput input, DataFetchingEnvironment dfe) {
+        SearchResponse searchResponse = this.searchService.search(input, true);
+        // ensure the facetValues resolver has access to the input
+        searchResponse.setSearchInput(input);
+        return searchResponse;
+    }
 }

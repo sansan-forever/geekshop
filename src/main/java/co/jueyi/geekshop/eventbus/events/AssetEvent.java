@@ -21,6 +21,6 @@ import lombok.EqualsAndHashCode;
 @Data
 public class AssetEvent extends BaseEvent {
     private final RequestContext ctx;
-    private final AssetEntity assetEntity;
+    private final AssetEntity asset;
     private final String type; // 'created' | 'updated' | 'deleted'
 }
