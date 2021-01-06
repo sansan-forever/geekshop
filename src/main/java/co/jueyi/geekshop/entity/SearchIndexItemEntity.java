@@ -5,6 +5,7 @@
 
 package co.jueyi.geekshop.entity;
 
+import co.jueyi.geekshop.custom.mybatis_plus.LongListTypeHandler;
 import co.jueyi.geekshop.types.asset.Coordinate;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -32,11 +33,11 @@ public class SearchIndexItemEntity {
     private String slug;
     private String sku;
     private Integer price;
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = LongListTypeHandler.class)
     private List<Long> facetIds = new ArrayList<>();
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = LongListTypeHandler.class)
     private List<Long> facetValueIds = new ArrayList<>();
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = LongListTypeHandler.class)
     private List<Long> collectionIds = new ArrayList<>();
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> collectionSlugs = new ArrayList<>();

@@ -74,10 +74,12 @@ public class SearchService {
         if (CollectionUtils.isEmpty(facetValueEntities)) return new ArrayList<>();
 
         if (publicOnly) {
-            List<Long> facetIds = facetValueEntities.stream()
-                    .map(FacetValueEntity::getFacetId).collect(Collectors.toList());
+            Set<Long> facetIds = facetValueEntities.stream()
+                    .map(FacetValueEntity::getFacetId).collect(Collectors.toSet());
             QueryWrapper<FacetEntity> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(FacetEntity::isPrivateOnly, true).in(FacetEntity::getId, facetIds);
+
+            List<FacetEntity> facetEntities = this.facetEntityMapper.selectList(null);
 
             Set<Long> privateOnlyFacetIds = this.facetEntityMapper.selectList(queryWrapper)
                     .stream().map(FacetEntity::getId).collect(Collectors.toSet());
@@ -85,7 +87,7 @@ public class SearchService {
             if (!CollectionUtils.isEmpty(privateOnlyFacetIds)) {
                 // 过滤掉Facet是private的FacetValue
                 facetValueEntities = facetValueEntities.stream()
-                        .filter(facetValueEntity -> !privateOnlyFacetIds.contains(facetValueEntity.getId()))
+                        .filter(facetValueEntity -> !privateOnlyFacetIds.contains(facetValueEntity.getFacetId()))
                         .collect(Collectors.toList());
             }
         }

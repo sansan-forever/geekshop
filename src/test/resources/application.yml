@@ -8,7 +8,7 @@ spring:
   datasource:
     schema: classpath*:db/${database}/schema.sql
     data: classpath*:db/${database}/data.sql
-    url: jdbc:h2:mem:testdb;MODE=MYSQL
+    url: jdbc:h2:mem:testdb;MODE=MYSQL;IGNORECASE=TRUE
     driver-class-name: org.h2.Driver
   output:
     ansi:
@@ -52,9 +52,9 @@ geekshop:
       - image/*
       - application/pdf
 
-#mybatis-plus:
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 
 

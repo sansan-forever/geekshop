@@ -6,10 +6,8 @@
 package co.jueyi.geekshop.service.helpers.search_strategy;
 
 import co.jueyi.geekshop.types.asset.Coordinate;
-import co.jueyi.geekshop.types.search.PriceRange;
 import co.jueyi.geekshop.types.search.SearchResult;
 import co.jueyi.geekshop.types.search.SearchResultAsset;
-import co.jueyi.geekshop.types.search.SinglePrice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.sql.NClob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,67 +33,74 @@ public class SearchStrategyUtils {
     public SearchResult mapToSearchResult(Map<String, Object> map) {
         SearchResult searchResult = new SearchResult();
 
-        if (map.get("min_price") != null) {
-            PriceRange priceRange = new PriceRange();
-            priceRange.setMin((Integer) map.get("min_price"));
-            priceRange.setMax((Integer) map.get("max_price"));
-            searchResult.setPriceRange(priceRange);
-        } else {
-            SinglePrice singlePrice = new SinglePrice();
-            singlePrice.setValue((Integer) map.get("price"));
-            searchResult.setPrice(singlePrice);
-        }
-
-        if (map.get("product_asset_id") != null) {
+        if (map.get("product_asset_id".toUpperCase()) != null) {
             SearchResultAsset searchResultAsset = new SearchResultAsset();
-            searchResultAsset.setId((Long) map.get("product_asset_id"));
-            searchResultAsset.setPreview((String) map.get("product_preview"));
-            String jsonString = (String) map.get("product_preview_focal_point");
+            searchResultAsset.setId((Long) map.get("product_asset_id".toUpperCase()));
+            searchResultAsset.setPreview((String) map.get("product_preview".toUpperCase()));
+            String jsonString = (String) map.get("product_preview_focal_point".toUpperCase());
             if (!StringUtils.isEmpty(jsonString)) {
                 searchResultAsset.setFocalPoint(parseFocalPoint(jsonString));
             }
             searchResult.setProductAsset(searchResultAsset);
         }
 
-        if (map.get("product_variant_asset_id") != null) {
+        if (map.get("product_variant_asset_id".toUpperCase()) != null) {
             SearchResultAsset searchResultAsset = new SearchResultAsset();
-            searchResultAsset.setId((Long) map.get("product_variant_asset_id"));
-            searchResultAsset.setPreview((String) map.get("product_variant_preview"));
-            String jsonString = (String) map.get("product_variant_preview_focal_point");
+            searchResultAsset.setId((Long) map.get("product_variant_asset_id".toUpperCase()));
+            searchResultAsset.setPreview((String) map.get("product_variant_preview".toUpperCase()));
+            String jsonString = (String) map.get("product_variant_preview_focal_point".toUpperCase());
             if (!StringUtils.isEmpty(jsonString)) {
                 searchResultAsset.setFocalPoint(parseFocalPoint(jsonString));
             }
             searchResult.setProductVariantAsset(searchResultAsset);
         }
 
-        searchResult.setSku((String) map.get("sku"));
-        searchResult.setSlug((String) map.get("slug"));
-        searchResult.setEnabled((Boolean) map.get("enabled"));
-        searchResult.setProductVariantId((Long) map.get("product_variant_id"));
-        searchResult.setProductId((Long) map.get("product_id"));
-        searchResult.setProductName((String) map.get("product_name"));
-        searchResult.setProductVariantName((String) map.get("product_variant_name"));
-        searchResult.setDescription((String) map.get("description"));
+        searchResult.setSku((String) map.get("sku".toUpperCase()));
+        searchResult.setSlug((String) map.get("slug".toUpperCase()));
+        searchResult.setEnabled((Boolean) map.get("enabled".toUpperCase()));
+        searchResult.setProductVariantId((Long) map.get("product_variant_id".toUpperCase()));
+        searchResult.setProductId((Long) map.get("product_id".toUpperCase()));
+        searchResult.setProductName((String) map.get("product_name".toUpperCase()));
+        searchResult.setProductVariantName((String) map.get("product_variant_name".toUpperCase()));
+        Object clob = map.get("description".toUpperCase());
+        searchResult.setDescription(convertClob2String((NClob) clob));
+        searchResult.setPrice((Integer) map.get("price".toUpperCase()));
 
-        String jsonString = (String) map.get("facet_ids");
-        if (!StringUtils.isEmpty(jsonString)) {
-            searchResult.setFacetIds(parseLongList(jsonString));
-        }
-        jsonString = (String) map.get("facet_value_ids");
+
+        clob = map.get("facet_ids".toUpperCase());
+        String jsonString = convertClob2String((NClob) clob);
+        searchResult.setFacetIds(parseLongList(jsonString));
+        clob = map.get("facet_value_ids".toUpperCase());
+        jsonString = convertClob2String((NClob) clob);
         if (!StringUtils.isEmpty(jsonString)) {
             searchResult.setFacetValueIds(parseLongList(jsonString));
         }
-        jsonString = (String) map.get("collection_ids");
+        clob = map.get("collection_ids".toUpperCase());
+        jsonString = convertClob2String((NClob) clob);
         if (!StringUtils.isEmpty(jsonString)) {
             searchResult.setCollectionIds(parseLongList(jsonString));
         }
 
-        searchResult.setScore((Float) map.get("score"));
+        Integer score = (Integer) map.get("score".toUpperCase());
+        searchResult.setScore(score == null ? null : score.floatValue());
 
         return searchResult;
     }
 
+    // 参考：
+    // https://stackoverflow.com/questions/2169732/most-efficient-solution-for-reading-clob-to-string-and-string-to-clob-in-java
+    private String convertClob2String(NClob clob) {
+        if (clob == null) return null;
+        try {
+            return clob.getSubString(1, (int) clob.length());
+        } catch (SQLException ex) {
+            log.error("Fail to convert clob to String", ex);
+        }
+        return null;
+    }
+
     private List<Long> parseLongList(String jsonString) {
+        if (StringUtils.isEmpty(jsonString)) return new ArrayList<>();
         try {
             List<Long> idList = objectMapper.readValue(jsonString,
                     objectMapper.getTypeFactory().constructCollectionType(
@@ -106,6 +113,7 @@ public class SearchStrategyUtils {
     }
 
     private Coordinate parseFocalPoint(String jsonString) {
+        if (StringUtils.isEmpty(jsonString)) return null;
         try {
             return objectMapper.readValue(jsonString, Coordinate.class);
         } catch (JsonProcessingException ex) {

@@ -35,9 +35,7 @@ type SearchResult {
     productVariantId: ID!
     productVariantName: String!
     productVariantAsset: SearchResultAsset
-    "The price of a search result product, either as a range or as a single price"
-    price: SinglePrice
-    priceRange: PriceRange
+    price: Int!
     description: String!
     facetIds: [ID!]!
     facetValueIds: [ID!]!
@@ -45,15 +43,4 @@ type SearchResult {
     collectionIds: [ID!]!
     "A relevence score for the result. Differs between database implementations"
     score: Float!
-}
-
-"The price value where the result has a single price"
-type SinglePrice {
-    value: Int!
-}
-
-"The price range where the result has more than one price"
-type PriceRange {
-    min: Int!
-    max: Int!
 }

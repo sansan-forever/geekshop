@@ -18,9 +18,7 @@ import co.jueyi.geekshop.data_import.asset_importer.AssetImporter;
 import co.jueyi.geekshop.entity.AssetEntity;
 import co.jueyi.geekshop.entity.CollectionEntity;
 import co.jueyi.geekshop.entity.FacetValueEntity;
-import co.jueyi.geekshop.service.CollectionService;
-import co.jueyi.geekshop.service.FacetValueService;
-import co.jueyi.geekshop.service.ShippingMethodService;
+import co.jueyi.geekshop.service.*;
 import co.jueyi.geekshop.types.collection.CreateCollectionInput;
 import co.jueyi.geekshop.types.common.ConfigArgInput;
 import co.jueyi.geekshop.types.common.ConfigurableOperationInput;
@@ -51,7 +49,7 @@ public class Populator {
     private final ShippingMethodService shippingMethodService;
     private final ShippingEligibilityChecker defaultShippingEligibilityChecker;
     private final ShippingCalculator defaultShippingCalculator;
-    // TODO searchService
+    private final SearchIndexService searchIndexService;
 
     /**
      * Should be run *before* populating the products.
@@ -136,7 +134,7 @@ public class Populator {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        // TODO this.searchService.reindex(ctx);
+        this.searchIndexService.reindex();
     }
 
     private ConfigurableOperationInput processFilterDefinition(

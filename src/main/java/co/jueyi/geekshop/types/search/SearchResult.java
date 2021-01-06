@@ -24,11 +24,7 @@ public class SearchResult {
     private Long productVariantId;
     private String productVariantName;
     private SearchResultAsset productVariantAsset;
-    /**
-     * price和priceRange二选一
-     */
-    private SinglePrice price;
-    private PriceRange priceRange;
+    private Integer price;
     private String description;
     private List<Long> facetIds = new ArrayList<>();
     private List<Long> facetValueIds = new ArrayList<>();

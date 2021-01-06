@@ -229,8 +229,8 @@ public class SearchIndexService {
         if (CollectionUtils.isEmpty(collectionIds)) return new ArrayList<>();
 
         QueryWrapper<CollectionEntity> collectionEntityQueryWrapper = new QueryWrapper<>();
-        collectionEntityQueryWrapper.lambda().in(CollectionEntity::getId, collectionIds)
-                .select(CollectionEntity::getId).select(CollectionEntity::getSlug);
+        collectionEntityQueryWrapper.lambda().in(CollectionEntity::getId, collectionIds);
+        collectionEntityQueryWrapper.lambda().select(CollectionEntity::getId, CollectionEntity::getSlug);
         return this.collectionEntityMapper.selectList(collectionEntityQueryWrapper);
     }
 

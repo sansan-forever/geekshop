@@ -20,7 +20,6 @@ public class SearchInput {
     private LogicalOperator facetValueOperator;
     private Long collectionId;
     private String collectionSlug;
-    private Boolean groupByProduct;
     private Integer currentPage;
     private Integer pageSize;
     private SearchResultSortParameter sort;

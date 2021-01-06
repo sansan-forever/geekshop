@@ -15,7 +15,6 @@ import co.jueyi.geekshop.types.search.SearchResult;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -45,32 +44,28 @@ public class DbSearchStrategy implements SearchStrategy {
 
         List<String> selectColumns = new ArrayList<>();
         selectColumns.addAll(Arrays.asList(
-           "price",
-           "product_asset_id",
-           "product_preview",
-           "product_preview_focal_point",
-           "product_variant_asset_id",
-           "product_variant_preview",
-           "product_variant_preview_focal_point",
-           "sku",
-           "slug",
-           "enabled",
-           "product_variant_id",
-           "product_id",
-           "product_name",
-           "product_variant_name",
-           "description",
-           "facet_ids",
-           "facet_value_ids",
-           "collection_ids"
+                "price",
+                "product_asset_id",
+                "product_preview",
+                "product_preview_focal_point",
+                "product_variant_asset_id",
+                "product_variant_preview",
+                "product_variant_preview_focal_point",
+                "sku",
+                "slug",
+                "enabled",
+                "product_variant_id",
+                "product_id",
+                "product_name",
+                "product_variant_name",
+                "description",
+                "facet_ids",
+                "facet_value_ids",
+                "collection_ids"
         ));
-        if (BooleanUtils.isTrue(input.getGroupByProduct())) {
-            selectColumns.add("min(price) as min_price");
-            selectColumns.add("max(price) as max_price");
-        }
 
         QueryWrapper<SearchIndexItemEntity> queryWrapper = new QueryWrapper<>();
-        List<String> newColumns = applyTermAndFilters(queryWrapper, input, false);
+        List<String> newColumns = applyTermAndFilters(queryWrapper, input);
         selectColumns.addAll(newColumns);
 
         if (!StringUtils.isEmpty(input.getTerm()) && input.getTerm().length() > this.minTermLength) {
@@ -114,7 +109,7 @@ public class DbSearchStrategy implements SearchStrategy {
     @Override
     public Integer getTotalCount(SearchInput input, boolean enabledOnly) {
         QueryWrapper<SearchIndexItemEntity> queryWrapper = new QueryWrapper<>();
-        applyTermAndFilters(queryWrapper, input, true);  // TODO should use false?
+        applyTermAndFilters(queryWrapper, input);
 
         if (enabledOnly) {
             queryWrapper.lambda().eq(SearchIndexItemEntity::isEnabled, true);
@@ -126,7 +121,7 @@ public class DbSearchStrategy implements SearchStrategy {
     @Override
     public Map<Long, Integer> getFacetValueIds(SearchInput input, boolean enabledOnly) {
         QueryWrapper<SearchIndexItemEntity> queryWrapper = new QueryWrapper<>();
-        applyTermAndFilters(queryWrapper, input, true);
+        applyTermAndFilters(queryWrapper, input);
         queryWrapper.lambda()
                 .select(SearchIndexItemEntity::getProductVariantId)
                 .select(SearchIndexItemEntity::getFacetValueIds);
@@ -150,51 +145,49 @@ public class DbSearchStrategy implements SearchStrategy {
     }
 
     private List<String> applyTermAndFilters(
-            QueryWrapper<SearchIndexItemEntity> queryWrapper, SearchInput input, boolean ignoreGroupBy) {
+            QueryWrapper<SearchIndexItemEntity> queryWrapper, SearchInput input) {
         queryWrapper.apply("1 = 1");
 
         String term = input.getTerm() == null ? null : input.getTerm().trim();
 
         List<String> selectColumns = new ArrayList<>();
         if (!StringUtils.isEmpty(term) && term.length() > this.minTermLength) {
-            String scoreColumn = String.format(
-                            "case " +
-                            "when sku like '%%s%' then 10 " +
-                            "when product_name like '%%s%' then 3 " +
-                            "when product_variant_name like '%%s%' then 2 " +
-                            "when description like '%%s%' then 1 " +
+            String scoreColumn = "case " +
+                            "when sku like '%" + term + "%' then 10 " +
+                            "when product_name like '%" + term + "%' then 3 " +
+                            "when product_variant_name like '%" + term + "%' then 2 " +
+                            "when description like '%" + term + "%' then 1 " +
                             "else 0 " +
-                            "end as score", term);
+                            "end as score";
             selectColumns.add(scoreColumn);
 
             queryWrapper.lambda().like(SearchIndexItemEntity::getSku, term)
                     .or().like(SearchIndexItemEntity::getProductName, term)
                     .or().like(SearchIndexItemEntity::getProductVariantName, term)
                     .or().like(SearchIndexItemEntity::getDescription, term);
+        }
 
-            if (!CollectionUtils.isEmpty(input.getFacetValueIds())) {
-                String likeColumn = "concat(',', facet_value_ids, ',')";
-                input.getFacetValueIds().forEach(id -> {
+        if (!CollectionUtils.isEmpty(input.getFacetValueIds())) {
+            String likeColumn = "regexp_replace(facet_value_ids, '[\\[|\\]]', ',')";
+            queryWrapper.and(w -> {
+                for(Long id: input.getFacetValueIds()) {
                     String likeTerm = "," + id + ",";
                     if (Objects.equals(input.getFacetValueOperator(), LogicalOperator.AND)) {
-                        queryWrapper.like(likeColumn, likeTerm);
+                        w.like(likeColumn, likeTerm);
                     } else {
-                        queryWrapper.or().like(likeColumn, likeTerm);
+                        w.or().like(likeColumn, likeTerm);
                     }
-                });
-            }
+                }
+            });
 
-            if (input.getCollectionId() != null) {
-                queryWrapper.like("concat(',', collection_ids, ',')", "," + input.getCollectionId() + ",");
-            }
-            if (!StringUtils.isEmpty(input.getCollectionSlug())) {
-                queryWrapper.like("collection_slugs",
-                        "\"" + input.getCollectionSlug().trim() + "\"");
-            }
+        }
 
-            if(!ignoreGroupBy && BooleanUtils.isTrue(input.getGroupByProduct())) {
-                queryWrapper.groupBy("product_id");
-            }
+        if (input.getCollectionId() != null) {
+            queryWrapper.like("regexp_replace(collection_ids, '[\\[|\\]]', ',')", "," + input.getCollectionId() + ",");
+        }
+        if (!StringUtils.isEmpty(input.getCollectionSlug())) {
+            queryWrapper.like("collection_slugs",
+                    "\"" + input.getCollectionSlug().trim() + "\"");
         }
 
         return selectColumns;

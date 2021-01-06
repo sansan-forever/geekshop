@@ -8,7 +8,7 @@ spring:
   datasource:
     schema: classpath*:db/${database}/schema.sql
     data: classpath*:db/${database}/data.sql
-    url: jdbc:h2:mem:testdb;MODE=MYSQL
+    url: jdbc:h2:mem:testdb;MODE=MYSQL;IGNORECASE=TRUE
     driver-class-name: org.h2.Driver
   output:
     ansi:

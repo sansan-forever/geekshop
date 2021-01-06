@@ -126,8 +126,7 @@ input SearchInput {
     facetValueIds: [ID!]
     facetValueOperator: LogicalOperator
     collectionId: ID
-    collectionsSlug: String
-    groupByProduct: Boolean
+    collectionSlug: String
     currentPage: Int
     pageSize: Int
     sort: SearchResultSortParameter
