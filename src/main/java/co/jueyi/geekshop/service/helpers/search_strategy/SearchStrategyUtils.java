@@ -37,8 +37,9 @@ public class SearchStrategyUtils {
             SearchResultAsset searchResultAsset = new SearchResultAsset();
             searchResultAsset.setId((Long) map.get("product_asset_id".toUpperCase()));
             searchResultAsset.setPreview((String) map.get("product_preview".toUpperCase()));
-            String jsonString = (String) map.get("product_preview_focal_point".toUpperCase());
-            if (!StringUtils.isEmpty(jsonString)) {
+            Object clob = map.get("product_preview_focal_point".toUpperCase());
+            if (clob != null) {
+                String jsonString = convertClob2String((NClob) clob);
                 searchResultAsset.setFocalPoint(parseFocalPoint(jsonString));
             }
             searchResult.setProductAsset(searchResultAsset);
@@ -48,8 +49,9 @@ public class SearchStrategyUtils {
             SearchResultAsset searchResultAsset = new SearchResultAsset();
             searchResultAsset.setId((Long) map.get("product_variant_asset_id".toUpperCase()));
             searchResultAsset.setPreview((String) map.get("product_variant_preview".toUpperCase()));
-            String jsonString = (String) map.get("product_variant_preview_focal_point".toUpperCase());
-            if (!StringUtils.isEmpty(jsonString)) {
+            Object clob = map.get("product_variant_preview_focal_point".toUpperCase());
+            if (clob != null) {
+                String jsonString = convertClob2String((NClob) clob);
                 searchResultAsset.setFocalPoint(parseFocalPoint(jsonString));
             }
             searchResult.setProductVariantAsset(searchResultAsset);

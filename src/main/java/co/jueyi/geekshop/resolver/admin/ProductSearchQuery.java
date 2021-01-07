@@ -11,6 +11,7 @@ import co.jueyi.geekshop.types.common.Permission;
 import co.jueyi.geekshop.types.common.SearchInput;
 import co.jueyi.geekshop.types.search.SearchResponse;
 import graphql.kickstart.tools.GraphQLQueryResolver;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,7 @@ public class ProductSearchQuery implements GraphQLQueryResolver {
     private final SearchService searchService;
 
     @Allow(Permission.ReadCatalog)
-    public SearchResponse searchByAdmin(SearchInput input) {
+    public SearchResponse searchByAdmin(SearchInput input, DataFetchingEnvironment dfe) {
         SearchResponse searchResponse = this.searchService.search(input);
         searchResponse.setSearchInput(input);
         return searchResponse;

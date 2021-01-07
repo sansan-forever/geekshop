@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -254,6 +255,7 @@ public class ShopCatalogTest {
 
         UpdateProductInput updateProductInput = new UpdateProductInput();
         updateProductInput.setId(2L);
+        updateProductInput.setFacetValueIds(new ArrayList<>());
         updateProductInput.getFacetValueIds().add(facetValue.getId());
 
         inputNode = objectMapper.valueToTree(updateProductInput);

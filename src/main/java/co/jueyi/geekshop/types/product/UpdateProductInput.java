@@ -18,8 +18,8 @@ public class UpdateProductInput {
     private Long id;
     private Boolean enabled;
     private Long featuredAssetId;
-    private List<Long> assetIds = new ArrayList<>();
-    private List<Long> facetValueIds = new ArrayList<>();
+    private List<Long> assetIds;
+    private List<Long> facetValueIds;
     private String name;
     private String slug;
     private String description;

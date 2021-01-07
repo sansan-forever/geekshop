@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -689,6 +690,8 @@ public class ProductTest {
         UpdateProductInput updateProductInput = new UpdateProductInput();
         updateProductInput.setId(newProduct.getId());
         updateProductInput.setFeaturedAssetId(1L);
+        updateProductInput.setFacetValueIds(new ArrayList<>());
+        updateProductInput.setAssetIds(new ArrayList<>());
         updateProductInput.getAssetIds().addAll(Arrays.asList(1L, 2L));
 
         JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
@@ -708,6 +711,7 @@ public class ProductTest {
     public void updateProduct_updates_FacetValues() throws IOException {
         UpdateProductInput updateProductInput = new UpdateProductInput();
         updateProductInput.setId(newProduct.getId());
+        updateProductInput.setFacetValueIds(new ArrayList<>());
         updateProductInput.getFacetValueIds().add(1L);
 
         JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
@@ -1266,6 +1270,7 @@ public class ProductTest {
     public void updateProduct_throws_for_deleted_product() throws IOException {
         UpdateProductInput updateProductInput = new UpdateProductInput();
         updateProductInput.setId(productToDelete.getId());
+        updateProductInput.setFacetValueIds(new ArrayList<>());
         updateProductInput.getFacetValueIds().add(1L);
 
         JsonNode inputNode = objectMapper.valueToTree(updateProductInput);

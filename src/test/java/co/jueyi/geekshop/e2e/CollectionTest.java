@@ -1207,6 +1207,7 @@ public class CollectionTest {
 
         UpdateProductInput input = new UpdateProductInput();
         input.setId(products.get(1).getId());
+        input.setFacetValueIds(new ArrayList<>());
         input.getFacetValueIds().add(getFacetValueId("electronics"));
         input.getFacetValueIds().add(getFacetValueId("computers"));
         input.getFacetValueIds().add(getFacetValueId("pear"));

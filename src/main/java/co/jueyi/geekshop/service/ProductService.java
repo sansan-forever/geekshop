@@ -171,22 +171,26 @@ public class ProductService {
         BeanMapper.patch(input, existingProductEntity);
         this.productEntityMapper.updateById(existingProductEntity);
 
-        if (!CollectionUtils.isEmpty(input.getFacetValueIds())) {
+        if (input.getFacetValueIds() != null) {
             // 先清除现有关联关系
             QueryWrapper<ProductFacetValueJoinEntity> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(ProductFacetValueJoinEntity::getProductId, existingProductEntity.getId());
             this.productFacetValueJoinEntityMapper.delete(queryWrapper);
             // 再添加
-            this.joinProductWithFacetValue(input.getFacetValueIds(), existingProductEntity.getId());
+            if (input.getFacetValueIds().size() > 0) {
+                this.joinProductWithFacetValue(input.getFacetValueIds(), existingProductEntity.getId());
+            }
         }
 
-        if (!CollectionUtils.isEmpty(input.getAssetIds())) {
+        if (input.getAssetIds() != null) {
             // 先清除现有关联关系
             QueryWrapper<ProductAssetJoinEntity> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(ProductAssetJoinEntity::getProductId, existingProductEntity.getId());
             this.productAssetJoinEntityMapper.delete(queryWrapper);
             // 再添加
-            this.joinProductWithAsset(input.getAssetIds(), existingProductEntity.getId());
+            if (input.getAssetIds().size() > 0) {
+                this.joinProductWithAsset(input.getAssetIds(), existingProductEntity.getId());
+            }
         }
 
         ProductEvent event = new ProductEvent(ctx, existingProductEntity, "updated");

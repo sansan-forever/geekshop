@@ -257,6 +257,7 @@ public class FacetTest {
 
         UpdateProductInput updateProductInput = new UpdateProductInput();
         updateProductInput.setId(products.get(0).getId());
+        updateProductInput.setFacetValueIds(new ArrayList<>());
         updateProductInput.getFacetValueIds().add(speakerTypeFacet.getValues().get(0).getId());
 
         JsonNode inputNode = objectMapper.valueToTree(updateProductInput);
@@ -279,6 +280,7 @@ public class FacetTest {
 
         updateProductInput = new UpdateProductInput();
         updateProductInput.setId(products.get(1).getId());
+        updateProductInput.setFacetValueIds(new ArrayList<>());
         updateProductInput.getFacetValueIds().add(speakerTypeFacet.getValues().get(1).getId());
 
         inputNode = objectMapper.valueToTree(updateProductInput);
