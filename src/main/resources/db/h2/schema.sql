@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 掘艺网络(jueyi.co).
+ * Copyright (c) 2020 极客之道(daogeek.io).
  * All rights reserved.
  */
 drop all objects delete files;

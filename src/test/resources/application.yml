@@ -1,4 +1,4 @@
-# Copyright (c) 2020 掘艺网络(jueyi.co).
+# Copyright (c) 2020 极客之道(daogeek.io).
 # All rights reserved.
 
 # database init, supports mysql too
@@ -22,7 +22,7 @@ logging:
     graphql: error
     notprivacysafe.graphql: error
     org.springframework: info
-    co.jueyi: info
+    io.geekshop: info
     org.apache.catalina.loader.WebappClassLoaderBase: warn # ignore Illegal Access caused by DirtyContext
 
 geekshop:
@@ -43,7 +43,7 @@ geekshop:
   email-options:
     transport: ${EMAIL_TRANSPORT:none}
     output-path: ${EMAIL_FILE_OUTPUT_PATH:test-emails}
-    default-from-email: ${DEFAULT_FROM_EMAIL:geekshop@jueyi.co}
+    default-from-email: ${DEFAULT_FROM_EMAIL:geekshop@daogeek.io}
     verify-email-address-url: ${VERIFY_EMAIL_ADDRESS_URL:http://localhost:4201/verify}
     password-reset-url: ${PASSWORD_RESET_URL:http://localhost:4201/reset-password}
     change-email-address-url: ${CHANGE_EMAIL_ADDRESS_URL:http://localhost:4201/change-email-address}

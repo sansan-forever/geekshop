@@ -7,7 +7,7 @@
   xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>co.jueyi.geekshop</groupId>
+  <groupId>io.geekshop</groupId>
   <artifactId>geekshop</artifactId>
   <version>0.15.2.BUILD-SNAPSHOT</version>
 
