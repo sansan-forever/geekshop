@@ -97,6 +97,10 @@ public class ProductSearchTest {
             String.format(ADMIN_SEARCH_GRAPHQL_RESOURCE_TEMPLATE, "search_products_admin");
     static final String SEARCH_GET_ASSETS =
             String.format(ADMIN_SEARCH_GRAPHQL_RESOURCE_TEMPLATE, "search_get_assets");
+    public static final String SEARCH_GET_PRICES =
+            String.format(ADMIN_SEARCH_GRAPHQL_RESOURCE_TEMPLATE, "search_get_prices");
+    public static final String REINDEX =
+            String.format(ADMIN_SEARCH_GRAPHQL_RESOURCE_TEMPLATE, "reindex");
 
     @Autowired
     TestHelper testHelper;
@@ -528,32 +532,32 @@ public class ProductSearchTest {
         assertThat(searchResponse.getItems().get(0).getCollectionIds()).containsExactly(2L);
     }
 
-    void before_test_15() throws IOException {
-        UpdateProductVariantInput input = new UpdateProductVariantInput();
-        input.setId(3L);
-        input.setEnabled(true); // 恢复成true
-
-        JsonNode inputNode = objectMapper.valueToTree(input);
-        ObjectNode variables = objectMapper.createObjectNode();
-        variables.set("input", inputNode);
-
-        adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables, Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
-
-        UpdateProductInput updateProductInput = new UpdateProductInput();
-        updateProductInput.setId(2L);
-        updateProductInput.setFacetValueIds(new ArrayList<>());
-        // 1 & 2 are the existing facetValues (electronics & photo)
-        updateProductInput.getFacetValueIds().addAll(Arrays.asList(1L, 2L));
-
-        inputNode = objectMapper.valueToTree(updateProductInput);
-        variables = objectMapper.createObjectNode();
-        variables.set("input", inputNode);
-
-        adminClient.perform(UPDATE_PRODUCT, variables,
-                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
-
-        testHelper.awaitRunningTasks();
-    }
+//    void before_test_15() throws IOException {
+//        UpdateProductVariantInput input = new UpdateProductVariantInput();
+//        input.setId(3L);
+//        input.setEnabled(true); // 恢复成true
+//
+//        JsonNode inputNode = objectMapper.valueToTree(input);
+//        ObjectNode variables = objectMapper.createObjectNode();
+//        variables.set("input", inputNode);
+//
+//        adminClient.perform(UPDATE_PRODUCT_VARIANTS, variables, Arrays.asList(PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+//
+//        UpdateProductInput updateProductInput = new UpdateProductInput();
+//        updateProductInput.setId(2L);
+//        updateProductInput.setFacetValueIds(new ArrayList<>());
+//        // 1 & 2 are the existing facetValues (electronics & photo)
+//        updateProductInput.getFacetValueIds().addAll(Arrays.asList(1L, 2L));
+//
+//        inputNode = objectMapper.valueToTree(updateProductInput);
+//        variables = objectMapper.createObjectNode();
+//        variables.set("input", inputNode);
+//
+//        adminClient.perform(UPDATE_PRODUCT, variables,
+//                Arrays.asList(PRODUCT_WITH_VARIANTS_FRAGMENT, PRODUCT_VARIANT_FRAGMENT, ASSET_FRAGMENT));
+//
+//        testHelper.awaitRunningTasks();
+//    }
 
     /**
      * admin api
@@ -561,8 +565,6 @@ public class ProductSearchTest {
     @Test
     @Order(15)
     public void total_items_by_admin() throws IOException {
-        before_test_15();
-
         testTotalItems(adminClient);
     }
 
@@ -932,5 +934,86 @@ public class ProductSearchTest {
         assertThat(focalPoint.getY()).isEqualTo(0.42F);
     }
 
+    @Test
+    @Order(31)
+    public void does_not_include_deleted_ProductVariants_in_index() throws IOException {
+        SearchInput input = new SearchInput();
+        input.setTerm("hard drive");
 
+        SearchResponse s1 = doAdminSearchQuery(input);
+        assertThat(s1.getItems().stream().map(SearchResult::getPrice).collect(Collectors.toSet()))
+                .hasSize(4);
+
+        ObjectNode variables = objectMapper.createObjectNode();
+        variables.put("id", s1.getItems().get(0).getProductVariantId());
+        Integer price = s1.getItems().get(0).getPrice();
+
+        adminClient.perform(DELETE_PRODUCT_VARIANT, variables);
+
+        testHelper.awaitRunningTasks();
+
+        input = new SearchInput();
+        input.setTerm("hard drive");
+
+        ObjectNode inputNode = objectMapper.valueToTree(input);
+        variables = objectMapper.createObjectNode();
+        variables.set("input", inputNode);
+
+        GraphQLResponse graphQLResponse =
+                adminClient.perform(SEARCH_GET_PRICES, variables);
+        SearchResponse search =
+                graphQLResponse.get("$.data.searchByAdmin", SearchResponse.class);
+        assertThat(search.getItems().stream().map(SearchResult::getPrice).collect(Collectors.toSet()))
+                .hasSize(3);
+        assertThat(search.getItems().stream().map(SearchResult::getPrice).collect(Collectors.toSet()))
+                .doesNotContain(price);
+    }
+
+    @Test
+    @Order(32)
+    public void returns_enabled_field() throws IOException {
+        SearchInput input = new SearchInput();
+        input.setPageSize(3);
+
+        SearchResponse searchResponse = doAdminSearchQuery(input);
+        assertThat(searchResponse.getItems()).hasSize(3);
+
+        SearchResult searchResult1 = searchResponse.getItems().get(0);
+        assertThat(searchResult1.getProductVariantId()).isEqualTo(1L);
+        assertThat(searchResult1.getEnabled()).isTrue();
+
+        SearchResult searchResult2 = searchResponse.getItems().get(1);
+        assertThat(searchResult2.getProductVariantId()).isEqualTo(2L);
+        assertThat(searchResult2.getEnabled()).isTrue();
+
+        SearchResult searchResult3 = searchResponse.getItems().get(2);
+        assertThat(searchResult3.getProductVariantId()).isEqualTo(3L);
+        assertThat(searchResult3.getEnabled()).isFalse();
+    }
+
+    @Test
+    @Order(33)
+    public void enabled_status_survives_reindex() throws IOException {
+        adminClient.perform(REINDEX, null);
+
+        testHelper.awaitRunningTasks();
+
+        SearchInput input = new SearchInput();
+        input.setPageSize(3);
+
+        SearchResponse searchResponse = doAdminSearchQuery(input);
+        assertThat(searchResponse.getItems()).hasSize(3);
+
+        SearchResult searchResult1 = searchResponse.getItems().get(0);
+        assertThat(searchResult1.getProductVariantId()).isEqualTo(1L);
+        assertThat(searchResult1.getEnabled()).isTrue();
+
+        SearchResult searchResult2 = searchResponse.getItems().get(1);
+        assertThat(searchResult2.getProductVariantId()).isEqualTo(2L);
+        assertThat(searchResult2.getEnabled()).isTrue();
+
+        SearchResult searchResult3 = searchResponse.getItems().get(2);
+        assertThat(searchResult3.getProductVariantId()).isEqualTo(3L);
+        assertThat(searchResult3.getEnabled()).isFalse();
+    }
 }

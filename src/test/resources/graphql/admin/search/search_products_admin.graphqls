@@ -16,6 +16,7 @@ query SearchProductAdmin($input: SearchInput!) {
             collectionIds
             price
             facetValueIds
+            enabled
         }
     }
 }
