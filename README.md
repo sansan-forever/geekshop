@@ -3,4 +3,4 @@
 
 ## Copyright
 
-#### Copyright © 2020-present 极客之道(daogeek.io). All rights reserved.
+#### Copyright © 2020-present GeekXYZ. All rights reserved.

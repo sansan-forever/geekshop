@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 极客之道(daogeek.io).
+ * Copyright (c) 2020 GeekXYZ.
  * All rights reserved.
  */
 
