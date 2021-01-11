@@ -2,7 +2,7 @@
 一个面向开发者的、基于Spring+GraphQL+Angular的、无前端(headless)电商框架。框架亮点：
 
 * **无前端(headless)框架**，后端提供基于标准GraphQL的API接口，支持前后分离开发模型，前端框架无关，用户可以根据需要灵活选择各种前端技术，如Angular，Reactjs或者Vuejs等。
-* **面向开发者的框架**，支持基于契约的类型安全的GralphQL API接口，提升开发者生产率。
+* **面向开发者的框架**，支持基于契约的类型安全的[GralphQL API接口](https://github.com/geekxyz/geekshop/tree/main/src/main/resources/graphql)，提升开发者生产率。
 * **开源**，基于[MIT license](https://tldrlegal.com/license/mit-license)，所有源代码开放在github上。
 
 **注意，该框架主要为教学而开发，目前是Alpha状态，如需生产化，需自己严格测试+定制**。
@@ -73,7 +73,7 @@ mvn clean test
 http://127.0.0.1:8080/playground
 ```
 
-关于GraphQL Playground如何使用，不复杂，请自行网上找资料。具体每个API的接口规范，可以参考GraphQL Playground反射出来的Schema文档，或者直接看源码resources/graphql中的schema文档。
+关于GraphQL Playground如何使用，不复杂，请自行网上找资料。具体每个API的接口规范，可以参考GraphQL Playground反射出来的Schema文档，或者直接看[源码resources/graphql中的schema文档](https://github.com/geekxyz/geekshop/tree/main/src/main/resources/graphql)。
 
 如果不想用GraphQL Playground，也可以使用最新版本的Postman访问GraphQL端点：
 
